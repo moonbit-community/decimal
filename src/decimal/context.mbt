@@ -52,6 +52,21 @@ pub(all) struct Flags {
   mut underflow : Bool
   mut subnormal : Bool
   mut clamped : Bool
+  /// Raised by `parse` when input doesn't match the GDA grammar — the
+  /// parser surfaces a `ParseError` today and callers can route into
+  /// here at a Context boundary.
+  mut conversion_syntax : Bool
+  /// Raised by integer division when the quotient would exceed precision
+  /// (`Decimal::divide_int` with a multi-precision quotient), and by
+  /// quantize when the rescaled coefficient exceeds precision.
+  mut division_impossible : Bool
+  /// Raised by `0 / 0` and Infinity-arithmetic special cases where the
+  /// result has no defined value.
+  mut division_undefined : Bool
+  /// Reserved — `apd` raises this for context-internal allocation
+  /// failures. We keep the slot for GDA-tag compatibility but don't yet
+  /// emit it from any op.
+  mut insufficient_storage : Bool
 }
 
 ///| A fresh `Flags` with every signal cleared.
@@ -65,6 +80,10 @@ pub fn Flags::new() -> Flags {
     underflow: false,
     subnormal: false,
     clamped: false,
+    conversion_syntax: false,
+    division_impossible: false,
+    division_undefined: false,
+    insufficient_storage: false,
   }
 }
 
@@ -108,6 +127,43 @@ pub fn Context::new(
 /// arithmetic" callers.
 pub fn Context::exact() -> Context {
   Context::new()
+}
+
+///| IEEE-754 `decimal32` preset: precision 7, `Emax = 96`, `Emin = -95`,
+/// `clamp = true`, rounding half-even. Matches decNumber's
+/// `DEC_INIT_DECIMAL32`.
+pub fn Context::decimal32() -> Context {
+  Context::new(
+    precision=7,
+    rounding=HalfEven,
+    e_max=96,
+    e_min=-95,
+    clamp=true,
+  )
+}
+
+///| IEEE-754 `decimal64` preset: precision 16, `Emax = 384`,
+/// `Emin = -383`, `clamp = true`. Matches `DEC_INIT_DECIMAL64`.
+pub fn Context::decimal64() -> Context {
+  Context::new(
+    precision=16,
+    rounding=HalfEven,
+    e_max=384,
+    e_min=-383,
+    clamp=true,
+  )
+}
+
+///| IEEE-754 `decimal128` preset: precision 34, `Emax = 6144`,
+/// `Emin = -6143`, `clamp = true`. Matches `DEC_INIT_DECIMAL128`.
+pub fn Context::decimal128() -> Context {
+  Context::new(
+    precision=34,
+    rounding=HalfEven,
+    e_max=6144,
+    e_min=-6143,
+    clamp=true,
+  )
 }
 
 ///| Raise status flags on the context. Flags are additive and never clear an
