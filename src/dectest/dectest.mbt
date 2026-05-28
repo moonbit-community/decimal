@@ -180,6 +180,14 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(binary(case, Decimal::subtract))
   } else if ascii_eq_ci(case.op, "multiply") {
     Some(binary(case, Decimal::multiply))
+  } else if ascii_eq_ci(case.op, "copy") {
+    Some(unary(case, Decimal::copy))
+  } else if ascii_eq_ci(case.op, "copyabs") {
+    Some(unary(case, Decimal::copy_abs))
+  } else if ascii_eq_ci(case.op, "copynegate") {
+    Some(unary(case, Decimal::copy_negate))
+  } else if ascii_eq_ci(case.op, "copysign") {
+    Some(binary(case, Decimal::copy_sign))
   } else {
     None
   }
