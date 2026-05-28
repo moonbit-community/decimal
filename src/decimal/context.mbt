@@ -1,10 +1,8 @@
 // ---------------------------------------------------------------------------
 // Arithmetic context: precision, rounding mode, accumulated status flags.
 //
-// This file introduces the types and a standalone `Decimal::round` operation.
-// Integration with the rest of the arithmetic ops happens in a follow-up so
-// that defaults stay backwards-compatible — the existing dectest cases were
-// written against bit-exact behaviour and would otherwise regress.
+// This file introduces the arithmetic context and the result-finalisation
+// path shared by arithmetic operations.
 // ---------------------------------------------------------------------------
 
 ///| GDA rounding modes for finite-result finalisation.
@@ -106,24 +104,23 @@ pub fn Context::exact() -> Context {
 }
 
 // ---------------------------------------------------------------------------
-// Standalone rounding op.
+// Result finalisation.
 // ---------------------------------------------------------------------------
 
-///| Round a finite `Decimal` to fit the context's precision under its
-/// rounding mode. NaN and Infinity pass through unchanged.
+///| Finalise a `Decimal` result under the active context. Today this means
+/// precision-driven rounding and status flags; exponent range enforcement
+/// (`e_min` / `e_max`) will live here too.
 ///
 /// On any precision-driven adjustment, `ctx.flags.rounded` is raised; on a
 /// truncation that discards non-zero digits, `ctx.flags.inexact` also goes up.
-/// The exponent range (`e_min` / `e_max`) is not enforced here — that's the
-/// finalisation step's job once we plumb context through the binary ops.
-pub fn Decimal::round(self : Decimal, ctx : Context) -> Decimal {
+pub fn Decimal::finalize(self : Decimal, ctx : Context) -> Decimal {
   match self.class {
     Finite => round_finite(self, ctx)
     _ => self
   }
 }
 
-///| The finite path of `Decimal::round`. Splits the coefficient into kept and
+///| The finite rounding path. Splits the coefficient into kept and
 /// dropped parts via BigInt div/mod (no String round-trip), decides whether
 /// to round up, and handles the `999→1000` carry-over.
 fn round_finite(d : Decimal, ctx : Context) -> Decimal {

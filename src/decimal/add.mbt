@@ -35,7 +35,7 @@ pub fn Decimal::add(self : Decimal, other : Decimal, ctx : Context) -> Decimal {
       }
     (Infinity, Finite) => self
     (Finite, Infinity) => other
-    (Finite, Finite) => add_finite(self, other, ctx).round(ctx)
+    (Finite, Finite) => add_finite(self, other, ctx).finalize(ctx)
     _ => abort("Decimal::add: unreachable class combination")
   }
 }

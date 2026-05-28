@@ -15,7 +15,7 @@ pub fn Decimal::multiply(
   }
   let sign = xor_sign(self, other)
   match (self.class, other.class) {
-    (Finite, Finite) => multiply_finite(self, other).round(ctx)
+    (Finite, Finite) => multiply_finite(self, other).finalize(ctx)
     (Infinity, Finite) =>
       if other.coefficient.is_zero() {
         invalid_nan(ctx)

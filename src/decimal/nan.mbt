@@ -1,4 +1,4 @@
-// Shared special-value constructors and propagation helpers.
+// NaN propagation and invalid-operation signalling helpers.
 
 fn quiet_snan(d : Decimal, ctx : Context) -> Decimal {
   ctx.flags.invalid_operation = true
@@ -22,16 +22,4 @@ fn propagate_nan(a : Decimal, b : Decimal, ctx : Context) -> Decimal? {
     (_, QNaN) => Some(b)
     _ => None
   }
-}
-
-fn signed_infinity(negative : Bool) -> Decimal {
-  { class: Infinity, negative, coefficient: 0N, exponent: 0 }
-}
-
-fn finite_zero(exponent : Int, negative : Bool) -> Decimal {
-  { class: Finite, negative, coefficient: 0N, exponent }
-}
-
-fn xor_sign(a : Decimal, b : Decimal) -> Bool {
-  a.negative != b.negative
 }
