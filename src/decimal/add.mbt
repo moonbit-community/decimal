@@ -118,18 +118,19 @@ fn add_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
   // skipping BigInt allocations for scale_up / signed_add. The path bails
   // out (returns `None`) on any overflow, falling through to the BigInt
   // logic below.
-  match try_add_finite_small(a, b) {
+  match try_add_finite_small(a, b, ctx) {
     Some(d) => return d
     None => ()
   }
   let (a_scaled, b_scaled, result_exp) = align(a, b)
   let (sum, neg) = signed_add(a_scaled, a.negative, b_scaled, b.negative)
-  { class: Finite, negative: neg, coefficient: sum, exponent: result_exp }
+  let final_neg = cancellation_sign(sum, a.negative, b.negative, ctx.rounding, neg)
+  { class: Finite, negative: final_neg, coefficient: sum, exponent: result_exp }
 }
 
 ///| Attempt the add in Int64. Returns `None` if either coefficient or any
 /// intermediate overflows. Caller falls back to the BigInt path on `None`.
-fn try_add_finite_small(a : Decimal, b : Decimal) -> Decimal? {
+fn try_add_finite_small(a : Decimal, b : Decimal, ctx : Context) -> Decimal? {
   let a64 = fits_int64(a.coefficient)
   let b64 = fits_int64(b.coefficient)
   guard a64 is Some(ai) else { return None }
@@ -158,12 +159,36 @@ fn try_add_finite_small(a : Decimal, b : Decimal) -> Decimal? {
   } else {
     (0L, false)
   }
+  let final_neg = if sum == 0L {
+    // Same Floor-mode -0 rule as the BigInt path's cancellation_sign.
+    a.negative != b.negative && ctx.rounding == Floor
+  } else {
+    neg
+  }
   Some({
     class: Finite,
-    negative: neg,
+    negative: final_neg,
     coefficient: BigInt::from_int64(sum),
     exponent: result_exp,
   })
+}
+
+///| GDA sign-of-zero rule for additive cancellation. When opposite-sign
+/// operands cancel to exactly zero (`a + -a`), the result is `+0` under
+/// every rounding mode except `Floor`, which yields `-0`. Same-sign
+/// operations and non-zero results keep the sign `signed_add` reports.
+fn cancellation_sign(
+  sum : BigInt,
+  a_neg : Bool,
+  b_neg : Bool,
+  rounding : Rounding,
+  default : Bool,
+) -> Bool {
+  if sum.is_zero() && a_neg != b_neg {
+    rounding == Floor
+  } else {
+    default
+  }
 }
 
 ///| Fast path for `non_zero + zero` (and `zero + zero` when signs match).
