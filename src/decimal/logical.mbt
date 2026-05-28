@@ -132,6 +132,160 @@ fn logical_digits(d : Decimal, ctx : Context) -> String? {
   Some(s)
 }
 
+///| GDA `rotate`: cyclically rotate the digits of `self` (treated as a
+/// precision-width unsigned integer) by `other` positions — left for
+/// positive, right for negative. The first operand may carry any decimal
+/// digit (unlike the logical ops); only the second has the integer-in-
+/// `[-precision, precision]` constraint.
+pub fn Decimal::rotate(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> Decimal {
+  rotate_or_shift(self, other, ctx, true)
+}
+
+///| GDA `shift`: shift the digits of `self` (precision-width) by `other`
+/// positions; positions shifted past either end are discarded, vacated
+/// positions are filled with zeros.
+pub fn Decimal::shift(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> Decimal {
+  rotate_or_shift(self, other, ctx, false)
+}
+
+///| Shared body. NaN/Inf routing comes first (Infinity in the first
+/// operand passes through; an Infinity rhs is `Invalid_operation`); for
+/// finite/finite, the body lays the first operand's coefficient out as a
+/// precision-width digit string and dispatches to the cyclic or non-cyclic
+/// digit-mover. The first operand's sign and exponent are preserved on
+/// the result — rotate/shift only ever touch the coefficient.
+fn rotate_or_shift(
+  a : Decimal,
+  b : Decimal,
+  ctx : Context,
+  is_rotate : Bool,
+) -> Decimal {
+  match propagate_nan(a, b, ctx) {
+    Some(d) => return d
+    None => ()
+  }
+  match (a.class, b.class) {
+    (Infinity, Finite) => return a
+    (_, Infinity) => return invalid_nan(ctx)
+    _ => ()
+  }
+  let shift = match shift_amount(b, ctx) {
+    Some(n) => n
+    None => return invalid_nan(ctx)
+  }
+  if ctx.precision <= 0 {
+    return invalid_nan(ctx)
+  }
+  let width = ctx.precision
+  let mut s = a.coefficient.to_string()
+  if s.length() > width {
+    s = s[s.length() - width:].to_owned()
+  }
+  if s.length() < width {
+    let pad = StringBuilder::new()
+    for _ in 0..<(width - s.length()) {
+      pad.write_char('0')
+    }
+    pad.write_string(s)
+    s = pad.to_string()
+  }
+  let moved = if is_rotate {
+    rotate_digits(s, shift, width)
+  } else {
+    shift_digits(s, shift, width)
+  }
+  let mut start = 0
+  while start < moved.length() - 1 && moved[start].to_int() == 0x30 {
+    start = start + 1
+  }
+  let trimmed = if start == 0 { moved } else { moved[start:].to_owned() }
+  let coef = BigInt::from_string(trimmed)
+  { class: Finite, negative: a.negative, coefficient: coef, exponent: a.exponent }
+}
+
+///| `b` must be a finite non-fractional integer (exponent 0) whose
+/// magnitude does not exceed `ctx.precision`. Returns the signed shift
+/// amount in `Some`, or `None` to signal `Invalid_operation`.
+fn shift_amount(b : Decimal, ctx : Context) -> Int? {
+  if !(b.class is Finite) {
+    return None
+  }
+  if b.exponent != 0 {
+    return None
+  }
+  let mag = fits_int64(b.coefficient)
+  match mag {
+    None => None
+    Some(n) =>
+      if n > ctx.precision.to_int64() {
+        None
+      } else {
+        let signed = if b.negative { -n.to_int() } else { n.to_int() }
+        Some(signed)
+      }
+  }
+}
+
+///| Cyclically rotate `s` by `shift` positions — positive shift moves the
+/// leftmost digits past the right edge; negative shift goes the other way.
+fn rotate_digits(s : String, shift : Int, width : Int) -> String {
+  // Normalise shift into `[0, width)`.
+  let mut k = shift % width
+  if k < 0 {
+    k = k + width
+  }
+  if k == 0 {
+    return s
+  }
+  // Left rotate by k: take s[k:] + s[:k].
+  let buf = StringBuilder::new()
+  buf.write_string(s[k:].to_owned())
+  buf.write_string(s[:k].to_owned())
+  buf.to_string()
+}
+
+///| Non-cyclic shift. Positive shift moves digits left (off the left
+/// edge); negative shift moves them right (off the right edge). Vacated
+/// positions are filled with `'0'`.
+fn shift_digits(s : String, shift : Int, width : Int) -> String {
+  if shift >= width || shift <= -width {
+    let buf = StringBuilder::new()
+    for _ in 0..<width {
+      buf.write_char('0')
+    }
+    return buf.to_string()
+  }
+  if shift == 0 {
+    return s
+  }
+  if shift > 0 {
+    // Left shift: take s[shift:] then pad shift zeros on the right.
+    let buf = StringBuilder::new()
+    buf.write_string(s[shift:].to_owned())
+    for _ in 0..<shift {
+      buf.write_char('0')
+    }
+    buf.to_string()
+  } else {
+    // Right shift: pad |shift| zeros on the left, take s[:width - |shift|].
+    let abs = -shift
+    let buf = StringBuilder::new()
+    for _ in 0..<abs {
+      buf.write_char('0')
+    }
+    buf.write_string(s[:width - abs].to_owned())
+    buf.to_string()
+  }
+}
+
 ///| Drop leading zeros from a bit-string, then build a finite Decimal
 /// with the resulting coefficient at exponent 0. An all-zero bit-string
 /// yields `0`.

@@ -328,6 +328,10 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(binary_ctx(case, Decimal::logical_xor))
   } else if ascii_eq_ci(case.op, "invert") {
     Some(unary_ctx(case, Decimal::logical_invert))
+  } else if ascii_eq_ci(case.op, "rotate") {
+    Some(binary_ctx(case, Decimal::rotate))
+  } else if ascii_eq_ci(case.op, "shift") {
+    Some(binary_ctx(case, Decimal::shift))
   } else {
     None
   }
