@@ -109,11 +109,11 @@ fn add_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
     let a_adj = a.exponent + digit_count(a.coefficient) - 1
     let b_adj = b.exponent + digit_count(b.coefficient) - 1
     if a_adj > b_adj + ctx.precision + 1 {
-      ctx.flags.inexact = true
+      ctx.raise_inexact()
       return align_zero_add(a, b, ctx)
     }
     if b_adj > a_adj + ctx.precision + 1 {
-      ctx.flags.inexact = true
+      ctx.raise_inexact()
       return align_zero_add(b, a, ctx)
     }
   }
@@ -213,7 +213,7 @@ fn align_zero_add(
       // Original coefficient already too long; let round_finite handle it.
       return non_zero
     }
-    ctx.flags.rounded = true
+    ctx.raise_rounded()
     return {
       ..non_zero,
       coefficient: non_zero.coefficient * pow10(pad),

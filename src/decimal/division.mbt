@@ -34,7 +34,7 @@ pub fn Decimal::divide_int(
     (Infinity, Infinity) => invalid_nan(ctx)
     (Infinity, Finite) => {
       if other.coefficient.is_zero() {
-        ctx.flags.division_by_zero = true
+        ctx.raise_division_by_zero()
       }
       signed_infinity(sign)
     }
@@ -44,7 +44,7 @@ pub fn Decimal::divide_int(
         if self.coefficient.is_zero() {
           invalid_nan(ctx)
         } else {
-          ctx.flags.division_by_zero = true
+          ctx.raise_division_by_zero()
           signed_infinity(sign)
         }
       } else {

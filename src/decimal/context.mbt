@@ -103,6 +103,24 @@ pub fn Context::exact() -> Context {
   Context::new()
 }
 
+///| Raise status flags on the context. Flags are additive and never clear an
+/// existing signal; these helpers make the side-channel explicit at call sites.
+fn Context::raise_inexact(self : Context) -> Unit {
+  self.flags.inexact = true
+}
+
+fn Context::raise_rounded(self : Context) -> Unit {
+  self.flags.rounded = true
+}
+
+fn Context::raise_invalid_operation(self : Context) -> Unit {
+  self.flags.invalid_operation = true
+}
+
+fn Context::raise_division_by_zero(self : Context) -> Unit {
+  self.flags.division_by_zero = true
+}
+
 // ---------------------------------------------------------------------------
 // Result finalisation.
 // ---------------------------------------------------------------------------
@@ -148,9 +166,9 @@ fn round_finite(d : Decimal, ctx : Context) -> Decimal {
     (candidate, 0)
   }
   let new_exp = d.exponent + dropped_len + extra
-  ctx.flags.rounded = true
+  ctx.raise_rounded()
   if !dropped.is_zero() {
-    ctx.flags.inexact = true
+    ctx.raise_inexact()
   }
   { ..d, coefficient: final_coeff, exponent: new_exp }
 }

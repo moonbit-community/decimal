@@ -1,12 +1,12 @@
 // NaN propagation and invalid-operation signalling helpers.
 
 fn quiet_snan(d : Decimal, ctx : Context) -> Decimal {
-  ctx.flags.invalid_operation = true
+  ctx.raise_invalid_operation()
   { ..d, class: QNaN }
 }
 
 fn invalid_nan(ctx : Context) -> Decimal {
-  ctx.flags.invalid_operation = true
+  ctx.raise_invalid_operation()
   Decimal::nan()
 }
 
