@@ -137,7 +137,7 @@ pub fn Decimal::add(self : Decimal, other : Decimal, ctx : Context) -> Decimal {
       }
     (Infinity, Finite) => self
     (Finite, Infinity) => other
-    (Finite, Finite) => add_finite(self, other).round(ctx)
+    (Finite, Finite) => add_finite(self, other, ctx).round(ctx)
     _ => abort("Decimal::add: unreachable class combination")
   }
 }
@@ -175,14 +175,31 @@ pub fn Decimal::subtract(
 /// * "Below the noise" (when both operands are non-zero with an adjusted
 ///   exponent gap so large no precision-9-or-more context could resolve the
 ///   smaller operand): we return the larger directly.
-fn add_finite(a : Decimal, b : Decimal) -> Decimal {
-  // `0 + b` / `a + 0` — common in dectest where one side is `0` to test
-  // trailing-zero preservation. We still align exponents (smaller wins) so
-  // `0.00 + 1` keeps `1` and `0 + 1.0` keeps `1.0`.
-  if b.coefficient.is_zero() && a.negative == b.negative {
+fn add_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
+  // Zero short-circuits. `a.negative == b.negative` only matters when both
+  // operands are zero — then GDA preserves the shared sign (and decides +0
+  // by default when signs differ, -0 under `Floor`). When one side is
+  // non-zero and the other is zero (any sign), the result is just the
+  // non-zero side with the smaller exponent — no sign coupling needed.
+  if b.coefficient.is_zero() {
+    if a.coefficient.is_zero() {
+      if a.negative == b.negative {
+        return align_zero_add(a, b)
+      }
+      let result_exp = if a.exponent <= b.exponent {
+        a.exponent
+      } else {
+        b.exponent
+      }
+      let neg = match ctx.rounding {
+        Floor => true
+        _ => false
+      }
+      return finite_zero(result_exp, neg)
+    }
     return align_zero_add(a, b)
   }
-  if a.coefficient.is_zero() && a.negative == b.negative {
+  if a.coefficient.is_zero() {
     return align_zero_add(b, a)
   }
   // Small-int fast path: when both operands fit in `Int64` and the
