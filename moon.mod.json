@@ -1,0 +1,8 @@
+{
+  "name": "dzmingli/decimal",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "source": "src",
+  "deps": {},
+  "description": "Arbitrary-precision decimal arithmetic for MoonBit"
+}

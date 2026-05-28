@@ -1,0 +1,70 @@
+{
+  "nodes": {
+    "haumea": {
+      "inputs": {
+        "nixpkgs": [
+          "nur-dzming",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1779649524,
+        "narHash": "sha256-iAxR5xUyra5kq5chmRnyUQ4gd7y8uR+Sy4dmYznuyUk=",
+        "owner": "nix-community",
+        "repo": "haumea",
+        "rev": "c2cfc9e1a046bf2ce56a10a4435943d0c5ddbb5d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "haumea",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1779560665,
+        "narHash": "sha256-tpyBcxPpcQb8ukyNF7DoCwfSY3VPsxHoYwj00Cayv5o=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "64c08a7ca051951c8eae34e3e3cb1e202fe36786",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nur-dzming": {
+      "inputs": {
+        "haumea": "haumea",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1779938224,
+        "narHash": "sha256-ltuqIMOjxuvohbdBDAoIg7iFNVjtsN6gxB8ElKMYEoM=",
+        "owner": "DzmingLi",
+        "repo": "nur-packages",
+        "rev": "a8bc403039020455239e9c1a7615bfe6d0436c76",
+        "type": "github"
+      },
+      "original": {
+        "owner": "DzmingLi",
+        "repo": "nur-packages",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nixpkgs": "nixpkgs",
+        "nur-dzming": "nur-dzming"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
