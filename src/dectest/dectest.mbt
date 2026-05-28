@@ -15,16 +15,27 @@ pub(all) struct TestCase {
   /// Active rounding mode; defaults to `HalfEven` until a `rounding:`
   /// directive overrides it.
   rounding : Rounding
+  /// Active `maxExponent` and `minExponent` directives; default to the
+  /// near-`Int.max` bounds Context uses when no directive is in scope.
+  max_exponent : Int
+  min_exponent : Int
+  /// Active `clamp` directive; defaults to off.
+  clamp : Bool
 }
 
 ///| Parse the full text of a `.decTest` source into test cases. Skips blank
-/// lines and comment lines (`--` to end of line). `precision:` and
-/// `rounding:` directives are tracked across the file so each emitted
-/// `TestCase` reports the context in scope for it.
+/// lines and comment lines (`--` to end of line). The `precision`,
+/// `rounding`, `maxExponent`, `minExponent`, and `clamp` directives are
+/// tracked across the file so each emitted `TestCase` reports the context
+/// in scope for it. Directive names are case-insensitive per the GDA
+/// convention.
 pub fn parse_dectest(text : String) -> Array[TestCase] {
   let cases = Array::new()
   let mut current_precision = 0
   let mut current_rounding = Rounding::HalfEven
+  let mut current_max_exp = 999_999_999
+  let mut current_min_exp = -999_999_999
+  let mut current_clamp = false
   for raw in text.split("\n") {
     let line = strip_dectest_comment(raw.to_owned())
     let trimmed = line.trim().to_owned()
@@ -34,18 +45,37 @@ pub fn parse_dectest(text : String) -> Array[TestCase] {
     // Directive line: has ':' but no '->'.
     if !trimmed.contains("->") && trimmed.contains(":") {
       match parse_directive(trimmed) {
-        Some(("precision", value)) =>
-          try @string.parse_int(value[:]) catch {
-            _ => ()
-          } noraise {
-            n => current_precision = n
+        Some((key, value)) => {
+          let key_lc = ascii_lowercase(key)
+          if key_lc == "precision" {
+            try @string.parse_int(value[:]) catch {
+              _ => ()
+            } noraise {
+              n => current_precision = n
+            }
+          } else if key_lc == "rounding" {
+            match parse_rounding_name(value) {
+              Some(r) => current_rounding = r
+              None => ()
+            }
+          } else if key_lc == "maxexponent" {
+            try @string.parse_int(value[:]) catch {
+              _ => ()
+            } noraise {
+              n => current_max_exp = n
+            }
+          } else if key_lc == "minexponent" {
+            try @string.parse_int(value[:]) catch {
+              _ => ()
+            } noraise {
+              n => current_min_exp = n
+            }
+          } else if key_lc == "clamp" {
+            // GDA writes "0" or "1"; treat anything else as off.
+            current_clamp = value == "1"
           }
-        Some(("rounding", value)) =>
-          match parse_rounding_name(value) {
-            Some(r) => current_rounding = r
-            None => ()
-          }
-        _ => ()
+        }
+        None => ()
       }
       continue
     }
@@ -55,6 +85,9 @@ pub fn parse_dectest(text : String) -> Array[TestCase] {
           ..c,
           precision: current_precision,
           rounding: current_rounding,
+          max_exponent: current_max_exp,
+          min_exponent: current_min_exp,
+          clamp: current_clamp,
         })
       None => ()
     }
@@ -123,6 +156,9 @@ fn parse_dectest_line(line : String) -> TestCase? {
     conditions,
     precision: 0,
     rounding: HalfEven,
+    max_exponent: 999_999_999,
+    min_exponent: -999_999_999,
+    clamp: false,
   })
 }
 
@@ -291,7 +327,13 @@ fn binary_ctx(
   let rhs = try Decimal::parse(case.operands[1]) catch {
     e => raise RunnerError("parse error in operand 1: \{e}")
   }
-  let ctx = Context::new(precision=case.precision, rounding=case.rounding)
+  let ctx = Context::new(
+    precision=case.precision,
+    rounding=case.rounding,
+    e_max=case.max_exponent,
+    e_min=case.min_exponent,
+    clamp=case.clamp,
+  )
   op(lhs, rhs, ctx).to_sci_string()
 }
 
@@ -321,6 +363,25 @@ fn format_operands(operands : Array[String]) -> String {
       buf.write_string(", ")
     }
     buf.write_string(op)
+  }
+  buf.to_string()
+}
+
+///| Lowercase the ASCII letters of a string. Directives in `.decTest` files
+/// are conventionally lowercase but the spec allows any case, so we
+/// normalise before matching.
+fn ascii_lowercase(s : String) -> String {
+  let buf = StringBuilder::new()
+  let n = s.length()
+  let mut i = 0
+  while i < n {
+    let c = char_at(s, i)
+    if c >= 'A' && c <= 'Z' {
+      buf.write_char((c.to_int() + 32).unsafe_to_char())
+    } else {
+      buf.write_char(c)
+    }
+    i = i + 1
   }
   buf.to_string()
 }
