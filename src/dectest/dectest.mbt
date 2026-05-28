@@ -342,6 +342,8 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(unary_ctx(case, Decimal::sqrt))
   } else if ascii_eq_ci(case.op, "class") {
     Some(unary_ctx_string(case, Decimal::number_class))
+  } else if ascii_eq_ci(case.op, "exp") {
+    Some(unary_ctx(case, Decimal::exp))
   } else {
     None
   }
