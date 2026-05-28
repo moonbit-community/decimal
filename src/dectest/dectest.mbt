@@ -312,6 +312,8 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(unary_ctx(case, Decimal::to_integral_value))
   } else if ascii_eq_ci(case.op, "tointegralx") {
     Some(unary_ctx(case, Decimal::to_integral_exact))
+  } else if ascii_eq_ci(case.op, "reduce") {
+    Some(unary_ctx(case, Decimal::reduce))
   } else {
     None
   }

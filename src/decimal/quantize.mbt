@@ -114,6 +114,44 @@ fn to_integral(d : Decimal, ctx : Context, raise_flags : Bool) -> Decimal {
   }
 }
 
+///| GDA `reduce` (also known as `normalize`): strip trailing zeros from
+/// the coefficient, raising the exponent to compensate, so the result
+/// has the same value but the most "concise" representation.
+///
+/// Zero is normalised to `exponent = 0` regardless of input exponent
+/// (`reduce(0E+5) = 0`); sign is preserved.
+///
+/// Re-finalises the result so precision rounding still applies if the
+/// stripped coefficient happens to exceed `ctx.precision` (unusual but
+/// possible for inputs that arrive over-wide).
+pub fn Decimal::reduce(self : Decimal, ctx : Context) -> Decimal {
+  match self.class {
+    SNaN => quiet_snan(self, ctx)
+    QNaN => self
+    Infinity => self
+    Finite => reduce_finite(self).finalize(ctx)
+  }
+}
+
+///| Coefficient-stripping body. Zero normalises to exp 0; non-zero strips
+/// trailing zeros by dividing by 10 while the last digit is 0.
+fn reduce_finite(d : Decimal) -> Decimal {
+  if d.coefficient.is_zero() {
+    return { ..d, exponent: 0 }
+  }
+  let mut coef = d.coefficient
+  let mut exp = d.exponent
+  while !coef.is_zero() {
+    let next = coef / 10N
+    if next * 10N != coef {
+      break
+    }
+    coef = next
+    exp = exp + 1
+  }
+  { ..d, coefficient: coef, exponent: exp }
+}
+
 ///| Finite path. Already-integer inputs (`exponent >= 0`) are returned
 /// unchanged. Otherwise drop the `-exponent` fractional digits under the
 /// active rounding mode.
