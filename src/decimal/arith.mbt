@@ -52,6 +52,55 @@ pub fn Decimal::abs(self : Decimal) -> Decimal {
 }
 
 // ---------------------------------------------------------------------------
+// Internal helpers shared across the arithmetic ops.
+//
+// These collapse the repetitive NaN-handling, signed-infinity, and zero-
+// constructor patterns that appeared on every op. None of them change
+// behaviour — they just give the ops a smaller, intent-revealing surface.
+// ---------------------------------------------------------------------------
+
+///|
+fn quiet_snan(d : Decimal, ctx : Context) -> Decimal {
+  ctx.flags.invalid_operation = true
+  { ..d, class: QNaN }
+}
+
+///|
+fn invalid_nan(ctx : Context) -> Decimal {
+  ctx.flags.invalid_operation = true
+  Decimal::nan()
+}
+
+///| Centralised NaN propagation. Returns `Some(d)` when one of the operands
+/// is a NaN (with the appropriate quietening / signal); the caller then
+/// short-circuits to that value. `None` lets the op continue with the
+/// non-NaN code path.
+fn propagate_nan(a : Decimal, b : Decimal, ctx : Context) -> Decimal? {
+  match (a.class, b.class) {
+    (SNaN, _) => Some(quiet_snan(a, ctx))
+    (_, SNaN) => Some(quiet_snan(b, ctx))
+    (QNaN, _) => Some(a)
+    (_, QNaN) => Some(b)
+    _ => None
+  }
+}
+
+///|
+fn signed_infinity(negative : Bool) -> Decimal {
+  { class: Infinity, negative, coefficient: 0N, exponent: 0 }
+}
+
+///|
+fn finite_zero(exponent : Int, negative : Bool) -> Decimal {
+  { class: Finite, negative, coefficient: 0N, exponent }
+}
+
+///|
+fn xor_sign(a : Decimal, b : Decimal) -> Bool {
+  a.negative != b.negative
+}
+
+// ---------------------------------------------------------------------------
 // Exact addition and subtraction.
 //
 // No rounding is applied — the result keeps every digit that arises from
@@ -75,27 +124,21 @@ pub fn Decimal::abs(self : Decimal) -> Decimal {
 /// * Sign of a zero result: same sign when both operands share a sign,
 ///   `+0` otherwise (the default-rounding rule).
 pub fn Decimal::add(self : Decimal, other : Decimal, ctx : Context) -> Decimal {
+  match propagate_nan(self, other, ctx) {
+    Some(d) => return d
+    None => ()
+  }
   match (self.class, other.class) {
-    (SNaN, _) => {
-      ctx.flags.invalid_operation = true
-      { ..self, class: QNaN }
-    }
-    (_, SNaN) => {
-      ctx.flags.invalid_operation = true
-      { ..other, class: QNaN }
-    }
-    (QNaN, _) => self
-    (_, QNaN) => other
     (Infinity, Infinity) =>
       if self.negative == other.negative {
         self
       } else {
-        ctx.flags.invalid_operation = true
-        Decimal::nan()
+        invalid_nan(ctx)
       }
     (Infinity, Finite) => self
     (Finite, Infinity) => other
     (Finite, Finite) => add_finite(self, other).round(ctx)
+    _ => abort("Decimal::add: unreachable class combination")
   }
 }
 
@@ -114,18 +157,9 @@ pub fn Decimal::subtract(
   other : Decimal,
   ctx : Context,
 ) -> Decimal {
-  match (self.class, other.class) {
-    (SNaN, _) => {
-      ctx.flags.invalid_operation = true
-      { ..self, class: QNaN }
-    }
-    (_, SNaN) => {
-      ctx.flags.invalid_operation = true
-      { ..other, class: QNaN }
-    }
-    (QNaN, _) => self
-    (_, QNaN) => other
-    _ => Decimal::add(self, { ..other, negative: !other.negative }, ctx)
+  match propagate_nan(self, other, ctx) {
+    Some(d) => d
+    None => Decimal::add(self, { ..other, negative: !other.negative }, ctx)
   }
 }
 
@@ -271,49 +305,27 @@ pub fn Decimal::multiply(
   other : Decimal,
   ctx : Context,
 ) -> Decimal {
+  match propagate_nan(self, other, ctx) {
+    Some(d) => return d
+    None => ()
+  }
+  let sign = xor_sign(self, other)
   match (self.class, other.class) {
-    (SNaN, _) => {
-      ctx.flags.invalid_operation = true
-      { ..self, class: QNaN }
-    }
-    (_, SNaN) => {
-      ctx.flags.invalid_operation = true
-      { ..other, class: QNaN }
-    }
-    (QNaN, _) => self
-    (_, QNaN) => other
     (Finite, Finite) => multiply_finite(self, other).round(ctx)
     (Infinity, Finite) =>
       if other.coefficient.is_zero() {
-        ctx.flags.invalid_operation = true
-        Decimal::nan()
+        invalid_nan(ctx)
       } else {
-        {
-          class: Infinity,
-          negative: self.negative != other.negative,
-          coefficient: 0N,
-          exponent: 0,
-        }
+        signed_infinity(sign)
       }
     (Finite, Infinity) =>
       if self.coefficient.is_zero() {
-        ctx.flags.invalid_operation = true
-        Decimal::nan()
+        invalid_nan(ctx)
       } else {
-        {
-          class: Infinity,
-          negative: self.negative != other.negative,
-          coefficient: 0N,
-          exponent: 0,
-        }
+        signed_infinity(sign)
       }
-    (Infinity, Infinity) =>
-      {
-        class: Infinity,
-        negative: self.negative != other.negative,
-        coefficient: 0N,
-        exponent: 0,
-      }
+    (Infinity, Infinity) => signed_infinity(sign)
+    _ => abort("Decimal::multiply: unreachable class combination")
   }
 }
 
@@ -442,56 +454,32 @@ pub fn Decimal::divide_int(
   other : Decimal,
   ctx : Context,
 ) -> Decimal {
+  match propagate_nan(self, other, ctx) {
+    Some(d) => return d
+    None => ()
+  }
+  let sign = xor_sign(self, other)
   match (self.class, other.class) {
-    (SNaN, _) => {
-      ctx.flags.invalid_operation = true
-      { ..self, class: QNaN }
-    }
-    (_, SNaN) => {
-      ctx.flags.invalid_operation = true
-      { ..other, class: QNaN }
-    }
-    (QNaN, _) => self
-    (_, QNaN) => other
-    (Infinity, Infinity) => {
-      ctx.flags.invalid_operation = true
-      Decimal::nan()
-    }
+    (Infinity, Infinity) => invalid_nan(ctx)
     (Infinity, Finite) => {
       if other.coefficient.is_zero() {
         ctx.flags.division_by_zero = true
       }
-      {
-        class: Infinity,
-        negative: self.negative != other.negative,
-        coefficient: 0N,
-        exponent: 0,
-      }
+      signed_infinity(sign)
     }
-    (Finite, Infinity) =>
-      {
-        class: Finite,
-        negative: self.negative != other.negative,
-        coefficient: 0N,
-        exponent: 0,
-      }
+    (Finite, Infinity) => finite_zero(0, sign)
     (Finite, Finite) =>
       if other.coefficient.is_zero() {
         if self.coefficient.is_zero() {
-          ctx.flags.invalid_operation = true
-          Decimal::nan()
+          invalid_nan(ctx)
         } else {
           ctx.flags.division_by_zero = true
-          {
-            class: Infinity,
-            negative: self.negative != other.negative,
-            coefficient: 0N,
-            exponent: 0,
-          }
+          signed_infinity(sign)
         }
       } else {
         divide_int_finite(self, other)
       }
+    _ => abort("Decimal::divide_int: unreachable class combination")
   }
 }
 
@@ -564,26 +552,16 @@ pub fn Decimal::remainder(
   ctx : Context,
 ) -> Decimal {
   let exact_ctx = Context::exact()
+  match propagate_nan(self, other, ctx) {
+    Some(d) => return d
+    None => ()
+  }
   match (self.class, other.class) {
-    (SNaN, _) => {
-      ctx.flags.invalid_operation = true
-      { ..self, class: QNaN }
-    }
-    (_, SNaN) => {
-      ctx.flags.invalid_operation = true
-      { ..other, class: QNaN }
-    }
-    (QNaN, _) => self
-    (_, QNaN) => other
-    (Infinity, _) => {
-      ctx.flags.invalid_operation = true
-      Decimal::nan()
-    }
+    (Infinity, _) => invalid_nan(ctx)
     (Finite, Infinity) => self
     (Finite, Finite) =>
       if other.coefficient.is_zero() {
-        ctx.flags.invalid_operation = true
-        Decimal::nan()
+        invalid_nan(ctx)
       } else {
         // Intermediate quotient and product stay exact — the final subtract
         // is the only place that applies the caller's precision.
@@ -596,5 +574,6 @@ pub fn Decimal::remainder(
           result
         }
       }
+    _ => abort("Decimal::remainder: unreachable class combination")
   }
 }
