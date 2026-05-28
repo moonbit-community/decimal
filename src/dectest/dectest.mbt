@@ -338,6 +338,8 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(unary_ctx(case, Decimal::next_minus))
   } else if ascii_eq_ci(case.op, "nexttoward") {
     Some(binary_ctx(case, Decimal::next_toward))
+  } else if ascii_eq_ci(case.op, "squareroot") {
+    Some(unary_ctx(case, Decimal::sqrt))
   } else {
     None
   }
