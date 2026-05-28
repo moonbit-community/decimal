@@ -284,6 +284,8 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(unary(case, Decimal::copy_negate))
   } else if ascii_eq_ci(case.op, "copysign") {
     Some(binary(case, Decimal::copy_sign))
+  } else if ascii_eq_ci(case.op, "divide") {
+    Some(binary_ctx(case, Decimal::divide))
   } else if ascii_eq_ci(case.op, "divideint") {
     Some(binary_ctx(case, Decimal::divide_int))
   } else if ascii_eq_ci(case.op, "remainder") {
