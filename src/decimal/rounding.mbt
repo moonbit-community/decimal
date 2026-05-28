@@ -25,20 +25,37 @@ pub fn Decimal::finalize(self : Decimal, ctx : Context) -> Decimal {
   }
 }
 
-///| Apply the exponent-range rules to an already-rounded finite. Two stages:
-/// overflow detection (GDA §9.5.1) and clamp fold-down (GDA §9.5.3).
-/// Underflow / subnormal handling will join here once quantize lands.
+///| Apply the exponent-range rules to an already-rounded finite. Three
+/// stages:
+///
+/// * Overflow (GDA §9.5.1) — non-zero result with `adjusted > e_max` goes
+///   to `±Infinity` or the largest representable, depending on rounding.
+/// * Subnormal-side etiny clamp — a result with `exponent < etiny` whose
+///   coefficient is zero gets its exponent lifted to etiny and `Clamped`
+///   raised. This is *unconditional*: the GDA spec treats the etiny floor
+///   as a representability invariant, distinct from the `clamp` opt-in.
+/// * Overflow-side clamp (GDA §9.5.3) — when `ctx.clamp` is on, finite
+///   results with `exponent > etop` get the exponent folded down to etop
+///   by padding the coefficient.
+///
+/// Non-zero subnormal (where the coefficient has more digits than fits at
+/// etiny) needs the underflow re-rounding path; that depends on quantize
+/// and lands separately.
 fn check_range(d : Decimal, ctx : Context) -> Decimal {
   if ctx.precision == 0 {
     return d
   }
-  // Zero values have no meaningful adjusted exponent and can't overflow,
-  // but they can still need clamping when ctx.clamp is on.
-  if !d.coefficient.is_zero() {
-    let adj = adjusted_exponent(d)
-    if adj > ctx.e_max {
-      return apply_overflow(d, ctx)
+  if d.coefficient.is_zero() {
+    let etiny = ctx.e_min - ctx.precision + 1
+    if d.exponent < etiny {
+      ctx.raise_clamped()
+      return { ..d, exponent: etiny }
     }
+    return if ctx.clamp { apply_clamp(d, ctx) } else { d }
+  }
+  let adj = adjusted_exponent(d)
+  if adj > ctx.e_max {
+    return apply_overflow(d, ctx)
   }
   if ctx.clamp {
     apply_clamp(d, ctx)
