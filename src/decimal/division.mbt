@@ -7,6 +7,58 @@
 // won't ship until rounding lands).
 // ---------------------------------------------------------------------------
 
+///| GDA `divide`: true division with precision-driven rounding. The result
+/// has `precision` digits (before final rounding) and an exponent chosen so
+/// that the value is `(a / b)` to within half a ULP under the active
+/// rounding mode.
+///
+/// Special values follow the usual NaN / Infinity propagation rules:
+/// * `Infinity / Infinity` → NaN (`Invalid_operation`).
+/// * `Infinity / finite-nonzero` → `±Infinity` (XOR sign).
+/// * `finite / Infinity` → `±0` (XOR sign).
+/// * `0 / x` (x ≠ 0) → signed `0` with `ideal_exp = a.exp - b.exp`.
+/// * `x / 0` (x ≠ 0) → `±Infinity` (`Division_by_zero` raised).
+/// * `0 / 0` → NaN (`Invalid_operation`).
+///
+/// Precision is required: when `ctx.precision == 0` and the division is
+/// not exact, the result is NaN with `Invalid_operation` raised — there's
+/// no stopping criterion for a non-terminating decimal (e.g. 1/3).
+pub fn Decimal::divide(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> Decimal {
+  match propagate_nan(self, other, ctx) {
+    Some(d) => return d
+    None => ()
+  }
+  let sign = xor_sign(self, other)
+  match (self.class, other.class) {
+    (Infinity, Infinity) => invalid_nan(ctx)
+    (Infinity, Finite) => {
+      if other.coefficient.is_zero() {
+        // Inf / 0 is Inf (the divisor's zero magnitude is dwarfed). GDA
+        // does not raise division-by-zero for an infinite dividend.
+        ()
+      }
+      signed_infinity(sign)
+    }
+    (Finite, Infinity) => finite_zero(0, sign)
+    (Finite, Finite) =>
+      if other.coefficient.is_zero() {
+        if self.coefficient.is_zero() {
+          invalid_nan(ctx)
+        } else {
+          ctx.raise_division_by_zero()
+          signed_infinity(sign)
+        }
+      } else {
+        divide_finite(self, other, ctx).finalize(ctx)
+      }
+    _ => abort("Decimal::divide: unreachable class combination")
+  }
+}
+
 ///| GDA `divide-integer`: truncated integer quotient `trunc(a / b)`.
 ///
 /// * Special values follow the usual NaN / Infinity propagation rules.
