@@ -175,3 +175,50 @@ test "finalize precision-zero skips overflow check entirely" {
   )
   assert_false(ctx.flags.overflow)
 }
+
+///|
+test "finalize clamp folds exponent down" {
+  // precision=3, e_max=5 → etop=3. `1E+5` is in range (adj=5 ≤ e_max), but
+  // exponent 5 > etop=3, so clamp pads the coefficient: 1 × 10^(5-3) = 100,
+  // exponent = 3. Numerically still 1E+5, but written as "1.00E+5".
+  let ctx = Context::new(precision=3, e_max=5, clamp=true)
+  assert_eq(
+    Decimal::finalize(Decimal::parse("1E+5"), ctx).to_sci_string(), "1.00E+5",
+  )
+  assert_true(ctx.flags.clamped)
+  assert_false(ctx.flags.overflow)
+}
+
+///|
+test "finalize clamp leaves in-range exponents alone" {
+  // precision=3, e_max=5 → etop=3. Input has exponent exactly at etop, so
+  // there's nothing to fold; the value passes through unchanged.
+  let ctx = Context::new(precision=3, e_max=5, clamp=true)
+  assert_eq(
+    Decimal::finalize(Decimal::parse("1.23E+5"), ctx).to_sci_string(),
+    "1.23E+5",
+  )
+  assert_false(ctx.flags.clamped)
+}
+
+///|
+test "finalize clamp off leaves exponents above etop alone" {
+  // Same input as the clamp-on case, but clamp defaults off: exponent 5
+  // passes through, no padding, no clamped flag.
+  let ctx = Context::new(precision=3, e_max=5)
+  assert_eq(
+    Decimal::finalize(Decimal::parse("1E+5"), ctx).to_sci_string(), "1E+5",
+  )
+  assert_false(ctx.flags.clamped)
+}
+
+///|
+test "finalize clamp applies to zero too" {
+  // A zero with exponent above etop gets folded — preserves the "fits in
+  // the storable exponent range" invariant the IEEE-754 formats need.
+  let ctx = Context::new(precision=3, e_max=5, clamp=true)
+  assert_eq(
+    Decimal::finalize(Decimal::parse("0E+5"), ctx).to_sci_string(), "0E+3",
+  )
+  assert_true(ctx.flags.clamped)
+}

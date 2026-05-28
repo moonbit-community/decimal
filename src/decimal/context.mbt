@@ -81,18 +81,26 @@ pub(all) struct Context {
   rounding : Rounding
   e_min : Int
   e_max : Int
+  /// When set, finite results with `exponent > etop = e_max - precision + 1`
+  /// get their exponent folded down to `etop` by padding the coefficient
+  /// with trailing zeros, and `clamped` is raised. Required for IEEE-754
+  /// decimal{32,64,128} conformance; off by default so the bare GDA
+  /// arithmetic surface preserves trailing-zero scale.
+  clamp : Bool
   flags : Flags
 }
 
 ///| Build a Context. Defaults: no precision cap, half-to-even rounding,
-/// near-`Int.max` exponent range (effectively unbounded for dectest's range).
+/// near-`Int.max` exponent range (effectively unbounded for dectest's range),
+/// no clamp.
 pub fn Context::new(
   precision~ : Int = 0,
   rounding~ : Rounding = HalfEven,
   e_min~ : Int = -999_999_999,
   e_max~ : Int = 999_999_999,
+  clamp~ : Bool = false,
 ) -> Context {
-  { precision, rounding, e_min, e_max, flags: Flags::new() }
+  { precision, rounding, e_min, e_max, clamp, flags: Flags::new() }
 }
 
 ///| Convenience: a context that performs no rounding and lets every result
@@ -122,4 +130,8 @@ fn Context::raise_division_by_zero(self : Context) -> Unit {
 
 fn Context::raise_overflow(self : Context) -> Unit {
   self.flags.overflow = true
+}
+
+fn Context::raise_clamped(self : Context) -> Unit {
+  self.flags.clamped = true
 }

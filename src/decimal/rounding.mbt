@@ -25,22 +25,46 @@ pub fn Decimal::finalize(self : Decimal, ctx : Context) -> Decimal {
   }
 }
 
-///| Apply the exponent-range rules to an already-rounded finite. Today this
-/// only detects overflow; underflow/subnormal and the clamp fold-down will
-/// be added here once the subnormal flow lands.
+///| Apply the exponent-range rules to an already-rounded finite. Two stages:
+/// overflow detection (GDA §9.5.1) and clamp fold-down (GDA §9.5.3).
+/// Underflow / subnormal handling will join here once quantize lands.
 fn check_range(d : Decimal, ctx : Context) -> Decimal {
   if ctx.precision == 0 {
     return d
   }
-  // Zero values have no meaningful adjusted exponent and can't overflow.
-  if d.coefficient.is_zero() {
+  // Zero values have no meaningful adjusted exponent and can't overflow,
+  // but they can still need clamping when ctx.clamp is on.
+  if !d.coefficient.is_zero() {
+    let adj = adjusted_exponent(d)
+    if adj > ctx.e_max {
+      return apply_overflow(d, ctx)
+    }
+  }
+  if ctx.clamp {
+    apply_clamp(d, ctx)
+  } else {
+    d
+  }
+}
+
+///| GDA §9.5.3 clamp. When the result's exponent exceeds `etop`, fold it
+/// down to `etop` by multiplying the coefficient by `10^(exp - etop)`, and
+/// raise `clamped`. The numeric value is preserved (trailing zeros land in
+/// the coefficient instead of the exponent), but the resulting coefficient
+/// may exceed `precision` digits — which is fine, since the IEEE-754
+/// formats define the storable digit count to *include* the padding.
+fn apply_clamp(d : Decimal, ctx : Context) -> Decimal {
+  let etop = ctx.e_max - ctx.precision + 1
+  if d.exponent <= etop {
     return d
   }
-  let adj = adjusted_exponent(d)
-  if adj > ctx.e_max {
-    return apply_overflow(d, ctx)
+  let pad = d.exponent - etop
+  ctx.raise_clamped()
+  {
+    ..d,
+    coefficient: scale_up(d.coefficient, pad),
+    exponent: etop,
   }
-  d
 }
 
 ///| GDA §9.5.1 overflow. The rounding mode picks between `±Infinity` and
