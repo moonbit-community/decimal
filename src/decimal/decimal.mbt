@@ -41,6 +41,11 @@ pub(all) struct Decimal {
   exponent : Int
 } derive(Eq)
 
+///| Default rendering is GDA `to-scientific-string`. See `Decimal::to_sci_string`.
+pub impl Show for Decimal with fn to_string(self) {
+  Decimal::to_sci_string(self)
+}
+
 ///| Construct a finite decimal `(-1)^negative * coefficient * 10^exponent`.
 /// Panics if `coefficient` is negative — encode the sign in `negative` instead.
 pub fn Decimal::finite(
