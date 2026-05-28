@@ -1,105 +1,3 @@
-///| GDA `minus`: equivalent to `subtract('0', N)`. Concretely:
-///
-/// * Finite non-zero: flip the sign bit, coefficient and exponent unchanged.
-/// * Finite zero: result is `+0` with the same exponent (the GDA addition rule
-///   for two zeros with opposite signs yields `+0` under default rounding).
-/// * Infinity: flip the sign bit.
-/// * QNaN: propagate the operand unchanged (NaN keeps its original sign).
-/// * SNaN: convert to QNaN with the same sign and payload. The
-///   `Invalid_operation` signal that GDA prescribes here is silently dropped
-///   until a `Context` is wired up.
-pub fn Decimal::minus(self : Decimal) -> Decimal {
-  match self.class {
-    QNaN => self
-    SNaN => { ..self, class: QNaN }
-    Finite =>
-      if self.coefficient.is_zero() {
-        { ..self, negative: false }
-      } else {
-        { ..self, negative: !self.negative }
-      }
-    Infinity => { ..self, negative: !self.negative }
-  }
-}
-
-///| GDA `plus`: equivalent to `add('0', N)`. Differs from `minus` only on
-/// finite non-zero and Infinity (where it preserves the sign instead of
-/// flipping). Zero is canonicalized to `+0`, QNaN propagates unchanged, and
-/// sNaN is silently quietened.
-pub fn Decimal::plus(self : Decimal) -> Decimal {
-  match self.class {
-    QNaN => self
-    SNaN => { ..self, class: QNaN }
-    Finite =>
-      if self.coefficient.is_zero() {
-        { ..self, negative: false }
-      } else {
-        self
-      }
-    Infinity => self
-  }
-}
-
-///| GDA `abs`: `minus` if the operand's sign bit is set, `plus` otherwise.
-/// Note that for NaN inputs the sign bit is *not* cleared — NaN propagation
-/// wins over the "absolute value" intuition, so e.g. `abs(-NaN22) = -NaN22`.
-pub fn Decimal::abs(self : Decimal) -> Decimal {
-  if self.negative {
-    Decimal::minus(self)
-  } else {
-    Decimal::plus(self)
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Internal helpers shared across the arithmetic ops.
-//
-// These collapse the repetitive NaN-handling, signed-infinity, and zero-
-// constructor patterns that appeared on every op. None of them change
-// behaviour — they just give the ops a smaller, intent-revealing surface.
-// ---------------------------------------------------------------------------
-
-///|
-fn quiet_snan(d : Decimal, ctx : Context) -> Decimal {
-  ctx.flags.invalid_operation = true
-  { ..d, class: QNaN }
-}
-
-///|
-fn invalid_nan(ctx : Context) -> Decimal {
-  ctx.flags.invalid_operation = true
-  Decimal::nan()
-}
-
-///| Centralised NaN propagation. Returns `Some(d)` when one of the operands
-/// is a NaN (with the appropriate quietening / signal); the caller then
-/// short-circuits to that value. `None` lets the op continue with the
-/// non-NaN code path.
-fn propagate_nan(a : Decimal, b : Decimal, ctx : Context) -> Decimal? {
-  match (a.class, b.class) {
-    (SNaN, _) => Some(quiet_snan(a, ctx))
-    (_, SNaN) => Some(quiet_snan(b, ctx))
-    (QNaN, _) => Some(a)
-    (_, QNaN) => Some(b)
-    _ => None
-  }
-}
-
-///|
-fn signed_infinity(negative : Bool) -> Decimal {
-  { class: Infinity, negative, coefficient: 0N, exponent: 0 }
-}
-
-///|
-fn finite_zero(exponent : Int, negative : Bool) -> Decimal {
-  { class: Finite, negative, coefficient: 0N, exponent }
-}
-
-///|
-fn xor_sign(a : Decimal, b : Decimal) -> Bool {
-  a.negative != b.negative
-}
-
 // ---------------------------------------------------------------------------
 // Exact addition and subtraction.
 //
@@ -184,7 +82,7 @@ fn add_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
   if b.coefficient.is_zero() {
     if a.coefficient.is_zero() {
       if a.negative == b.negative {
-        return align_zero_add(a, b)
+        return align_zero_add(a, b, ctx)
       }
       let result_exp = if a.exponent <= b.exponent {
         a.exponent
@@ -197,10 +95,10 @@ fn add_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
       }
       return finite_zero(result_exp, neg)
     }
-    return align_zero_add(a, b)
+    return align_zero_add(a, b, ctx)
   }
   if a.coefficient.is_zero() {
-    return align_zero_add(b, a)
+    return align_zero_add(b, a, ctx)
   }
   // Small-int fast path: when both operands fit in `Int64` and the
   // alignment factor isn't too large, do the whole add in primitive Int64,
@@ -278,21 +176,50 @@ fn scale_up_i64(n : Int64, shift : Int) -> Int64? {
   }
 }
 
-///| Fast path for `non_zero + zero` (and `zero + zero` when signs match):
-/// the result is the non-zero operand, with exponent reduced to the smaller
-/// of the two so trailing-zero count is preserved.
-fn align_zero_add(non_zero : Decimal, zero : Decimal) -> Decimal {
-  if zero.exponent < non_zero.exponent {
-    {
-      ..non_zero,
-      coefficient: scale_up(
-        non_zero.coefficient,
-        non_zero.exponent - zero.exponent,
-      ),
-      exponent: zero.exponent,
+///| Fast path for `non_zero + zero` (and `zero + zero` when signs match).
+///
+/// Without precision, GDA's "result exponent = min(a.exp, b.exp)" rule needs
+/// the non-zero operand scaled up to the smaller exponent so trailing-zero
+/// scale is preserved. With precision, the rounded result has at most
+/// `precision` digits — so we never need to materialise a coefficient with
+/// more than `precision` digits, regardless of the exponent gap. That keeps
+/// `add(0, 9E+999)`-style cases from allocating a 1000-digit BigInt only to
+/// throw most of it away in `round_finite`.
+fn align_zero_add(
+  non_zero : Decimal,
+  zero : Decimal,
+  ctx : Context,
+) -> Decimal {
+  let shift = non_zero.exponent - zero.exponent
+  if shift <= 0 {
+    return non_zero
+  }
+  // Both-zero case: value is zero regardless of scaling, so just preserve
+  // the smaller exponent without inventing a "precision-bounded" form.
+  if non_zero.coefficient.is_zero() {
+    return { ..non_zero, exponent: zero.exponent }
+  }
+  let n_digits = digit_count(non_zero.coefficient)
+  // Precision-bounded fast path: pad with only as many trailing zeros as
+  // precision allows. The resulting coefficient ends with the same trailing
+  // zeros `round_finite` would settle on, with no oversized intermediate.
+  if ctx.precision > 0 && n_digits + shift > ctx.precision {
+    let pad = ctx.precision - n_digits
+    if pad <= 0 {
+      // Original coefficient already too long; let round_finite handle it.
+      return non_zero
     }
-  } else {
-    non_zero
+    ctx.flags.rounded = true
+    return {
+      ..non_zero,
+      coefficient: non_zero.coefficient * pow10(pad),
+      exponent: non_zero.exponent - pad,
+    }
+  }
+  {
+    ..non_zero,
+    coefficient: scale_up(non_zero.coefficient, shift),
+    exponent: zero.exponent,
   }
 }
 
@@ -410,40 +337,6 @@ fn signed_add(
     }
   }
 }
-// ---------------------------------------------------------------------------
-// Bit-level sign operations: `copy`, `copy_abs`, `copy_negate`, `copy_sign`.
-//
-// These never apply arithmetic rules — sNaN passes through as sNaN (no
-// `Invalid_operation` signal), payloads are preserved exactly, and zero is
-// *not* canonicalised to `+0`. Use these when you want a sign operation
-// without disturbing the operand's class.
-// ---------------------------------------------------------------------------
-
-///| GDA `copy`: structural identity. The operand is returned unchanged. The
-/// op exists in the spec so that `copy(sNaN)` round-trips as `sNaN` instead
-/// of being quietened — a property no arithmetic op offers.
-pub fn Decimal::copy(self : Decimal) -> Decimal {
-  self
-}
-
-///| GDA `copyAbs`: clear the sign bit. Unlike `abs`, the sign of NaN is
-/// cleared too (`copyAbs(-NaN10) = NaN10`).
-pub fn Decimal::copy_abs(self : Decimal) -> Decimal {
-  { ..self, negative: false }
-}
-
-///| GDA `copyNegate`: flip the sign bit. Unlike `minus`, the sign of NaN is
-/// flipped too and zero stays signed.
-pub fn Decimal::copy_negate(self : Decimal) -> Decimal {
-  { ..self, negative: !self.negative }
-}
-
-///| GDA `copySign`: take everything from `self` except the sign bit, which
-/// comes from `other`.
-pub fn Decimal::copy_sign(self : Decimal, other : Decimal) -> Decimal {
-  { ..self, negative: other.negative }
-}
-
 // ---------------------------------------------------------------------------
 // Integer division and remainder.
 //
