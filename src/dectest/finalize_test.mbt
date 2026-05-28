@@ -156,14 +156,17 @@ test "finalize overflow under Ceiling and Floor tracks sign" {
 }
 
 ///|
-test "finalize zero never overflows regardless of exponent" {
-  // A zero with a huge exponent has no representable value to overflow; the
-  // exponent passes through unchanged.
+test "finalize zero never overflows but its exponent clamps to e_max" {
+  // A zero has no significant digits, so it can't overflow — but the GDA
+  // spec still bounds zero's exponent in [etiny, e_max] for representability.
+  // A zero above e_max is folded down to e_max with Clamped (matches apd's
+  // setExponent zero branch); the Overflow flag stays clear.
   let ctx = Context::new(precision=3, e_max=5, rounding=HalfUp)
   assert_eq(
-    Decimal::finalize(Decimal::parse("0E+99"), ctx).to_sci_string(), "0E+99",
+    Decimal::finalize(Decimal::parse("0E+99"), ctx).to_sci_string(), "0E+5",
   )
   assert_false(ctx.flags.overflow)
+  assert_true(ctx.flags.clamped)
 }
 
 ///|

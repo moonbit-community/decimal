@@ -51,6 +51,16 @@ fn check_range(d : Decimal, ctx : Context) -> Decimal {
       ctx.raise_clamped()
       return { ..d, exponent: etiny }
     }
+    // The storable upper bound for a zero exponent is `e_max`, not `etop`:
+    // a zero has no significant digits, so its exponent isn't constrained
+    // by the "leading digit at e_max" rule that defines etop for finite
+    // non-zero. Clamp unconditionally (matches apd's setExponent zero
+    // branch and decNumber's "clamp zero exponent into [etiny, emax]"
+    // invariant).
+    if d.exponent > ctx.e_max {
+      ctx.raise_clamped()
+      return { ..d, exponent: ctx.e_max }
+    }
     return if ctx.clamp { apply_clamp(d, ctx) } else { d }
   }
   let adj = adjusted_exponent(d)
