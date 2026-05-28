@@ -178,6 +178,8 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(binary(case, Decimal::add))
   } else if ascii_eq_ci(case.op, "subtract") {
     Some(binary(case, Decimal::subtract))
+  } else if ascii_eq_ci(case.op, "multiply") {
+    Some(binary(case, Decimal::multiply))
   } else {
     None
   }

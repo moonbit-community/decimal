@@ -135,6 +135,64 @@ fn scale_up(coeff : BigInt, shift : Int) -> BigInt {
   }
 }
 
+///| GDA `multiply`. Coefficients multiply, exponents add, signs XOR.
+///
+/// Special values follow the usual priority: sNaN wins over QNaN (with the
+/// quieten-and-keep-sign rule); `0 * Infinity` is `NaN + Invalid_operation`
+/// (signal currently dropped); finite-nonzero * Infinity yields an infinity
+/// with the XOR sign; Infinity * Infinity yields the XOR-signed Infinity.
+pub fn Decimal::multiply(self : Decimal, other : Decimal) -> Decimal {
+  match (self.class, other.class) {
+    (SNaN, _) => { ..self, class: QNaN }
+    (_, SNaN) => { ..other, class: QNaN }
+    (QNaN, _) => self
+    (_, QNaN) => other
+    (Finite, Finite) => multiply_finite(self, other)
+    (Infinity, Finite) =>
+      if other.coefficient.is_zero() {
+        Decimal::nan()
+      } else {
+        {
+          class: Infinity,
+          negative: self.negative != other.negative,
+          coefficient: 0N,
+          exponent: 0,
+        }
+      }
+    (Finite, Infinity) =>
+      if self.coefficient.is_zero() {
+        Decimal::nan()
+      } else {
+        {
+          class: Infinity,
+          negative: self.negative != other.negative,
+          coefficient: 0N,
+          exponent: 0,
+        }
+      }
+    (Infinity, Infinity) =>
+      {
+        class: Infinity,
+        negative: self.negative != other.negative,
+        coefficient: 0N,
+        exponent: 0,
+      }
+  }
+}
+
+///| Multiply two finite Decimals: coefficients multiply, exponents add. The
+/// result sign is the XOR of operand signs even when the coefficient is zero
+/// (so `-0 * +5 = -0`, per GDA's "sign of zero result is XOR of operand signs"
+/// rule).
+fn multiply_finite(a : Decimal, b : Decimal) -> Decimal {
+  {
+    class: Finite,
+    negative: a.negative != b.negative,
+    coefficient: a.coefficient * b.coefficient,
+    exponent: a.exponent + b.exponent,
+  }
+}
+
 ///| Add two non-negative magnitudes carrying signs separately, returning the
 /// magnitude and sign of the result.
 fn signed_add(
