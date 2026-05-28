@@ -344,6 +344,12 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(unary_ctx_string(case, Decimal::number_class))
   } else if ascii_eq_ci(case.op, "exp") {
     Some(unary_ctx(case, Decimal::exp))
+  } else if ascii_eq_ci(case.op, "ln") {
+    Some(unary_ctx(case, Decimal::ln))
+  } else if ascii_eq_ci(case.op, "log10") {
+    Some(unary_ctx(case, Decimal::log10))
+  } else if ascii_eq_ci(case.op, "power") {
+    Some(binary_ctx(case, Decimal::power))
   } else {
     None
   }
