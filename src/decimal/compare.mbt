@@ -6,6 +6,63 @@
 // family.
 // ---------------------------------------------------------------------------
 
+///| GDA `compare`: numeric comparison returning `-1`, `0`, or `1` as a
+/// Decimal. Distinct from `compare-total` in that NaN operands propagate
+/// (compare-total wraps NaN into the total order) and values that are
+/// numerically equal but differ in scale (e.g. `1` vs `1.0`) return `0`.
+///
+/// sNaN in either operand: signals `Invalid_operation` and returns the
+/// quietened sNaN. QNaN: propagates per the usual left-to-right rule.
+///
+/// For infinities: `-Infinity < every finite < +Infinity`. Two infinities
+/// of the same sign are equal; opposite signs use the sign rule.
+pub fn Decimal::compare(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> Decimal {
+  match propagate_nan(self, other, ctx) {
+    Some(d) => return d
+    None => ()
+  }
+  Decimal::of_int(compare_numeric_int(self, other))
+}
+
+///| Signed-numeric comparison for non-NaN operands. Returns the same
+/// `-1` / `0` / `+1` shape as `compare_total_int`, but follows the
+/// "value-only, scale-agnostic" rule of `compare`.
+fn compare_numeric_int(a : Decimal, b : Decimal) -> Int {
+  match (a.class, b.class) {
+    (Infinity, Infinity) =>
+      if a.negative == b.negative {
+        0
+      } else if a.negative {
+        -1
+      } else {
+        1
+      }
+    (Infinity, Finite) => if a.negative { -1 } else { 1 }
+    (Finite, Infinity) => if b.negative { 1 } else { -1 }
+    (Finite, Finite) => {
+      if a.coefficient.is_zero() && b.coefficient.is_zero() {
+        return 0
+      }
+      if a.negative != b.negative {
+        return if a.negative { -1 } else { 1 }
+      }
+      let mag = compare_magnitudes(
+        a.coefficient, a.exponent, b.coefficient, b.exponent,
+      )
+      if a.negative {
+        -mag
+      } else {
+        mag
+      }
+    }
+    _ => abort("compare_numeric_int: NaN should be filtered by propagate_nan")
+  }
+}
+
 ///| GDA `compare-total`: total ordering across every Decimal value,
 /// including NaNs. Returns `-1`, `0`, or `1` as a `Decimal`.
 ///

@@ -290,6 +290,8 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(binary_ctx(case, Decimal::divide_int))
   } else if ascii_eq_ci(case.op, "remainder") {
     Some(binary_ctx(case, Decimal::remainder))
+  } else if ascii_eq_ci(case.op, "compare") {
+    Some(binary_ctx(case, Decimal::compare))
   } else if ascii_eq_ci(case.op, "comparetotal") {
     Some(binary(case, Decimal::compare_total))
   } else if ascii_eq_ci(case.op, "comparetotmag") {
