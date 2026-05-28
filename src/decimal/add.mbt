@@ -100,6 +100,23 @@ fn add_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
   if a.coefficient.is_zero() {
     return align_zero_add(b, a, ctx)
   }
+  // Below-the-noise short-circuit. Only applies for rounding modes whose
+  // decision is determined by digits within half a ULP — `Up`, `Ceiling`,
+  // `Floor`, and `ZeroFiveUp` are sensitive to *any* non-zero discard, so
+  // for those we still have to materialise the alignment and let
+  // `round_finite` see the discarded bit.
+  if ctx.precision > 0 && is_half_mode(ctx.rounding) {
+    let a_adj = a.exponent + digit_count(a.coefficient) - 1
+    let b_adj = b.exponent + digit_count(b.coefficient) - 1
+    if a_adj > b_adj + ctx.precision + 1 {
+      ctx.flags.inexact = true
+      return align_zero_add(a, b, ctx)
+    }
+    if b_adj > a_adj + ctx.precision + 1 {
+      ctx.flags.inexact = true
+      return align_zero_add(b, a, ctx)
+    }
+  }
   // Small-int fast path: when both operands fit in `Int64` and the
   // alignment factor isn't too large, do the whole add in primitive Int64,
   // skipping BigInt allocations for scale_up / signed_add. The path bails
@@ -210,3 +227,18 @@ fn align_zero_add(
   }
 }
 
+///| Whether the rounding mode is "half-aware" — its decision depends on
+/// whether the discarded portion exceeds half a ULP, with sub-half-ULP
+/// discards never crossing a kept-digit boundary. Below-the-noise short-
+/// circuits are safe here regardless of operand signs.
+///
+/// `Down` is excluded even though same-sign Down would be safe, because the
+/// opposite-sign borrow can shave the last kept digit (`123456789 +
+/// -0.000001 = 123456788.999...` truncates to `123456788`, not `123456789`).
+/// The conservative gate keeps the shortcut independent of operand signs.
+fn is_half_mode(r : Rounding) -> Bool {
+  match r {
+    HalfUp | HalfEven | HalfDown => true
+    Up | Down | Ceiling | Floor | ZeroFiveUp => false
+  }
+}
