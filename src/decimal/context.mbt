@@ -119,3 +119,7 @@ fn Context::raise_invalid_operation(self : Context) -> Unit {
 fn Context::raise_division_by_zero(self : Context) -> Unit {
   self.flags.division_by_zero = true
 }
+
+fn Context::raise_overflow(self : Context) -> Unit {
+  self.flags.overflow = true
+}

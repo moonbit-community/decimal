@@ -2,16 +2,71 @@
 // Result finalisation and precision rounding.
 // ---------------------------------------------------------------------------
 
-///| Finalise a `Decimal` result under the active context. Today this means
-/// precision-driven rounding and status flags; exponent range enforcement
-/// (`e_min` / `e_max`) will live here too.
+///| Finalise a `Decimal` result under the active context: round to
+/// `precision`, then enforce the exponent range. Non-finite results pass
+/// through unchanged — NaN and Infinity have no representation to round and
+/// no exponent to clamp.
 ///
-/// On any precision-driven adjustment, `ctx.flags.rounded` is raised; on a
-/// truncation that discards non-zero digits, `ctx.flags.inexact` also goes up.
+/// Flags raised here:
+/// * `rounded` — whenever precision-driven adjustment shortened the
+///   coefficient.
+/// * `inexact` — when that shortening discarded non-zero digits, or when
+///   overflow truncated a finite result.
+/// * `overflow` — when the rounded result's adjusted exponent exceeds
+///   `e_max`. Per GDA the result then becomes `±Infinity` or the
+///   largest-finite-representable value, depending on the rounding mode.
+///
+/// `underflow` / `subnormal` / `clamped` are not raised yet; those land
+/// alongside the subnormal handling and the `clamp` field on Context.
 pub fn Decimal::finalize(self : Decimal, ctx : Context) -> Decimal {
   match self.class {
-    Finite => round_finite(self, ctx)
+    Finite => check_range(round_finite(self, ctx), ctx)
     _ => self
+  }
+}
+
+///| Apply the exponent-range rules to an already-rounded finite. Today this
+/// only detects overflow; underflow/subnormal and the clamp fold-down will
+/// be added here once the subnormal flow lands.
+fn check_range(d : Decimal, ctx : Context) -> Decimal {
+  if ctx.precision == 0 {
+    return d
+  }
+  // Zero values have no meaningful adjusted exponent and can't overflow.
+  if d.coefficient.is_zero() {
+    return d
+  }
+  let adj = adjusted_exponent(d)
+  if adj > ctx.e_max {
+    return apply_overflow(d, ctx)
+  }
+  d
+}
+
+///| GDA §9.5.1 overflow. The rounding mode picks between `±Infinity` and
+/// the largest finite representable (`(10^precision - 1) × 10^etop`,
+/// `etop = e_max - precision + 1`). `overflow`, `inexact`, and `rounded` all
+/// fire.
+fn apply_overflow(d : Decimal, ctx : Context) -> Decimal {
+  ctx.raise_overflow()
+  ctx.raise_inexact()
+  ctx.raise_rounded()
+  let to_inf = match ctx.rounding {
+    HalfUp | HalfEven | HalfDown | Up => true
+    Ceiling => !d.negative
+    Floor => d.negative
+    Down | ZeroFiveUp => false
+  }
+  if to_inf {
+    signed_infinity(d.negative)
+  } else {
+    let etop = ctx.e_max - ctx.precision + 1
+    {
+      class: Finite,
+      negative: d.negative,
+      coefficient: pow10(ctx.precision) - 1N,
+      exponent: etop,
+    }
   }
 }
 

@@ -97,3 +97,81 @@ test "finalize up moves any discarded non-zero away from zero" {
   assert_eq(Decimal::finalize(Decimal::parse("1.01"), ctx).to_sci_string(), "1.1")
   assert_eq(Decimal::finalize(Decimal::parse("-1.01"), ctx).to_sci_string(), "-1.1")
 }
+
+///|
+test "finalize overflow to infinity in half-aware modes" {
+  // precision=3, e_max=5 → etop=3, largest finite = 999E+3. `1E+6` has
+  // adjusted exponent 6 > 5, so it overflows; HalfUp routes to +Infinity.
+  let ctx = Context::new(precision=3, e_max=5, rounding=HalfUp)
+  assert_eq(
+    Decimal::finalize(Decimal::parse("1E+6"), ctx).to_sci_string(), "Infinity",
+  )
+  assert_true(ctx.flags.overflow)
+  assert_true(ctx.flags.inexact)
+  assert_true(ctx.flags.rounded)
+}
+
+///|
+test "finalize overflow honours sign for half-aware modes" {
+  let ctx = Context::new(precision=3, e_max=5, rounding=HalfEven)
+  assert_eq(
+    Decimal::finalize(Decimal::parse("-1E+6"), ctx).to_sci_string(), "-Infinity",
+  )
+  assert_true(ctx.flags.overflow)
+}
+
+///|
+test "finalize overflow to largest finite under Down" {
+  // Down never invents trailing digits; on overflow it caps at 999E+3.
+  let ctx = Context::new(precision=3, e_max=5, rounding=Down)
+  assert_eq(
+    Decimal::finalize(Decimal::parse("1E+6"), ctx).to_sci_string(), "9.99E+5",
+  )
+  assert_true(ctx.flags.overflow)
+}
+
+///|
+test "finalize overflow under Ceiling and Floor tracks sign" {
+  // Ceiling: +overflow → +Inf, -overflow → largest finite (toward zero).
+  let ctx_c = Context::new(precision=3, e_max=5, rounding=Ceiling)
+  assert_eq(
+    Decimal::finalize(Decimal::parse("1E+6"), ctx_c).to_sci_string(),
+    "Infinity",
+  )
+  let ctx_c2 = Context::new(precision=3, e_max=5, rounding=Ceiling)
+  assert_eq(
+    Decimal::finalize(Decimal::parse("-1E+6"), ctx_c2).to_sci_string(),
+    "-9.99E+5",
+  )
+  // Floor: mirror.
+  let ctx_f = Context::new(precision=3, e_max=5, rounding=Floor)
+  assert_eq(
+    Decimal::finalize(Decimal::parse("1E+6"), ctx_f).to_sci_string(), "9.99E+5",
+  )
+  let ctx_f2 = Context::new(precision=3, e_max=5, rounding=Floor)
+  assert_eq(
+    Decimal::finalize(Decimal::parse("-1E+6"), ctx_f2).to_sci_string(),
+    "-Infinity",
+  )
+}
+
+///|
+test "finalize zero never overflows regardless of exponent" {
+  // A zero with a huge exponent has no representable value to overflow; the
+  // exponent passes through unchanged.
+  let ctx = Context::new(precision=3, e_max=5, rounding=HalfUp)
+  assert_eq(
+    Decimal::finalize(Decimal::parse("0E+99"), ctx).to_sci_string(), "0E+99",
+  )
+  assert_false(ctx.flags.overflow)
+}
+
+///|
+test "finalize precision-zero skips overflow check entirely" {
+  // Without precision, GDA disables range checks even when e_max is small.
+  let ctx = Context::exact()
+  assert_eq(
+    Decimal::finalize(Decimal::parse("1E+999"), ctx).to_sci_string(), "1E+999",
+  )
+  assert_false(ctx.flags.overflow)
+}
