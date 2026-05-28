@@ -57,14 +57,40 @@ pub fn Decimal::finite(
   { class: Finite, negative, coefficient, exponent }
 }
 
+///| Shared `+0`, `+1`, and quiet `NaN` singletons. Reused by the
+/// constructor wrappers below and by every op that wants to return one of
+/// these constants without re-allocating a struct.
+let zero_singleton : Decimal = {
+  class: Finite,
+  negative: false,
+  coefficient: 0N,
+  exponent: 0,
+}
+
+///|
+let one_singleton : Decimal = {
+  class: Finite,
+  negative: false,
+  coefficient: 1N,
+  exponent: 0,
+}
+
+///|
+let nan_singleton : Decimal = {
+  class: QNaN,
+  negative: false,
+  coefficient: 0N,
+  exponent: 0,
+}
+
 ///| The decimal `+0`.
 pub fn Decimal::zero() -> Decimal {
-  { class: Finite, negative: false, coefficient: 0N, exponent: 0 }
+  zero_singleton
 }
 
 ///| The decimal `+1`.
 pub fn Decimal::one() -> Decimal {
-  { class: Finite, negative: false, coefficient: 1N, exponent: 0 }
+  one_singleton
 }
 
 ///| `+Infinity`.
@@ -77,10 +103,15 @@ pub fn Decimal::neg_infinity() -> Decimal {
   { class: Infinity, negative: true, coefficient: 0N, exponent: 0 }
 }
 
-///| A quiet NaN with the given (non-negative) diagnostic payload.
+///| A quiet NaN with the given (non-negative) diagnostic payload. The
+/// no-payload, non-negative variant returns a shared singleton.
 pub fn Decimal::nan(payload~ : BigInt = 0N, negative~ : Bool = false) -> Decimal {
   guard payload >= 0N else { abort("Decimal::nan: payload must be non-negative") }
-  { class: QNaN, negative, coefficient: payload, exponent: 0 }
+  if !negative && payload.is_zero() {
+    nan_singleton
+  } else {
+    { class: QNaN, negative, coefficient: payload, exponent: 0 }
+  }
 }
 
 ///| A signaling NaN with the given (non-negative) diagnostic payload.

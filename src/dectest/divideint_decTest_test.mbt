@@ -1,9 +1,13 @@
-///| `divideint` cases from `divideint.decTest`, restricted to the half_up
-/// rounding mode and precision >= 9 sections, with cases requiring
-/// rounding or Division_impossible (precision-driven outcome) excluded.
-/// Signal-only conditions like Invalid_operation and Division_by_zero
-/// are kept — only the result string is compared.
+///| `divideint` cases from `divideint.decTest`, restricted to precision >= 9
+/// sections. `precision:` and `rounding:` directive lines are kept
+/// alongside the test lines so the runner can build the matching
+/// Context for each test. Skipped: Subnormal / Underflow / Overflow /
+/// Clamped (need e_min/e_max enforcement), Conversion_syntax (parse
+/// errors surface as ParseError), Division_impossible (precision-
+/// bounded quotient check not yet implemented).
 let divideint_subset : String =
+  #|precision:   9
+  #|rounding:    half_up
   #|dvix001 divideint  1     1    ->  1
   #|dvix002 divideint  2     1    ->  2
   #|dvix003 divideint  1     2    ->  0
@@ -94,6 +98,8 @@ let divideint_subset : String =
   #|dvix072 divideint  999999999.5   1  ->  999999999
   #|dvix073 divideint  999999999.9   1  ->  999999999
   #|dvix074 divideint  999999999.999 1  ->  999999999
+  #|precision: 6
+  #|precision: 9
   #|dvix090 divideint  0.            1    ->  0
   #|dvix091 divideint  .0            1    ->  0
   #|dvix092 divideint  0.00          1    ->  0
@@ -186,6 +192,7 @@ let divideint_subset : String =
   #|dvix335 divideint -1.23456789012345E-0 9E+999999999    -> -0
   #|dvix337 divideint -0.100 9E+999999999    -> -0
   #|dvix338 divideint 9E-999999999 -9.100    -> -0
+  #|precision: 9
   #|dvix401 divideint 12345678000 100 -> 123456780
   #|dvix402 divideint 1 12345678000   -> 0
   #|dvix403 divideint 1234567800  10  -> 123456780
@@ -203,6 +210,7 @@ let divideint_subset : String =
   #|dvix415 divideint 12345678950 100 -> 123456789
   #|dvix416 divideint 12345678951 100 -> 123456789
   #|dvix417 divideint 12345678999 100 -> 123456789
+  #|precision: 15
   #|dvix441 divideint 12345678000 1 -> 12345678000
   #|dvix442 divideint 1 12345678000 -> 0
   #|dvix443 divideint 1234567800  1 -> 1234567800
@@ -215,6 +223,8 @@ let divideint_subset : String =
   #|dvix450 divideint 1 12345678901 -> 0
   #|dvix451 divideint 1234567896  1 -> 1234567896
   #|dvix452 divideint 1 1234567896  -> 0
+  #|precision:   9
+  #|rounding:    half_up
   #|dvix531 divideint 5.00 1E-3    -> 5000
   #|dvix532 divideint 00.00 0.000  -> NaN Division_undefined
   #|dvix533 divideint 00.00 0E-3   -> NaN Division_undefined
@@ -337,6 +347,9 @@ let divideint_subset : String =
   #|dvix677 divideint  0      sNaN91  ->  NaN91 Invalid_operation
   #|dvix678 divideint  Inf   -sNaN90  -> -NaN90 Invalid_operation
   #|dvix679 divideint  NaN    sNaN89  ->  NaN89 Invalid_operation
+  #|precision: 8
+  #|precision: 6
+  #|precision: 9
   #|dvix732 divideint 1 0.99e999999999 -> 0
   #|dvix733 divideint 1 0.999999999e999999999 -> 0
 

@@ -1,8 +1,13 @@
-///| `subtract` cases from `subtract.decTest`, restricted to the half_up
-/// rounding mode and precision >= 9 sections; further filtered to those
-/// without conditions we don't yet model (Inexact, Rounded, Overflow,
-/// Underflow, Clamped, Conversion_syntax) or a GDA `#` null operand.
+///| `subtract` cases from `subtract.decTest`, restricted to precision >= 9
+/// sections. `precision:` and `rounding:` directive lines are kept
+/// alongside the test lines so the runner can build the matching
+/// Context for each test. Skipped: Subnormal / Underflow / Overflow /
+/// Clamped (need e_min/e_max enforcement), Conversion_syntax (parse
+/// errors surface as ParseError), Division_impossible (precision-
+/// bounded quotient check not yet implemented).
 let subtract_subset : String =
+  #|precision:   9
+  #|rounding:    half_up
   #|subx001 subtract  0   0  -> '0'
   #|subx002 subtract  1   1  -> '0'
   #|subx003 subtract  1   2  -> '-1'
@@ -42,6 +47,25 @@ let subtract_subset : String =
   #|subx046 subtract '1.25' '1.25' -> '0.00'
   #|subx050 subtract '1.23456789'    '1.00000000' -> '0.23456789'
   #|subx051 subtract '1.23456789'    '1.00000089' -> '0.23456700'
+  #|subx052 subtract '0.5555555559'    '0.0000000001' -> '0.555555556' Inexact Rounded
+  #|subx053 subtract '0.5555555559'    '0.0000000005' -> '0.555555555' Inexact Rounded
+  #|subx054 subtract '0.4444444444'    '0.1111111111' -> '0.333333333' Inexact Rounded
+  #|subx055 subtract '1.0000000000'    '0.00000001' -> '0.999999990' Rounded
+  #|subx056 subtract '0.4444444444999'    '0' -> '0.444444444' Inexact Rounded
+  #|subx057 subtract '0.4444444445000'    '0' -> '0.444444445' Inexact Rounded
+  #|subx060 subtract '70'    '10000e+9' -> '-1.00000000E+13' Inexact Rounded
+  #|subx061 subtract '700'    '10000e+9' -> '-1.00000000E+13' Inexact Rounded
+  #|subx062 subtract '7000'    '10000e+9' -> '-9.99999999E+12' Inexact Rounded
+  #|subx063 subtract '70000'    '10000e+9' -> '-9.99999993E+12' Rounded
+  #|subx064 subtract '700000'    '10000e+9' -> '-9.99999930E+12' Rounded
+  #|subx065 subtract '10000e+9'    '70' -> '1.00000000E+13' Inexact Rounded
+  #|subx066 subtract '10000e+9'    '700' -> '1.00000000E+13' Inexact Rounded
+  #|subx067 subtract '10000e+9'    '7000' -> '9.99999999E+12' Inexact Rounded
+  #|subx068 subtract '10000e+9'    '70000' -> '9.99999993E+12' Rounded
+  #|subx069 subtract '10000e+9'    '700000' -> '9.99999930E+12' Rounded
+  #|subx080 subtract '10000e+9'    '70000' -> '9.99999993E+12' Rounded
+  #|precision: 6
+  #|precision: 9
   #|subx090 subtract '00.0'    '0.0'  -> '0.0'
   #|subx091 subtract '00.0'    '0.00' -> '0.00'
   #|subx092 subtract '0.00'    '00.0' -> '0.00'
@@ -88,8 +112,18 @@ let subtract_subset : String =
   #|subx144 subtract  '-10.23456780'   '-10.23456786' -> '6E-8'
   #|subx145 subtract  '-10.23456790'   '-10.23456786' -> '-4E-8'
   #|subx146 subtract  '-10.23456791'   '-10.23456786' -> '-5E-8'
+  #|precision: 3
+  #|precision: 6
+  #|precision: 9
+  #|subx154 subtract '12345678900000' '9999999999999'  -> 2.34567890E+12 Inexact Rounded
+  #|subx155 subtract '9999999999999'  '12345678900000' -> -2.34567890E+12 Inexact Rounded
+  #|precision: 12
+  #|subx156 subtract '12345678900000' '9999999999999'  -> 2.34567890000E+12 Inexact Rounded
+  #|subx157 subtract '9999999999999'  '12345678900000' -> -2.34567890000E+12 Inexact Rounded
+  #|precision: 15
   #|subx158 subtract '12345678900000' '9999999999999'  -> 2345678900001
   #|subx159 subtract '9999999999999'  '12345678900000' -> -2345678900001
+  #|precision: 9
   #|subx160 subtract '0'     '.1'      -> '-0.1'
   #|subx161 subtract '00'    '.97983'  -> '-0.97983'
   #|subx162 subtract '0'     '.9'      -> '-0.9'
@@ -157,8 +191,19 @@ let subtract_subset : String =
   #|subx248 subtract 0 '-56267E-2'   -> '562.67'
   #|subx249 subtract 0 '-56267E-1'   -> '5626.7'
   #|subx250 subtract 0 '-56267E-0'   -> '56267'
+  #|precision: 9
   #|subx301 subtract '1.23456789'  '1.00000000' -> '0.23456789'
   #|subx302 subtract '1.23456789'  '1.00000011' -> '0.23456778'
+  #|subx311 subtract '0.4444444444'  '0.5555555555' -> '-0.111111111' Inexact Rounded
+  #|subx312 subtract '0.4444444440'  '0.5555555555' -> '-0.111111112' Inexact Rounded
+  #|subx313 subtract '0.4444444444'  '0.5555555550' -> '-0.111111111' Inexact Rounded
+  #|subx314 subtract '0.44444444449'    '0' -> '0.444444444' Inexact Rounded
+  #|subx315 subtract '0.444444444499'   '0' -> '0.444444444' Inexact Rounded
+  #|subx316 subtract '0.4444444444999'  '0' -> '0.444444444' Inexact Rounded
+  #|subx317 subtract '0.4444444445000'  '0' -> '0.444444445' Inexact Rounded
+  #|subx318 subtract '0.4444444445001'  '0' -> '0.444444445' Inexact Rounded
+  #|subx319 subtract '0.444444444501'   '0' -> '0.444444445' Inexact Rounded
+  #|subx320 subtract '0.44444444451'    '0' -> '0.444444445' Inexact Rounded
   #|subx321 subtract '0.9998'  '0.0000' -> '0.9998'
   #|subx322 subtract '0.9998'  '0.0001' -> '0.9997'
   #|subx323 subtract '0.9998'  '0.0002' -> '0.9996'
@@ -167,6 +212,19 @@ let subtract_subset : String =
   #|subx326 subtract '0.9998'  '-0.0001' -> '0.9999'
   #|subx327 subtract '0.9998'  '-0.0002' -> '1.0000'
   #|subx328 subtract '0.9998'  '-0.0003' -> '1.0001'
+  #|subx330 subtract '70'  '10000e+9' -> '-1.00000000E+13' Inexact Rounded
+  #|subx331 subtract '700'  '10000e+9' -> '-1.00000000E+13' Inexact Rounded
+  #|subx332 subtract '7000'  '10000e+9' -> '-9.99999999E+12' Inexact Rounded
+  #|subx333 subtract '70000'  '10000e+9' -> '-9.99999993E+12' Rounded
+  #|subx334 subtract '700000'  '10000e+9' -> '-9.99999930E+12' Rounded
+  #|subx335 subtract '7000000'  '10000e+9' -> '-9.99999300E+12' Rounded
+  #|subx340 subtract '10000e+9'  '70' -> '1.00000000E+13' Inexact Rounded
+  #|subx341 subtract '10000e+9'  '700' -> '1.00000000E+13' Inexact Rounded
+  #|subx342 subtract '10000e+9'  '7000' -> '9.99999999E+12' Inexact Rounded
+  #|subx343 subtract '10000e+9'  '70000' -> '9.99999993E+12' Rounded
+  #|subx344 subtract '10000e+9'  '700000' -> '9.99999930E+12' Rounded
+  #|subx345 subtract '10000e+9'  '7000000' -> '9.99999300E+12' Rounded
+  #|precision: 15
   #|subx346 subtract '10000e+9'  '7'   -> '9999999999993'
   #|subx347 subtract '10000e+9'  '70'   -> '9999999999930'
   #|subx348 subtract '10000e+9'  '700'   -> '9999999999300'
@@ -179,18 +237,33 @@ let subtract_subset : String =
   #|subx355 subtract '7000' '10000e+9'   -> '-9999999993000'
   #|subx356 subtract '70000' '10000e+9'   -> '-9999999930000'
   #|subx357 subtract '700000' '10000e+9'   -> '-9999999300000'
+  #|precision: 6
+  #|precision: 9
   #|subx910 subtract -103519362 -51897955.3 -> -51621406.7
   #|subx911 subtract 159579.444 89827.5229 -> 69751.9211
+  #|subx920 subtract 333.123456 33.1234566 -> 299.999999 Inexact Rounded
+  #|subx921 subtract 333.123456 33.1234565 -> 300.000000 Inexact Rounded
   #|subx922 subtract 133.123456 33.1234565 ->  99.9999995
   #|subx923 subtract 133.123456 33.1234564 ->  99.9999996
+  #|subx924 subtract 133.123456 33.1234540 -> 100.000002 Rounded
   #|subx925 subtract 133.123456 43.1234560 ->  90.0000000
   #|subx926 subtract 133.123456 43.1234561 ->  89.9999999
   #|subx927 subtract 133.123456 43.1234566 ->  89.9999994
   #|subx928 subtract 101.123456 91.1234566 ->   9.9999994
   #|subx929 subtract 101.123456 99.1234566 ->   1.9999994
+  #|precision: 1
+  #|precision: 2
+  #|precision: 3
+  #|precision: 4
+  #|precision: 5
+  #|precision: 6
+  #|precision: 7
+  #|precision: 8
+  #|precision: 9
   #|subx951 subtract 101 2.0000001   -> 98.9999999
   #|subx952 subtract 101 92.0000001  ->  8.9999999
   #|subx953 subtract 101 92.00000006 ->  8.99999994
+  #|precision: 9
   #|subx390 subtract '-56267E-10'   0 ->  '-0.0000056267'
   #|subx391 subtract '-56267E-6'    0 ->  '-0.056267'
   #|subx392 subtract '-56267E-5'    0 ->  '-0.56267'
@@ -209,6 +282,10 @@ let subtract_subset : String =
   #|subx405 subtract '-5E1'         0 ->  '-50'
   #|subx406 subtract '-5E5'         0 ->  '-500000'
   #|subx407 subtract '-5E8'         0 ->  '-500000000'
+  #|subx408 subtract '-5E9'         0 ->  '-5.00000000E+9'   Rounded
+  #|subx409 subtract '-5E10'        0 ->  '-5.00000000E+10'  Rounded
+  #|subx410 subtract '-5E11'        0 ->  '-5.00000000E+11'  Rounded
+  #|subx411 subtract '-5E100'       0 ->  '-5.00000000E+100' Rounded
   #|subx420 subtract 0  '-56267E-10' ->  '0.0000056267'
   #|subx421 subtract 0  '-56267E-6'  ->  '0.056267'
   #|subx422 subtract 0  '-56267E-5'  ->  '0.56267'
@@ -227,6 +304,11 @@ let subtract_subset : String =
   #|subx435 subtract 0  '-5E1'       ->  '50'
   #|subx436 subtract 0  '-5E5'       ->  '500000'
   #|subx437 subtract 0  '-5E8'       ->  '500000000'
+  #|subx438 subtract 0  '-5E9'       ->  '5.00000000E+9'    Rounded
+  #|subx439 subtract 0  '-5E10'      ->  '5.00000000E+10'   Rounded
+  #|subx440 subtract 0  '-5E11'      ->  '5.00000000E+11'   Rounded
+  #|subx441 subtract 0  '-5E100'     ->  '5.00000000E+100'  Rounded
+  #|precision: 15
   #|subx461 subtract '1E+12' '1'       -> '999999999999'
   #|subx462 subtract '1E+12' '-1.11'   -> '1000000000001.11'
   #|subx463 subtract '1.11'  '-1E+12'  -> '1000000000001.11'
@@ -235,21 +317,209 @@ let subtract_subset : String =
   #|subx466 subtract '7E+12' '-1.11'   -> '7000000000001.11'
   #|subx467 subtract '1.11'  '-7E+12'  -> '7000000000001.11'
   #|subx468 subtract '-1'    '-7E+12'  -> '6999999999999'
+  #|subx470 subtract '0.444444444444444'  '-0.555555555555563' -> '1.00000000000001' Inexact Rounded
+  #|subx471 subtract '0.444444444444444'  '-0.555555555555562' -> '1.00000000000001' Inexact Rounded
+  #|subx472 subtract '0.444444444444444'  '-0.555555555555561' -> '1.00000000000001' Inexact Rounded
+  #|subx473 subtract '0.444444444444444'  '-0.555555555555560' -> '1.00000000000000' Inexact Rounded
+  #|subx474 subtract '0.444444444444444'  '-0.555555555555559' -> '1.00000000000000' Inexact Rounded
+  #|subx475 subtract '0.444444444444444'  '-0.555555555555558' -> '1.00000000000000' Inexact Rounded
+  #|subx476 subtract '0.444444444444444'  '-0.555555555555557' -> '1.00000000000000' Inexact Rounded
+  #|subx477 subtract '0.444444444444444'  '-0.555555555555556' -> '1.00000000000000' Rounded
   #|subx478 subtract '0.444444444444444'  '-0.555555555555555' -> '0.999999999999999'
   #|subx479 subtract '0.444444444444444'  '-0.555555555555554' -> '0.999999999999998'
   #|subx480 subtract '0.444444444444444'  '-0.555555555555553' -> '0.999999999999997'
   #|subx481 subtract '0.444444444444444'  '-0.555555555555552' -> '0.999999999999996'
   #|subx482 subtract '0.444444444444444'  '-0.555555555555551' -> '0.999999999999995'
   #|subx483 subtract '0.444444444444444'  '-0.555555555555550' -> '0.999999999999994'
+  #|precision: 9
+  #|rounding: half_up
   #|subx500 subtract '123456789' 0             -> '123456789'
+  #|subx501 subtract '123456789' 0.000000001   -> '123456789' Inexact Rounded
+  #|subx502 subtract '123456789' 0.000001      -> '123456789' Inexact Rounded
+  #|subx503 subtract '123456789' 0.1           -> '123456789' Inexact Rounded
+  #|subx504 subtract '123456789' 0.4           -> '123456789' Inexact Rounded
+  #|subx505 subtract '123456789' 0.49          -> '123456789' Inexact Rounded
+  #|subx506 subtract '123456789' 0.499999      -> '123456789' Inexact Rounded
+  #|subx507 subtract '123456789' 0.499999999   -> '123456789' Inexact Rounded
+  #|subx508 subtract '123456789' 0.5           -> '123456789' Inexact Rounded
+  #|subx509 subtract '123456789' 0.500000001   -> '123456788' Inexact Rounded
+  #|subx510 subtract '123456789' 0.500001      -> '123456788' Inexact Rounded
+  #|subx511 subtract '123456789' 0.51          -> '123456788' Inexact Rounded
+  #|subx512 subtract '123456789' 0.6           -> '123456788' Inexact Rounded
+  #|subx513 subtract '123456789' 0.9           -> '123456788' Inexact Rounded
+  #|subx514 subtract '123456789' 0.99999       -> '123456788' Inexact Rounded
+  #|subx515 subtract '123456789' 0.999999999   -> '123456788' Inexact Rounded
   #|subx516 subtract '123456789' 1             -> '123456788'
+  #|subx517 subtract '123456789' 1.000000001   -> '123456788' Inexact Rounded
+  #|subx518 subtract '123456789' 1.00001       -> '123456788' Inexact Rounded
+  #|subx519 subtract '123456789' 1.1           -> '123456788' Inexact Rounded
+  #|rounding: half_even
+  #|subx520 subtract '123456789' 0             -> '123456789'
+  #|subx521 subtract '123456789' 0.000000001   -> '123456789' Inexact Rounded
+  #|subx522 subtract '123456789' 0.000001      -> '123456789' Inexact Rounded
+  #|subx523 subtract '123456789' 0.1           -> '123456789' Inexact Rounded
+  #|subx524 subtract '123456789' 0.4           -> '123456789' Inexact Rounded
+  #|subx525 subtract '123456789' 0.49          -> '123456789' Inexact Rounded
+  #|subx526 subtract '123456789' 0.499999      -> '123456789' Inexact Rounded
+  #|subx527 subtract '123456789' 0.499999999   -> '123456789' Inexact Rounded
+  #|subx528 subtract '123456789' 0.5           -> '123456788' Inexact Rounded
+  #|subx529 subtract '123456789' 0.500000001   -> '123456788' Inexact Rounded
+  #|subx530 subtract '123456789' 0.500001      -> '123456788' Inexact Rounded
+  #|subx531 subtract '123456789' 0.51          -> '123456788' Inexact Rounded
+  #|subx532 subtract '123456789' 0.6           -> '123456788' Inexact Rounded
+  #|subx533 subtract '123456789' 0.9           -> '123456788' Inexact Rounded
+  #|subx534 subtract '123456789' 0.99999       -> '123456788' Inexact Rounded
+  #|subx535 subtract '123456789' 0.999999999   -> '123456788' Inexact Rounded
+  #|subx536 subtract '123456789' 1             -> '123456788'
+  #|subx537 subtract '123456789' 1.00000001    -> '123456788' Inexact Rounded
+  #|subx538 subtract '123456789' 1.00001       -> '123456788' Inexact Rounded
+  #|subx539 subtract '123456789' 1.1           -> '123456788' Inexact Rounded
+  #|subx540 subtract '123456788' 0.499999999   -> '123456788' Inexact Rounded
+  #|subx541 subtract '123456788' 0.5           -> '123456788' Inexact Rounded
+  #|subx542 subtract '123456788' 0.500000001   -> '123456787' Inexact Rounded
+  #|rounding: down
+  #|subx550 subtract '123456789' 0             -> '123456789'
+  #|subx551 subtract '123456789' 0.000000001   -> '123456788' Inexact Rounded
+  #|subx552 subtract '123456789' 0.000001      -> '123456788' Inexact Rounded
+  #|subx553 subtract '123456789' 0.1           -> '123456788' Inexact Rounded
+  #|subx554 subtract '123456789' 0.4           -> '123456788' Inexact Rounded
+  #|subx555 subtract '123456789' 0.49          -> '123456788' Inexact Rounded
+  #|subx556 subtract '123456789' 0.499999      -> '123456788' Inexact Rounded
+  #|subx557 subtract '123456789' 0.499999999   -> '123456788' Inexact Rounded
+  #|subx558 subtract '123456789' 0.5           -> '123456788' Inexact Rounded
+  #|subx559 subtract '123456789' 0.500000001   -> '123456788' Inexact Rounded
+  #|subx560 subtract '123456789' 0.500001      -> '123456788' Inexact Rounded
+  #|subx561 subtract '123456789' 0.51          -> '123456788' Inexact Rounded
+  #|subx562 subtract '123456789' 0.6           -> '123456788' Inexact Rounded
+  #|subx563 subtract '123456789' 0.9           -> '123456788' Inexact Rounded
+  #|subx564 subtract '123456789' 0.99999       -> '123456788' Inexact Rounded
+  #|subx565 subtract '123456789' 0.999999999   -> '123456788' Inexact Rounded
+  #|subx566 subtract '123456789' 1             -> '123456788'
+  #|subx567 subtract '123456789' 1.00000001    -> '123456787' Inexact Rounded
+  #|subx568 subtract '123456789' 1.00001       -> '123456787' Inexact Rounded
+  #|subx569 subtract '123456789' 1.1           -> '123456787' Inexact Rounded
+  #|rounding: half_up
   #|subx600 subtract 0             '123456789' -> '-123456789'
+  #|subx601 subtract 0.000000001   '123456789' -> '-123456789' Inexact Rounded
+  #|subx602 subtract 0.000001      '123456789' -> '-123456789' Inexact Rounded
+  #|subx603 subtract 0.1           '123456789' -> '-123456789' Inexact Rounded
+  #|subx604 subtract 0.4           '123456789' -> '-123456789' Inexact Rounded
+  #|subx605 subtract 0.49          '123456789' -> '-123456789' Inexact Rounded
+  #|subx606 subtract 0.499999      '123456789' -> '-123456789' Inexact Rounded
+  #|subx607 subtract 0.499999999   '123456789' -> '-123456789' Inexact Rounded
+  #|subx608 subtract 0.5           '123456789' -> '-123456789' Inexact Rounded
+  #|subx609 subtract 0.500000001   '123456789' -> '-123456788' Inexact Rounded
+  #|subx610 subtract 0.500001      '123456789' -> '-123456788' Inexact Rounded
+  #|subx611 subtract 0.51          '123456789' -> '-123456788' Inexact Rounded
+  #|subx612 subtract 0.6           '123456789' -> '-123456788' Inexact Rounded
+  #|subx613 subtract 0.9           '123456789' -> '-123456788' Inexact Rounded
+  #|subx614 subtract 0.99999       '123456789' -> '-123456788' Inexact Rounded
+  #|subx615 subtract 0.999999999   '123456789' -> '-123456788' Inexact Rounded
   #|subx616 subtract 1             '123456789' -> '-123456788'
+  #|subx617 subtract 1.000000001   '123456789' -> '-123456788' Inexact Rounded
+  #|subx618 subtract 1.00001       '123456789' -> '-123456788' Inexact Rounded
+  #|subx619 subtract 1.1           '123456789' -> '-123456788' Inexact Rounded
+  #|rounding: half_even
+  #|subx620 subtract 0             '123456789' -> '-123456789'
+  #|subx621 subtract 0.000000001   '123456789' -> '-123456789' Inexact Rounded
+  #|subx622 subtract 0.000001      '123456789' -> '-123456789' Inexact Rounded
+  #|subx623 subtract 0.1           '123456789' -> '-123456789' Inexact Rounded
+  #|subx624 subtract 0.4           '123456789' -> '-123456789' Inexact Rounded
+  #|subx625 subtract 0.49          '123456789' -> '-123456789' Inexact Rounded
+  #|subx626 subtract 0.499999      '123456789' -> '-123456789' Inexact Rounded
+  #|subx627 subtract 0.499999999   '123456789' -> '-123456789' Inexact Rounded
+  #|subx628 subtract 0.5           '123456789' -> '-123456788' Inexact Rounded
+  #|subx629 subtract 0.500000001   '123456789' -> '-123456788' Inexact Rounded
+  #|subx630 subtract 0.500001      '123456789' -> '-123456788' Inexact Rounded
+  #|subx631 subtract 0.51          '123456789' -> '-123456788' Inexact Rounded
+  #|subx632 subtract 0.6           '123456789' -> '-123456788' Inexact Rounded
+  #|subx633 subtract 0.9           '123456789' -> '-123456788' Inexact Rounded
+  #|subx634 subtract 0.99999       '123456789' -> '-123456788' Inexact Rounded
+  #|subx635 subtract 0.999999999   '123456789' -> '-123456788' Inexact Rounded
+  #|subx636 subtract 1             '123456789' -> '-123456788'
+  #|subx637 subtract 1.00000001    '123456789' -> '-123456788' Inexact Rounded
+  #|subx638 subtract 1.00001       '123456789' -> '-123456788' Inexact Rounded
+  #|subx639 subtract 1.1           '123456789' -> '-123456788' Inexact Rounded
+  #|subx640 subtract 0.499999999   '123456788' -> '-123456788' Inexact Rounded
+  #|subx641 subtract 0.5           '123456788' -> '-123456788' Inexact Rounded
+  #|subx642 subtract 0.500000001   '123456788' -> '-123456787' Inexact Rounded
+  #|rounding: down
+  #|subx650 subtract 0             '123456789' -> '-123456789'
+  #|subx651 subtract 0.000000001   '123456789' -> '-123456788' Inexact Rounded
+  #|subx652 subtract 0.000001      '123456789' -> '-123456788' Inexact Rounded
+  #|subx653 subtract 0.1           '123456789' -> '-123456788' Inexact Rounded
+  #|subx654 subtract 0.4           '123456789' -> '-123456788' Inexact Rounded
+  #|subx655 subtract 0.49          '123456789' -> '-123456788' Inexact Rounded
+  #|subx656 subtract 0.499999      '123456789' -> '-123456788' Inexact Rounded
+  #|subx657 subtract 0.499999999   '123456789' -> '-123456788' Inexact Rounded
+  #|subx658 subtract 0.5           '123456789' -> '-123456788' Inexact Rounded
+  #|subx659 subtract 0.500000001   '123456789' -> '-123456788' Inexact Rounded
+  #|subx660 subtract 0.500001      '123456789' -> '-123456788' Inexact Rounded
+  #|subx661 subtract 0.51          '123456789' -> '-123456788' Inexact Rounded
+  #|subx662 subtract 0.6           '123456789' -> '-123456788' Inexact Rounded
+  #|subx663 subtract 0.9           '123456789' -> '-123456788' Inexact Rounded
+  #|subx664 subtract 0.99999       '123456789' -> '-123456788' Inexact Rounded
+  #|subx665 subtract 0.999999999   '123456789' -> '-123456788' Inexact Rounded
+  #|subx666 subtract 1             '123456789' -> '-123456788'
+  #|subx667 subtract 1.00000001    '123456789' -> '-123456787' Inexact Rounded
+  #|subx668 subtract 1.00001       '123456789' -> '-123456787' Inexact Rounded
+  #|subx669 subtract 1.1           '123456789' -> '-123456787' Inexact Rounded
+  #|precision: 9
+  #|rounding: half_up
   #|subx670 subtract '123456789' '123456788.1' -> 0.9
   #|subx671 subtract '123456789' '123456788.9' -> 0.1
   #|subx672 subtract '123456789' '123456789.1' -> -0.1
   #|subx673 subtract '123456789' '123456789.5' -> -0.5
   #|subx674 subtract '123456789' '123456789.9' -> -0.9
+  #|rounding: half_even
+  #|subx680 subtract '123456789' '123456788.1' -> 0.9
+  #|subx681 subtract '123456789' '123456788.9' -> 0.1
+  #|subx682 subtract '123456789' '123456789.1' -> -0.1
+  #|subx683 subtract '123456789' '123456789.5' -> -0.5
+  #|subx684 subtract '123456789' '123456789.9' -> -0.9
+  #|subx685 subtract '123456788' '123456787.1' -> 0.9
+  #|subx686 subtract '123456788' '123456787.9' -> 0.1
+  #|subx687 subtract '123456788' '123456788.1' -> -0.1
+  #|subx688 subtract '123456788' '123456788.5' -> -0.5
+  #|subx689 subtract '123456788' '123456788.9' -> -0.9
+  #|rounding: down
+  #|subx690 subtract '123456789' '123456788.1' -> 0.9
+  #|subx691 subtract '123456789' '123456788.9' -> 0.1
+  #|subx692 subtract '123456789' '123456789.1' -> -0.1
+  #|subx693 subtract '123456789' '123456789.5' -> -0.5
+  #|subx694 subtract '123456789' '123456789.9' -> -0.9
+  #|rounding: half_up
+  #|precision: 3
+  #|precision: 9
+  #|rounding: down
+  #|rounding: half_up
+  #|precision: 3
+  #|precision: 9
+  #|sub731 subtract 12345678000 0 ->  1.23456780E+10 Rounded
+  #|sub732 subtract 0 12345678000 -> -1.23456780E+10 Rounded
+  #|sub733 subtract 1234567800  0 ->  1.23456780E+9 Rounded
+  #|sub734 subtract 0 1234567800  -> -1.23456780E+9 Rounded
+  #|sub735 subtract 1234567890  0 ->  1.23456789E+9 Rounded
+  #|sub736 subtract 0 1234567890  -> -1.23456789E+9 Rounded
+  #|sub737 subtract 1234567891  0 ->  1.23456789E+9 Inexact Rounded
+  #|sub738 subtract 0 1234567891  -> -1.23456789E+9 Inexact Rounded
+  #|sub739 subtract 12345678901 0 ->  1.23456789E+10 Inexact Rounded
+  #|sub740 subtract 0 12345678901 -> -1.23456789E+10 Inexact Rounded
+  #|sub741 subtract 1234567896  0 ->  1.23456790E+9 Inexact Rounded
+  #|sub742 subtract 0 1234567896  -> -1.23456790E+9 Inexact Rounded
+  #|precision: 15
+  #|sub751 subtract 12345678000 0 ->  12345678000
+  #|sub752 subtract 0 12345678000 -> -12345678000
+  #|sub753 subtract 1234567800  0 ->  1234567800
+  #|sub754 subtract 0 1234567800  -> -1234567800
+  #|sub755 subtract 1234567890  0 ->  1234567890
+  #|sub756 subtract 0 1234567890  -> -1234567890
+  #|sub757 subtract 1234567891  0 ->  1234567891
+  #|sub758 subtract 0 1234567891  -> -1234567891
+  #|sub759 subtract 12345678901 0 ->  12345678901
+  #|sub760 subtract 0 12345678901 -> -12345678901
+  #|sub761 subtract 1234567896  0 ->  1234567896
+  #|sub762 subtract 0 1234567896  -> -1234567896
   #|subx780 subtract -Inf   Inf   -> -Infinity
   #|subx781 subtract -Inf   1000  -> -Infinity
   #|subx782 subtract -Inf   1     -> -Infinity
@@ -342,6 +612,11 @@ let subtract_subset : String =
   #|subx906 subtract  2.00000E-3  1.0020000  -> -1.00000000
   #|subx907 subtract  2.000000E-3  1.00200000  -> -1.000000000
   #|subx908 subtract  2.0000000E-3  1.002000000  -> -1.0000000000
+  #|precision: 3
+  #|rounding: half_up
+  #|precision:   5
+  #|precision:   34
+  #|rounding:    half_up
   #|subx1125  subtract 130E-2  120E-2 -> 0.10
   #|subx1126  subtract 130E-2  12E-1  -> 0.10
   #|subx1127  subtract 130E-2  1E0    -> 0.30
@@ -350,7 +625,7 @@ let subtract_subset : String =
 ///|
 test "subtract.decTest subset round-trips through parse + subtract + toSci" {
   let cases = parse_dectest(subtract_subset)
-  assert_eq(cases.length(), 343)
+  assert_eq(cases.length(), 566)
   let (failures, _) = run_cases(cases)
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")

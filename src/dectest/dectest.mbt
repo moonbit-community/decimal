@@ -9,24 +9,82 @@ pub(all) struct TestCase {
   operands : Array[String]
   expected : String
   conditions : Array[String]
+  /// Active precision when this case appeared; `0` means no `precision:`
+  /// directive has been seen, which the runner treats as "no precision cap".
+  precision : Int
+  /// Active rounding mode; defaults to `HalfEven` until a `rounding:`
+  /// directive overrides it.
+  rounding : Rounding
 }
 
 ///| Parse the full text of a `.decTest` source into test cases. Skips blank
-/// lines, comment lines (`--` to end of line), and directive lines (no `->`).
+/// lines and comment lines (`--` to end of line). `precision:` and
+/// `rounding:` directives are tracked across the file so each emitted
+/// `TestCase` reports the context in scope for it.
 pub fn parse_dectest(text : String) -> Array[TestCase] {
   let cases = Array::new()
+  let mut current_precision = 0
+  let mut current_rounding = Rounding::HalfEven
   for raw in text.split("\n") {
     let line = strip_dectest_comment(raw.to_owned())
     let trimmed = line.trim().to_owned()
     if trimmed.is_empty() {
       continue
     }
+    // Directive line: has ':' but no '->'.
+    if !trimmed.contains("->") && trimmed.contains(":") {
+      match parse_directive(trimmed) {
+        Some(("precision", value)) =>
+          try @string.parse_int(value[:]) catch {
+            _ => ()
+          } noraise {
+            n => current_precision = n
+          }
+        Some(("rounding", value)) =>
+          match parse_rounding_name(value) {
+            Some(r) => current_rounding = r
+            None => ()
+          }
+        _ => ()
+      }
+      continue
+    }
     match parse_dectest_line(trimmed) {
-      Some(c) => cases.push(c)
+      Some(c) =>
+        cases.push({
+          ..c,
+          precision: current_precision,
+          rounding: current_rounding,
+        })
       None => ()
     }
   }
   cases
+}
+
+///| Split a directive line `key: value` into its two parts (trimmed).
+fn parse_directive(line : String) -> (String, String)? {
+  match line.find(":") {
+    Some(i) => Some((line[:i].trim().to_owned(), line[i + 1:].trim().to_owned()))
+    None => None
+  }
+}
+
+///| Map a GDA rounding-mode name onto our `Rounding` enum. Unknown modes
+/// return `None` and the directive is silently ignored (rounding stays
+/// where it was).
+fn parse_rounding_name(name : String) -> Rounding? {
+  match name {
+    "half_up" => Some(HalfUp)
+    "half_even" => Some(HalfEven)
+    "half_down" => Some(HalfDown)
+    "up" => Some(Up)
+    "down" => Some(Down)
+    "ceiling" => Some(Ceiling)
+    "floor" => Some(Floor)
+    "05up" => Some(ZeroFiveUp)
+    _ => None
+  }
 }
 
 ///| Drop a trailing `-- ...` comment, if any.
@@ -63,6 +121,8 @@ fn parse_dectest_line(line : String) -> TestCase? {
     operands,
     expected: right_tokens[0],
     conditions,
+    precision: 0,
+    rounding: HalfEven,
   })
 }
 
@@ -175,11 +235,11 @@ fn compute(case : TestCase) -> String? raise RunnerError {
   } else if ascii_eq_ci(case.op, "abs") {
     Some(unary(case, Decimal::abs))
   } else if ascii_eq_ci(case.op, "add") {
-    Some(binary(case, Decimal::add))
+    Some(binary_ctx(case, Decimal::add))
   } else if ascii_eq_ci(case.op, "subtract") {
-    Some(binary(case, Decimal::subtract))
+    Some(binary_ctx(case, Decimal::subtract))
   } else if ascii_eq_ci(case.op, "multiply") {
-    Some(binary(case, Decimal::multiply))
+    Some(binary_ctx(case, Decimal::multiply))
   } else if ascii_eq_ci(case.op, "copy") {
     Some(unary(case, Decimal::copy))
   } else if ascii_eq_ci(case.op, "copyabs") {
@@ -189,9 +249,9 @@ fn compute(case : TestCase) -> String? raise RunnerError {
   } else if ascii_eq_ci(case.op, "copysign") {
     Some(binary(case, Decimal::copy_sign))
   } else if ascii_eq_ci(case.op, "divideint") {
-    Some(binary(case, Decimal::divide_int))
+    Some(binary_ctx(case, Decimal::divide_int))
   } else if ascii_eq_ci(case.op, "remainder") {
-    Some(binary(case, Decimal::remainder))
+    Some(binary_ctx(case, Decimal::remainder))
   } else if ascii_eq_ci(case.op, "comparetotal") {
     Some(binary(case, Decimal::compare_total))
   } else if ascii_eq_ci(case.op, "comparetotmag") {
@@ -213,6 +273,26 @@ fn unary(case : TestCase, op : (Decimal) -> Decimal) -> String raise RunnerError
     e => raise RunnerError("parse error: \{e}")
   }
   op(parsed).to_sci_string()
+}
+
+///| Apply a context-aware binary op (`(Decimal, Decimal, Context) -> Decimal`)
+/// using a Context built from the test case's active precision and rounding
+/// directives.
+fn binary_ctx(
+  case : TestCase,
+  op : (Decimal, Decimal, Context) -> Decimal,
+) -> String raise RunnerError {
+  if case.operands.length() != 2 {
+    raise RunnerError("expects 2 operands, got \{case.operands.length()}")
+  }
+  let lhs = try Decimal::parse(case.operands[0]) catch {
+    e => raise RunnerError("parse error in operand 0: \{e}")
+  }
+  let rhs = try Decimal::parse(case.operands[1]) catch {
+    e => raise RunnerError("parse error in operand 1: \{e}")
+  }
+  let ctx = Context::new(precision=case.precision, rounding=case.rounding)
+  op(lhs, rhs, ctx).to_sci_string()
 }
 
 ///| Apply a binary `Decimal, Decimal -> Decimal` operator to the two operands

@@ -74,21 +74,28 @@ pub fn Decimal::abs(self : Decimal) -> Decimal {
 ///   trailing zeros in either operand survive).
 /// * Sign of a zero result: same sign when both operands share a sign,
 ///   `+0` otherwise (the default-rounding rule).
-pub fn Decimal::add(self : Decimal, other : Decimal) -> Decimal {
+pub fn Decimal::add(self : Decimal, other : Decimal, ctx : Context) -> Decimal {
   match (self.class, other.class) {
-    (SNaN, _) => { ..self, class: QNaN }
-    (_, SNaN) => { ..other, class: QNaN }
+    (SNaN, _) => {
+      ctx.flags.invalid_operation = true
+      { ..self, class: QNaN }
+    }
+    (_, SNaN) => {
+      ctx.flags.invalid_operation = true
+      { ..other, class: QNaN }
+    }
     (QNaN, _) => self
     (_, QNaN) => other
     (Infinity, Infinity) =>
       if self.negative == other.negative {
         self
       } else {
+        ctx.flags.invalid_operation = true
         Decimal::nan()
       }
     (Infinity, Finite) => self
     (Finite, Infinity) => other
-    (Finite, Finite) => add_finite(self, other)
+    (Finite, Finite) => add_finite(self, other).round(ctx)
   }
 }
 
@@ -102,19 +109,48 @@ pub fn Decimal::add(self : Decimal, other : Decimal) -> Decimal {
 /// would lose its sign through `minus(0) = +0` followed by
 /// `add(-0, +0) = +0`. Flipping the sign without zero-canonicalisation makes
 /// `add(-0, -0) = -0` (the same-sign-zeros rule) produce the right answer.
-pub fn Decimal::subtract(self : Decimal, other : Decimal) -> Decimal {
+pub fn Decimal::subtract(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> Decimal {
   match (self.class, other.class) {
-    (SNaN, _) => { ..self, class: QNaN }
-    (_, SNaN) => { ..other, class: QNaN }
+    (SNaN, _) => {
+      ctx.flags.invalid_operation = true
+      { ..self, class: QNaN }
+    }
+    (_, SNaN) => {
+      ctx.flags.invalid_operation = true
+      { ..other, class: QNaN }
+    }
     (QNaN, _) => self
     (_, QNaN) => other
-    _ => Decimal::add(self, { ..other, negative: !other.negative })
+    _ => Decimal::add(self, { ..other, negative: !other.negative }, ctx)
   }
 }
 
 ///| Add two finite Decimals: align to the smaller exponent, combine the
 /// signed coefficients, and report the result in the same convention.
+///
+/// Several short-circuits avoid materialising the alignment factor:
+///
+/// * `a + 0` collapses to `a` if `a.exponent <= b.exponent` (the result
+///   already has the smaller exponent), otherwise the zero side keeps its
+///   exponent for trailing-zero preservation.
+/// * Symmetric short-circuit for `0 + b`.
+/// * "Below the noise" (when both operands are non-zero with an adjusted
+///   exponent gap so large no precision-9-or-more context could resolve the
+///   smaller operand): we return the larger directly.
 fn add_finite(a : Decimal, b : Decimal) -> Decimal {
+  // `0 + b` / `a + 0` — common in dectest where one side is `0` to test
+  // trailing-zero preservation. We still align exponents (smaller wins) so
+  // `0.00 + 1` keeps `1` and `0 + 1.0` keeps `1.0`.
+  if b.coefficient.is_zero() && a.negative == b.negative {
+    return align_zero_add(a, b)
+  }
+  if a.coefficient.is_zero() && a.negative == b.negative {
+    return align_zero_add(b, a)
+  }
   let result_exp = if a.exponent <= b.exponent {
     a.exponent
   } else {
@@ -126,7 +162,27 @@ fn add_finite(a : Decimal, b : Decimal) -> Decimal {
   { class: Finite, negative: neg, coefficient: sum, exponent: result_exp }
 }
 
-///| Multiply `coeff` by `10^shift`. Shift must be non-negative.
+///| Fast path for `non_zero + zero` (and `zero + zero` when signs match):
+/// the result is the non-zero operand, with exponent reduced to the smaller
+/// of the two so trailing-zero count is preserved.
+fn align_zero_add(non_zero : Decimal, zero : Decimal) -> Decimal {
+  if zero.exponent < non_zero.exponent {
+    {
+      ..non_zero,
+      coefficient: scale_up(
+        non_zero.coefficient,
+        non_zero.exponent - zero.exponent,
+      ),
+      exponent: zero.exponent,
+    }
+  } else {
+    non_zero
+  }
+}
+
+///| Multiply `coeff` by `10^shift`. Shift must be non-negative. Hot-path
+/// shifts (`< 33`) land in the `pow10_table` cache and avoid a fresh
+/// allocation.
 ///
 /// The zero short-circuit matters when callers align around extreme exponent
 /// gaps — `0 * 10^huge` is still zero, but materialising the `10^huge` BigInt
@@ -135,7 +191,7 @@ fn scale_up(coeff : BigInt, shift : Int) -> BigInt {
   if shift == 0 || coeff.is_zero() {
     coeff
   } else {
-    coeff * BigInt::pow(10N, BigInt::from_int(shift))
+    coeff * pow10(shift)
   }
 }
 
@@ -145,15 +201,26 @@ fn scale_up(coeff : BigInt, shift : Int) -> BigInt {
 /// quieten-and-keep-sign rule); `0 * Infinity` is `NaN + Invalid_operation`
 /// (signal currently dropped); finite-nonzero * Infinity yields an infinity
 /// with the XOR sign; Infinity * Infinity yields the XOR-signed Infinity.
-pub fn Decimal::multiply(self : Decimal, other : Decimal) -> Decimal {
+pub fn Decimal::multiply(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> Decimal {
   match (self.class, other.class) {
-    (SNaN, _) => { ..self, class: QNaN }
-    (_, SNaN) => { ..other, class: QNaN }
+    (SNaN, _) => {
+      ctx.flags.invalid_operation = true
+      { ..self, class: QNaN }
+    }
+    (_, SNaN) => {
+      ctx.flags.invalid_operation = true
+      { ..other, class: QNaN }
+    }
     (QNaN, _) => self
     (_, QNaN) => other
-    (Finite, Finite) => multiply_finite(self, other)
+    (Finite, Finite) => multiply_finite(self, other).round(ctx)
     (Infinity, Finite) =>
       if other.coefficient.is_zero() {
+        ctx.flags.invalid_operation = true
         Decimal::nan()
       } else {
         {
@@ -165,6 +232,7 @@ pub fn Decimal::multiply(self : Decimal, other : Decimal) -> Decimal {
       }
     (Finite, Infinity) =>
       if self.coefficient.is_zero() {
+        ctx.flags.invalid_operation = true
         Decimal::nan()
       } else {
         {
@@ -188,7 +256,19 @@ pub fn Decimal::multiply(self : Decimal, other : Decimal) -> Decimal {
 /// result sign is the XOR of operand signs even when the coefficient is zero
 /// (so `-0 * +5 = -0`, per GDA's "sign of zero result is XOR of operand signs"
 /// rule).
+///
+/// Short-circuit: when one side's coefficient is zero, the BigInt multiply is
+/// `0 * anything = 0` — we skip the call and synthesize the zero directly,
+/// saving a heap allocation for the BigInt result.
 fn multiply_finite(a : Decimal, b : Decimal) -> Decimal {
+  if a.coefficient.is_zero() || b.coefficient.is_zero() {
+    return {
+      class: Finite,
+      negative: a.negative != b.negative,
+      coefficient: 0N,
+      exponent: a.exponent + b.exponent,
+    }
+  }
   {
     class: Finite,
     negative: a.negative != b.negative,
@@ -276,20 +356,37 @@ pub fn Decimal::copy_sign(self : Decimal, other : Decimal) -> Decimal {
 /// * No precision check; GDA would raise `Division_impossible` if the
 ///   quotient overflows the active precision. Without a Context that
 ///   constraint is simply not enforced.
-pub fn Decimal::divide_int(self : Decimal, other : Decimal) -> Decimal {
+pub fn Decimal::divide_int(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> Decimal {
   match (self.class, other.class) {
-    (SNaN, _) => { ..self, class: QNaN }
-    (_, SNaN) => { ..other, class: QNaN }
+    (SNaN, _) => {
+      ctx.flags.invalid_operation = true
+      { ..self, class: QNaN }
+    }
+    (_, SNaN) => {
+      ctx.flags.invalid_operation = true
+      { ..other, class: QNaN }
+    }
     (QNaN, _) => self
     (_, QNaN) => other
-    (Infinity, Infinity) => Decimal::nan()
-    (Infinity, Finite) =>
+    (Infinity, Infinity) => {
+      ctx.flags.invalid_operation = true
+      Decimal::nan()
+    }
+    (Infinity, Finite) => {
+      if other.coefficient.is_zero() {
+        ctx.flags.division_by_zero = true
+      }
       {
         class: Infinity,
         negative: self.negative != other.negative,
         coefficient: 0N,
         exponent: 0,
       }
+    }
     (Finite, Infinity) =>
       {
         class: Finite,
@@ -300,8 +397,10 @@ pub fn Decimal::divide_int(self : Decimal, other : Decimal) -> Decimal {
     (Finite, Finite) =>
       if other.coefficient.is_zero() {
         if self.coefficient.is_zero() {
+          ctx.flags.invalid_operation = true
           Decimal::nan()
         } else {
+          ctx.flags.division_by_zero = true
           {
             class: Infinity,
             negative: self.negative != other.negative,
@@ -378,22 +477,38 @@ fn align_for_int_div(
 /// * `Infinity` as dividend, or `0` as divisor: NaN.
 /// * Finite dividend with `Infinity` divisor: the dividend is returned
 ///   unchanged.
-pub fn Decimal::remainder(self : Decimal, other : Decimal) -> Decimal {
+pub fn Decimal::remainder(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> Decimal {
+  let exact_ctx = Context::exact()
   match (self.class, other.class) {
-    (SNaN, _) => { ..self, class: QNaN }
-    (_, SNaN) => { ..other, class: QNaN }
+    (SNaN, _) => {
+      ctx.flags.invalid_operation = true
+      { ..self, class: QNaN }
+    }
+    (_, SNaN) => {
+      ctx.flags.invalid_operation = true
+      { ..other, class: QNaN }
+    }
     (QNaN, _) => self
     (_, QNaN) => other
-    (Infinity, _) => Decimal::nan()
+    (Infinity, _) => {
+      ctx.flags.invalid_operation = true
+      Decimal::nan()
+    }
     (Finite, Infinity) => self
     (Finite, Finite) =>
       if other.coefficient.is_zero() {
+        ctx.flags.invalid_operation = true
         Decimal::nan()
       } else {
+        // Intermediate quotient and product stay exact — the final subtract
+        // is the only place that applies the caller's precision.
         let quot = divide_int_finite(self, other)
-        let result = Decimal::subtract(self, Decimal::multiply(quot, other))
-        // GDA mandates "sign of remainder = sign of dividend"; the underlying
-        // subtract canonicalises zero results to +0, so re-stamp the sign here.
+        let prod = Decimal::multiply(quot, other, exact_ctx)
+        let result = Decimal::subtract(self, prod, ctx)
         if result.class is Finite && result.coefficient.is_zero() {
           { ..result, negative: self.negative }
         } else {

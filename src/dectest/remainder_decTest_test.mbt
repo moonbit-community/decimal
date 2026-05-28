@@ -1,9 +1,13 @@
-///| `remainder` cases from `remainder.decTest`, restricted to the half_up
-/// rounding mode and precision >= 9 sections, with cases requiring
-/// rounding or Division_impossible (precision-driven outcome) excluded.
-/// Signal-only conditions like Invalid_operation and Division_by_zero
-/// are kept — only the result string is compared.
+///| `remainder` cases from `remainder.decTest`, restricted to precision >= 9
+/// sections. `precision:` and `rounding:` directive lines are kept
+/// alongside the test lines so the runner can build the matching
+/// Context for each test. Skipped: Subnormal / Underflow / Overflow /
+/// Clamped (need e_min/e_max enforcement), Conversion_syntax (parse
+/// errors surface as ParseError), Division_impossible (precision-
+/// bounded quotient check not yet implemented).
 let remainder_subset : String =
+  #|precision:   9
+  #|rounding:    half_up
   #|remx001 remainder  1     1    ->  0
   #|remx002 remainder  2     1    ->  0
   #|remx003 remainder  1     2    ->  1
@@ -58,6 +62,8 @@ let remainder_subset : String =
   #|remx068 remainder  999999999.5   1  -> 0.5
   #|remx069 remainder  999999999.9   1  -> 0.9
   #|remx070 remainder  999999999.999 1  -> 0.999
+  #|precision: 6
+  #|precision: 9
   #|remx080 remainder  0.            1  -> 0
   #|remx081 remainder  .0            1  -> 0.0
   #|remx082 remainder  0.00          1  -> 0.00
@@ -74,6 +80,7 @@ let remainder_subset : String =
   #|remx093 remainder  0.00E-5       1  -> 0E-7
   #|remx094 remainder  0.00E-6       1  -> 0E-8
   #|remx095 remainder  0.0000E-50    1  -> 0E-54
+  #|precision: 9
   #|remx101 remainder  0       0   -> NaN Division_undefined
   #|remx102 remainder  0      -0   -> NaN Division_undefined
   #|remx103 remainder -0       0   -> NaN Division_undefined
@@ -199,6 +206,8 @@ let remainder_subset : String =
   #|remx340 remainder   0.5   0.5000001    ->  0.5000000
   #|remx341 remainder   0.5   0.50000001    ->  0.50000000
   #|remx342 remainder   0.5   0.500000001    ->  0.500000000
+  #|remx343 remainder   0.5   0.5000000001    ->  0.500000000  Rounded
+  #|remx344 remainder   0.5   0.50000000001    ->  0.500000000  Rounded
   #|remx345 remainder   0.5   0.4999999    ->  1E-7
   #|remx346 remainder   0.5   0.49999999    ->  1E-8
   #|remx347 remainder   0.5   0.499999999    ->  1E-9
@@ -221,6 +230,10 @@ let remainder_subset : String =
   #|remx364 remainder   0.800   12   ->  0.800
   #|remx365 remainder   0.800   1.7  ->  0.800
   #|remx366 remainder   2.400   2    ->  0.400
+  #|precision: 6
+  #|precision: 3
+  #|precision: 5
+  #|precision: 9
   #|remx401 remainder   0.5         1   ->  0.5
   #|remx402 remainder   0.55        1   ->  0.55
   #|remx403 remainder   0.555       1   ->  0.555
@@ -321,6 +334,7 @@ let remainder_subset : String =
   #|remx771 remainder 1 0.9e999999999  -> 1
   #|remx772 remainder 1 0.99e999999999 -> 1
   #|remx773 remainder 1 0.999999999e999999999 -> 1
+  #|precision: 9
   #|remx801 remainder 12345678000 100 -> 0
   #|remx802 remainder 1 12345678000   -> 1
   #|remx803 remainder 1234567800  10  -> 0
@@ -333,6 +347,7 @@ let remainder_subset : String =
   #|remx810 remainder 1 12345678901   -> 1
   #|remx811 remainder 1234567896  10  -> 6
   #|remx812 remainder 1 1234567896    -> 1
+  #|precision: 15
   #|remx821 remainder 12345678000 100 -> 0
   #|remx822 remainder 1 12345678000   -> 1
   #|remx823 remainder 1234567800  10  -> 0
@@ -345,15 +360,20 @@ let remainder_subset : String =
   #|remx830 remainder 1 12345678901   -> 1
   #|remx831 remainder 1234567896  10  -> 6
   #|remx832 remainder 1 1234567896    -> 1
+  #|precision: 8
+  #|precision: 6
+  #|precision: 9
+  #|remx990 remainder +1.23456789012345E-0 9E+999999999 -> 1.23456789 Inexact Rounded
   #|remx992 remainder +0.100 9E+999999999               -> 0.100
   #|remx993 remainder 9E-999999999 +9.100               -> 9E-999999999
+  #|remx995 remainder -1.23456789012345E-0 9E+999999999 -> -1.23456789 Inexact Rounded
   #|remx997 remainder -0.100 9E+999999999               -> -0.100
   #|remx998 remainder 9E-999999999 -9.100               -> 9E-999999999
 
 ///|
 test "remainder.decTest subset round-trips through parse + remainder + toSci" {
   let cases = parse_dectest(remainder_subset)
-  assert_eq(cases.length(), 345)
+  assert_eq(cases.length(), 349)
   let (failures, _) = run_cases(cases)
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")

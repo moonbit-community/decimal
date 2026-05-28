@@ -3,4 +3,11 @@
 /// stay unqualified. Enum variant constructors come along with their parent
 /// type; values (constructors, methods) are addressed through the type, e.g.
 /// `Decimal::parse`, `Class::Finite`, `ParseError::Empty`.
-pub using @decimal { type Decimal, type Class, type ParseError }
+pub using @decimal {
+  type Decimal,
+  type Class,
+  type ParseError,
+  type Context,
+  type Rounding,
+  type Flags,
+}

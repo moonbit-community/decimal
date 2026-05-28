@@ -1,7 +1,13 @@
-///| `multiply` cases from `multiply.decTest`, restricted to the half_up
-/// rounding mode and precision >= 9 sections; filtered to those without
-/// conditions we don't yet model or a GDA `#` null operand.
+///| `multiply` cases from `multiply.decTest`, restricted to precision >= 9
+/// sections. `precision:` and `rounding:` directive lines are kept
+/// alongside the test lines so the runner can build the matching
+/// Context for each test. Skipped: Subnormal / Underflow / Overflow /
+/// Clamped (need e_min/e_max enforcement), Conversion_syntax (parse
+/// errors surface as ParseError), Division_impossible (precision-
+/// bounded quotient check not yet implemented).
 let multiply_subset : String =
+  #|precision:   9
+  #|rounding:    half_up
   #|mulx000 multiply 2      2 -> 4
   #|mulx001 multiply 2      3 -> 6
   #|mulx002 multiply 5      1 -> 5
@@ -15,8 +21,15 @@ let multiply_subset : String =
   #|mulx010 multiply 5.09 7.1 -> 36.139
   #|mulx011 multiply 2.5    4 -> 10.0
   #|mulx012 multiply 2.50   4 -> 10.00
+  #|mulx013 multiply 1.23456789 1.00000000 -> 1.23456789 Rounded
+  #|mulx014 multiply 9.999999999 9.999999999 -> 100.000000 Inexact Rounded
   #|mulx015 multiply 2.50   4 -> 10.00
+  #|precision: 6
+  #|precision: 15
+  #|mulx059 multiply 999999999999 9765625 -> 9.76562499999023E+18 Inexact Rounded
+  #|precision: 30
   #|mulx160 multiply 999999999999 9765625 -> 9765624999990234375
+  #|precision: 9
   #|mulx021 multiply  0      0     ->  0
   #|mulx022 multiply  0     -0     -> -0
   #|mulx023 multiply -0      0     -> -0
@@ -45,6 +58,7 @@ let multiply_subset : String =
   #|mulx051 multiply 7    3        -> 21
   #|mulx052 multiply 0.9  0.8      -> 0.72
   #|mulx053 multiply 0.9  -0       -> -0.0
+  #|mulx054 multiply 654321 654321 -> 4.28135971E+11  Inexact Rounded
   #|mulx060 multiply 123.45 1e7  ->  1.2345E+9
   #|mulx061 multiply 123.45 1e8  ->  1.2345E+10
   #|mulx062 multiply 123.45 1e+9 ->  1.2345E+11
@@ -52,10 +66,23 @@ let multiply_subset : String =
   #|mulx064 multiply 123.45 1e11 ->  1.2345E+13
   #|mulx065 multiply 123.45 1e12 ->  1.2345E+14
   #|mulx066 multiply 123.45 1e13 ->  1.2345E+15
+  #|precision: 9
   #|mulx080 multiply 0.1 123456789          -> 12345678.9
+  #|mulx081 multiply 0.1 1234567891         -> 123456789 Inexact Rounded
+  #|mulx082 multiply 0.1 12345678912        -> 1.23456789E+9 Inexact Rounded
+  #|mulx083 multiply 0.1 12345678912345     -> 1.23456789E+12 Inexact Rounded
   #|mulx084 multiply 0.1 123456789          -> 12345678.9
+  #|precision: 8
+  #|precision: 7
+  #|precision: 9
   #|mulx090 multiply 123456789          0.1 -> 12345678.9
+  #|mulx091 multiply 1234567891         0.1 -> 123456789 Inexact Rounded
+  #|mulx092 multiply 12345678912        0.1 -> 1.23456789E+9 Inexact Rounded
+  #|mulx093 multiply 12345678912345     0.1 -> 1.23456789E+12 Inexact Rounded
   #|mulx094 multiply 123456789          0.1 -> 12345678.9
+  #|precision: 8
+  #|precision: 7
+  #|precision: 33
   #|mulx101 multiply 9 9   -> 81
   #|mulx102 multiply 9 90   -> 810
   #|mulx103 multiply 9 900   -> 8100
@@ -102,6 +129,7 @@ let multiply_subset : String =
   #|mulx151 multiply 3 300000000000000000000   -> 900000000000000000000
   #|mulx152 multiply 3 3000000000000000000000   -> 9000000000000000000000
   #|mulx153 multiply 3 30000000000000000000000   -> 90000000000000000000000
+  #|precision: 9
   #|mulx170 multiply 1 9e999999999    -> 9E+999999999
   #|mulx171 multiply 1 9.9e999999999  -> 9.9E+999999999
   #|mulx172 multiply 1 9.99e999999999 -> 9.99E+999999999
@@ -133,6 +161,65 @@ let multiply_subset : String =
   #|mulx202 multiply 1e600000000 1e399999999 -> 1E+999999999
   #|mulx203 multiply 1.2e599999999 1.2e400000000 -> 1.44E+999999999
   #|mulx204 multiply 1.2e600000000 1.2e399999999 -> 1.44E+999999999
+  #|precision: 33
+  #|mulx246 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.290801193369671916511992830 Inexact Rounded
+  #|precision: 32
+  #|mulx247 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.29080119336967191651199283  Inexact Rounded
+  #|precision: 31
+  #|mulx248 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.2908011933696719165119928   Inexact Rounded
+  #|precision: 30
+  #|mulx249 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.290801193369671916511993    Inexact Rounded
+  #|precision: 29
+  #|mulx250 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.29080119336967191651199     Inexact Rounded
+  #|precision: 28
+  #|mulx251 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.2908011933696719165120      Inexact Rounded
+  #|precision: 27
+  #|mulx252 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.290801193369671916512       Inexact Rounded
+  #|precision: 26
+  #|mulx253 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.29080119336967191651        Inexact Rounded
+  #|precision: 25
+  #|mulx254 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.2908011933696719165         Inexact Rounded
+  #|precision: 24
+  #|mulx255 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.290801193369671917          Inexact Rounded
+  #|precision: 23
+  #|mulx256 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.29080119336967192           Inexact Rounded
+  #|precision: 22
+  #|mulx257 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.2908011933696719            Inexact Rounded
+  #|precision: 21
+  #|mulx258 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.290801193369672             Inexact Rounded
+  #|precision: 20
+  #|mulx259 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.29080119336967              Inexact Rounded
+  #|precision: 19
+  #|mulx260 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.2908011933697               Inexact Rounded
+  #|precision: 18
+  #|mulx261 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.290801193370                Inexact Rounded
+  #|precision: 17
+  #|mulx262 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.29080119337                 Inexact Rounded
+  #|precision: 16
+  #|mulx263 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.2908011934                  Inexact Rounded
+  #|precision: 15
+  #|mulx264 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.290801193                   Inexact Rounded
+  #|precision: 14
+  #|mulx265 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.29080119                    Inexact Rounded
+  #|precision: 13
+  #|mulx266 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.2908012                     Inexact Rounded
+  #|precision: 12
+  #|mulx267 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.290801                      Inexact Rounded
+  #|precision: 11
+  #|mulx268 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.29080                       Inexact Rounded
+  #|precision: 10
+  #|mulx269 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.2908                        Inexact Rounded
+  #|precision:  9
+  #|mulx270 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.291                         Inexact Rounded
+  #|precision:  8
+  #|precision:  7
+  #|precision:  6
+  #|precision:  5
+  #|precision:  4
+  #|precision:  3
+  #|precision:  2
+  #|precision:  1
+  #|precision: 9
   #|mulx301 multiply 9 9   -> 81
   #|mulx302 multiply 9 90   -> 810
   #|mulx303 multiply 9 900   -> 8100
@@ -141,6 +228,28 @@ let multiply_subset : String =
   #|mulx306 multiply 9 900000   -> 8100000
   #|mulx307 multiply 9 9000000   -> 81000000
   #|mulx308 multiply 9 90000000   -> 810000000
+  #|mulx309 multiply 9 900000000   -> 8.10000000E+9   Rounded
+  #|mulx310 multiply 9 9000000000   -> 8.10000000E+10  Rounded
+  #|mulx311 multiply 9 90000000000   -> 8.10000000E+11  Rounded
+  #|mulx312 multiply 9 900000000000   -> 8.10000000E+12  Rounded
+  #|mulx313 multiply 9 9000000000000   -> 8.10000000E+13  Rounded
+  #|mulx314 multiply 9 90000000000000   -> 8.10000000E+14  Rounded
+  #|mulx315 multiply 9 900000000000000   -> 8.10000000E+15  Rounded
+  #|mulx316 multiply 9 9000000000000000   -> 8.10000000E+16  Rounded
+  #|mulx317 multiply 9 90000000000000000   -> 8.10000000E+17  Rounded
+  #|mulx318 multiply 9 900000000000000000   -> 8.10000000E+18  Rounded
+  #|mulx319 multiply 9 9000000000000000000   -> 8.10000000E+19  Rounded
+  #|mulx320 multiply 9 90000000000000000000   -> 8.10000000E+20  Rounded
+  #|mulx321 multiply 9 900000000000000000000   -> 8.10000000E+21  Rounded
+  #|mulx322 multiply 9 9000000000000000000000   -> 8.10000000E+22  Rounded
+  #|mulx323 multiply 9 90000000000000000000000   -> 8.10000000E+23  Rounded
+  #|precision:   29
+  #|mulx330 multiply 1.491824697641270317824852952837224 1.105170918075647624811707826490246514675628614562883537345747603 -> 1.6487212707001281468486507878 Inexact Rounded
+  #|precision:   55
+  #|mulx331 multiply 0.8958341352965282506768545828765117803873717284891040428 0.8958341352965282506768545828765117803873717284891040428 -> 0.8025187979624784829842553829934069955890983696752228299 Inexact Rounded
+  #|precision:   7
+  #|rounding:    half_up
+  #|precision: 9
   #|mulx541 multiply  0    -1     -> -0
   #|mulx542 multiply -0    -1     ->  0
   #|mulx543 multiply  0     1     ->  0
@@ -293,17 +402,36 @@ let multiply_subset : String =
   #|mulx743 multiply 9e-999999998 0.1  -> 9E-999999999
   #|mulx746 multiply 1e599999999 1e400000000 -> 1E+999999999
   #|mulx749 multiply 9e999999998 10   -> 9.0E+999999999
+  #|precision: 9
+  #|precision: 99
+  #|precision: 999
+  #|precision: 9999
+  #|precision: 99999
+  #|precision: 999999
+  #|precision: 9999999
+  #|precision: 99999999
+  #|precision: 999999999
+  #|precision:   5
+  #|rounding:    half_even
+  #|precision: 19
+  #|precision: 3
+  #|precision:   5
+  #|precision:   16
+  #|rounding:    half_up
   #|mulx906 multiply  9.999999999999999E-383  1                       -> 9.999999999999999E-383
   #|mulx907 multiply                       1  0.09999999999999999     -> 0.09999999999999999
+  #|precision:   34
+  #|rounding:    half_up
   #|mulx1001  multiply 130E-2  120E-2 -> 1.5600
   #|mulx1002  multiply 130E-2  12E-1  -> 1.560
   #|mulx1003  multiply 130E-2  1E0    -> 1.30
   #|mulx1004  multiply 1E2     1E4    -> 1E+6
+  #|precision: 5
 
 ///|
 test "multiply.decTest subset round-trips through parse + multiply + toSci" {
   let cases = parse_dectest(multiply_subset)
-  assert_eq(cases.length(), 297)
+  assert_eq(cases.length(), 349)
   let (failures, _) = run_cases(cases)
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")

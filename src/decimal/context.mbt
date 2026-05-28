@@ -1,0 +1,214 @@
+// ---------------------------------------------------------------------------
+// Arithmetic context: precision, rounding mode, accumulated status flags.
+//
+// This file introduces the types and a standalone `Decimal::round` operation.
+// Integration with the rest of the arithmetic ops happens in a follow-up so
+// that defaults stay backwards-compatible — the existing dectest cases were
+// written against bit-exact behaviour and would otherwise regress.
+// ---------------------------------------------------------------------------
+
+///| GDA rounding modes for finite-result finalisation.
+pub(all) enum Rounding {
+  /// Round to nearest; on tie, round away from zero.
+  HalfUp
+  /// Round to nearest; on tie, round to the even kept-coefficient digit.
+  /// IEEE 754 default; minimises bias across many round operations.
+  HalfEven
+  /// Round to nearest; on tie, round toward zero.
+  HalfDown
+  /// Always round away from zero.
+  Up
+  /// Always round toward zero (truncation).
+  Down
+  /// Round toward `+Infinity`.
+  Ceiling
+  /// Round toward `-Infinity`.
+  Floor
+  /// Round-half-to-even — but only kick in when the kept coefficient's last
+  /// digit is `0` or `5`. Used in legal/financial contexts.
+  ZeroFiveUp
+} derive(Eq)
+
+///|
+pub impl Show for Rounding with fn to_string(self) {
+  match self {
+    HalfUp => "half_up"
+    HalfEven => "half_even"
+    HalfDown => "half_down"
+    Up => "up"
+    Down => "down"
+    Ceiling => "ceiling"
+    Floor => "floor"
+    ZeroFiveUp => "05up"
+  }
+}
+
+///| GDA status flags accumulated by Context-aware ops. All flags are set
+/// additively (never cleared by an op); a sequence of ops reports whether
+/// any of them triggered the signal.
+pub(all) struct Flags {
+  mut inexact : Bool
+  mut rounded : Bool
+  mut invalid_operation : Bool
+  mut division_by_zero : Bool
+  mut overflow : Bool
+  mut underflow : Bool
+  mut subnormal : Bool
+  mut clamped : Bool
+}
+
+///| A fresh `Flags` with every signal cleared.
+pub fn Flags::new() -> Flags {
+  {
+    inexact: false,
+    rounded: false,
+    invalid_operation: false,
+    division_by_zero: false,
+    overflow: false,
+    underflow: false,
+    subnormal: false,
+    clamped: false,
+  }
+}
+
+///| Arithmetic context — precision, rounding mode, exponent range, and
+/// accumulated flags. Ops take a `Context` (with a no-precision default),
+/// produce a result that has been rounded / clamped to fit, and side-channel
+/// signals into the context's flags.
+///
+/// `precision == 0` means "no precision limit": the op produces an exact
+/// result with as many digits as needed. This is the default so the existing
+/// "exact" arithmetic surface keeps its current behaviour.
+pub(all) struct Context {
+  precision : Int
+  rounding : Rounding
+  e_min : Int
+  e_max : Int
+  flags : Flags
+}
+
+///| Build a Context. Defaults: no precision cap, half-to-even rounding,
+/// near-`Int.max` exponent range (effectively unbounded for dectest's range).
+pub fn Context::new(
+  precision~ : Int = 0,
+  rounding~ : Rounding = HalfEven,
+  e_min~ : Int = -999_999_999,
+  e_max~ : Int = 999_999_999,
+) -> Context {
+  { precision, rounding, e_min, e_max, flags: Flags::new() }
+}
+
+///| Convenience: a context that performs no rounding and lets every result
+/// pass through exactly. Mostly useful as a sentinel for "give me exact
+/// arithmetic" callers.
+pub fn Context::exact() -> Context {
+  Context::new()
+}
+
+// ---------------------------------------------------------------------------
+// Standalone rounding op.
+// ---------------------------------------------------------------------------
+
+///| Round a finite `Decimal` to fit the context's precision under its
+/// rounding mode. NaN and Infinity pass through unchanged.
+///
+/// On any precision-driven adjustment, `ctx.flags.rounded` is raised; on a
+/// truncation that discards non-zero digits, `ctx.flags.inexact` also goes up.
+/// The exponent range (`e_min` / `e_max`) is not enforced here — that's the
+/// finalisation step's job once we plumb context through the binary ops.
+pub fn Decimal::round(self : Decimal, ctx : Context) -> Decimal {
+  match self.class {
+    Finite => round_finite(self, ctx)
+    _ => self
+  }
+}
+
+///| The finite path of `Decimal::round`. Splits the coefficient into kept and
+/// dropped parts via BigInt div/mod (no String round-trip), decides whether
+/// to round up, and handles the `999→1000` carry-over.
+fn round_finite(d : Decimal, ctx : Context) -> Decimal {
+  if ctx.precision == 0 {
+    return d
+  }
+  let n = d.coefficient.to_string().length()
+  if n <= ctx.precision {
+    return d
+  }
+  let dropped_len = n - ctx.precision
+  let divisor = pow10(dropped_len)
+  let kept = d.coefficient / divisor
+  let dropped = d.coefficient % divisor
+  let round_up = round_decision(
+    dropped, dropped_len, kept, d.negative, ctx.rounding,
+  )
+  let candidate = if round_up { kept + 1N } else { kept }
+  // 999 → 1000: candidate gained a digit. The new digit count is exactly
+  // `precision + 1`; comparing against `10^precision` is the cheap check.
+  let precision_cap = pow10(ctx.precision)
+  let (final_coeff, extra) = if candidate >= precision_cap {
+    (candidate / 10N, 1)
+  } else {
+    (candidate, 0)
+  }
+  let new_exp = d.exponent + dropped_len + extra
+  ctx.flags.rounded = true
+  if !dropped.is_zero() {
+    ctx.flags.inexact = true
+  }
+  { ..d, coefficient: final_coeff, exponent: new_exp }
+}
+
+///| Decide whether to round the kept coefficient up by one, working entirely
+/// on the BigInt `dropped` value. The "first dropped digit" and "non-zero
+/// remainder" predicates that the rounding modes need can be recovered from
+/// `dropped` and its width `dropped_len` without ever going through a string.
+fn round_decision(
+  dropped : BigInt,
+  dropped_len : Int,
+  kept : BigInt,
+  negative : Bool,
+  mode : Rounding,
+) -> Bool {
+  if dropped_len == 0 {
+    return false
+  }
+  // `dropped` may have leading zeros relative to `dropped_len` — e.g. when
+  // the original coefficient ended in zeros — so the "first dropped digit"
+  // is the *most significant* of the `dropped_len` written-out digits, not
+  // of `dropped` itself.
+  let top_divisor = pow10(dropped_len - 1)
+  let first_digit = (dropped / top_divisor).to_int()
+  let rest = dropped % top_divisor
+  let rest_nonzero = !rest.is_zero()
+  let dropped_nonzero = first_digit != 0 || rest_nonzero
+  match mode {
+    Down => false
+    Up => dropped_nonzero
+    HalfUp => first_digit >= 5
+    HalfDown =>
+      if first_digit > 5 {
+        true
+      } else if first_digit < 5 {
+        false
+      } else {
+        rest_nonzero
+      }
+    HalfEven =>
+      if first_digit > 5 {
+        true
+      } else if first_digit < 5 {
+        false
+      } else if rest_nonzero {
+        true
+      } else {
+        // Exact tie. Round to make the last kept digit even.
+        (kept % 10N).to_int() % 2 != 0
+      }
+    Ceiling => !negative && dropped_nonzero
+    Floor => negative && dropped_nonzero
+    ZeroFiveUp => {
+      let last = (kept % 10N).to_int()
+      (last == 0 || last == 5) && dropped_nonzero
+    }
+  }
+}
