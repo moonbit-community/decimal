@@ -62,8 +62,8 @@ pub fn Decimal::divide_int(
 /// quotient digit count is implausibly large we surface `NaN` (GDA's
 /// `Division_impossible`) instead of attempting an intractable BigInt op.
 fn divide_int_finite(a : Decimal, b : Decimal) -> Decimal {
-  let adj_a = a.exponent + digit_count(a.coefficient) - 1
-  let adj_b = b.exponent + digit_count(b.coefficient) - 1
+  let adj_a = adjusted_exponent(a)
+  let adj_b = adjusted_exponent(b)
   if adj_a < adj_b {
     return {
       class: Finite,
@@ -86,25 +86,6 @@ fn divide_int_finite(a : Decimal, b : Decimal) -> Decimal {
     negative: a.negative != b.negative,
     coefficient: an / bn,
     exponent: 0,
-  }
-}
-
-///| Bring `a` and `b` to a representation where `an / bn` (BigInt integer
-/// division) is the truncated integer quotient of the abstract values.
-///
-/// Value(a) / Value(b) = (a_coeff / b_coeff) * 10^(a_exp - b_exp). To get an
-/// integer-division-friendly form, scale up the operand with the larger
-/// exponent so the powers of ten cancel.
-fn align_for_int_div(
-  a_coeff : BigInt,
-  a_exp : Int,
-  b_coeff : BigInt,
-  b_exp : Int,
-) -> (BigInt, BigInt) {
-  if a_exp >= b_exp {
-    (scale_up(a_coeff, a_exp - b_exp), b_coeff)
-  } else {
-    (a_coeff, scale_up(b_coeff, b_exp - a_exp))
   }
 }
 

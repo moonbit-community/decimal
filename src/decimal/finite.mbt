@@ -26,6 +26,22 @@ fn scale_up(coeff : BigInt, shift : Int) -> BigInt {
   }
 }
 
+fn min_exponent(a : Decimal, b : Decimal) -> Int {
+  if a.exponent <= b.exponent {
+    a.exponent
+  } else {
+    b.exponent
+  }
+}
+
+fn adjusted_exponent(d : Decimal) -> Int {
+  d.exponent + digit_count(d.coefficient) - 1
+}
+
+fn adjusted_exponent_parts(coeff : BigInt, exponent : Int) -> Int {
+  exponent + digit_count(coeff) - 1
+}
+
 ///| Add two non-negative magnitudes carrying signs separately, returning the
 /// magnitude and sign of the result.
 fn signed_add(
@@ -47,5 +63,24 @@ fn signed_add(
     } else {
       (0N, false)
     }
+  }
+}
+
+///| Bring `a` and `b` to a representation where `an / bn` (BigInt integer
+/// division) is the truncated integer quotient of the abstract values.
+///
+/// Value(a) / Value(b) = (a_coeff / b_coeff) * 10^(a_exp - b_exp). To get an
+/// integer-division-friendly form, scale up the operand with the larger
+/// exponent so the powers of ten cancel.
+fn align_for_int_div(
+  a_coeff : BigInt,
+  a_exp : Int,
+  b_coeff : BigInt,
+  b_exp : Int,
+) -> (BigInt, BigInt) {
+  if a_exp >= b_exp {
+    (scale_up(a_coeff, a_exp - b_exp), b_coeff)
+  } else {
+    (a_coeff, scale_up(b_coeff, b_exp - a_exp))
   }
 }

@@ -141,8 +141,8 @@ fn compare_magnitudes(
   if b_zero {
     return 1
   }
-  let a_adj = a_exp + digit_count(a_coeff) - 1
-  let b_adj = b_exp + digit_count(b_coeff) - 1
+  let a_adj = adjusted_exponent_parts(a_coeff, a_exp)
+  let b_adj = adjusted_exponent_parts(b_coeff, b_exp)
   if a_adj != b_adj {
     return if a_adj < b_adj { -1 } else { 1 }
   }

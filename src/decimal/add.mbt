@@ -84,11 +84,7 @@ fn add_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
       if a.negative == b.negative {
         return align_zero_add(a, b, ctx)
       }
-      let result_exp = if a.exponent <= b.exponent {
-        a.exponent
-      } else {
-        b.exponent
-      }
+      let result_exp = min_exponent(a, b)
       let neg = match ctx.rounding {
         Floor => true
         _ => false
@@ -106,8 +102,8 @@ fn add_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
   // for those we still have to materialise the alignment and let
   // `round_finite` see the discarded bit.
   if ctx.precision > 0 && is_half_mode(ctx.rounding) {
-    let a_adj = a.exponent + digit_count(a.coefficient) - 1
-    let b_adj = b.exponent + digit_count(b.coefficient) - 1
+    let a_adj = adjusted_exponent(a)
+    let b_adj = adjusted_exponent(b)
     if a_adj > b_adj + ctx.precision + 1 {
       ctx.raise_inexact()
       return align_zero_add(a, b, ctx)
@@ -126,11 +122,7 @@ fn add_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
     Some(d) => return d
     None => ()
   }
-  let result_exp = if a.exponent <= b.exponent {
-    a.exponent
-  } else {
-    b.exponent
-  }
+  let result_exp = min_exponent(a, b)
   let a_scaled = scale_up(a.coefficient, a.exponent - result_exp)
   let b_scaled = scale_up(b.coefficient, b.exponent - result_exp)
   let (sum, neg) = signed_add(a_scaled, a.negative, b_scaled, b.negative)
@@ -144,11 +136,7 @@ fn try_add_finite_small(a : Decimal, b : Decimal) -> Decimal? {
   let b64 = fits_int64(b.coefficient)
   guard a64 is Some(ai) else { return None }
   guard b64 is Some(bi) else { return None }
-  let result_exp = if a.exponent <= b.exponent {
-    a.exponent
-  } else {
-    b.exponent
-  }
+  let result_exp = min_exponent(a, b)
   let a_shift = a.exponent - result_exp
   let b_shift = b.exponent - result_exp
   let ai_scaled = match scale_up_i64(ai, a_shift) {
