@@ -122,9 +122,7 @@ fn add_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
     Some(d) => return d
     None => ()
   }
-  let result_exp = min_exponent(a, b)
-  let a_scaled = scale_up(a.coefficient, a.exponent - result_exp)
-  let b_scaled = scale_up(b.coefficient, b.exponent - result_exp)
+  let (a_scaled, b_scaled, result_exp) = align(a, b)
   let (sum, neg) = signed_add(a_scaled, a.negative, b_scaled, b.negative)
   { class: Finite, negative: neg, coefficient: sum, exponent: result_exp }
 }

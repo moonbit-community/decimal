@@ -34,6 +34,24 @@ fn min_exponent(a : Decimal, b : Decimal) -> Int {
   }
 }
 
+///| Align two finite Decimals to a shared exponent — the smaller of the two —
+/// returning the scaled magnitudes and that shared exponent.
+///
+/// This is the shape additive ops (add, subtract, numeric-compare) all need:
+/// once both magnitudes refer to the same power of ten, the operation is just
+/// integer arithmetic on the coefficients with the common exponent preserved.
+///
+/// `scale_up` is allocation-free for the zero short-circuit and the cached
+/// `pow10_table` range, so the helper is cheap for the common case where the
+/// exponent gap is small. Callers that have an Int64 fast path live alongside
+/// it (e.g. `try_add_finite_small`) handle their own small-int alignment.
+fn align(a : Decimal, b : Decimal) -> (BigInt, BigInt, Int) {
+  let result_exp = min_exponent(a, b)
+  let a_scaled = scale_up(a.coefficient, a.exponent - result_exp)
+  let b_scaled = scale_up(b.coefficient, b.exponent - result_exp)
+  (a_scaled, b_scaled, result_exp)
+}
+
 fn adjusted_exponent(d : Decimal) -> Int {
   d.exponent + digit_count(d.coefficient) - 1
 }
