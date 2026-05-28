@@ -1,5 +1,5 @@
 ///|
-test "round half_up basic" {
+test "finalize half_up basic" {
   let ctx = Context::new(precision=3, rounding=HalfUp)
   // 12345 → 12300 (123 vs dropped 45, first digit 4 < 5)
   let r = Decimal::finalize(Decimal::parse("12345"), ctx)
@@ -9,7 +9,7 @@ test "round half_up basic" {
 }
 
 ///|
-test "round half_up ties go away from zero" {
+test "finalize half_up ties go away from zero" {
   let ctx = Context::new(precision=3, rounding=HalfUp)
   // 12950 → 130 * 10^2 (first dropped digit is 5, half_up rounds up)
   let r = Decimal::finalize(Decimal::parse("12950"), ctx)
@@ -17,7 +17,7 @@ test "round half_up ties go away from zero" {
 }
 
 ///|
-test "round half_up carry-over from 999" {
+test "finalize half_up carry-over from 999" {
   let ctx = Context::new(precision=3, rounding=HalfUp)
   // 9995 → 9 kept + 9 9 5 dropped... actually 999 kept + 5 dropped → round up
   // → 1000 (4 digits), needs re-slicing to 100 * 10^2 = 10000
@@ -26,7 +26,7 @@ test "round half_up carry-over from 999" {
 }
 
 ///|
-test "round half_even on tie rounds to even" {
+test "finalize half_even on tie rounds to even" {
   let ctx = Context::new(precision=3, rounding=HalfEven)
   // 12550 — first dropped is 5, rest zero → exact tie. Kept = 125, odd last
   // digit → round up to 126.
@@ -39,7 +39,7 @@ test "round half_even on tie rounds to even" {
 }
 
 ///|
-test "round half_even non-tie still uses standard half logic" {
+test "finalize half_even non-tie still uses standard half logic" {
   let ctx = Context::new(precision=3, rounding=HalfEven)
   // 12551 → first dropped 5, rest nonzero → above the halfway point, round up.
   let r = Decimal::finalize(Decimal::parse("12551"), ctx)
@@ -47,7 +47,7 @@ test "round half_even non-tie still uses standard half logic" {
 }
 
 ///|
-test "round zero precision is identity" {
+test "finalize zero precision is identity" {
   let ctx = Context::exact()
   let r = Decimal::finalize(Decimal::parse("12345.6789"), ctx)
   assert_eq(r.to_sci_string(), "12345.6789")
@@ -55,7 +55,7 @@ test "round zero precision is identity" {
 }
 
 ///|
-test "round leaves NaN and Infinity alone" {
+test "finalize leaves NaN and Infinity alone" {
   let ctx = Context::new(precision=3, rounding=HalfUp)
   let nan_in = Decimal::parse("NaN123456789")
   let nan_out = Decimal::finalize(nan_in, ctx)
@@ -67,7 +67,7 @@ test "round leaves NaN and Infinity alone" {
 }
 
 ///|
-test "round ceiling and floor track sign" {
+test "finalize ceiling and floor track sign" {
   let pos = Decimal::parse("1.49")
   let neg = Decimal::parse("-1.49")
   // Ceiling: positive non-zero discard → round up (toward +inf).
@@ -85,14 +85,14 @@ test "round ceiling and floor track sign" {
 }
 
 ///|
-test "round down truncates" {
+test "finalize down truncates" {
   let ctx = Context::new(precision=2, rounding=Down)
   assert_eq(Decimal::finalize(Decimal::parse("1.99"), ctx).to_sci_string(), "1.9")
   assert_eq(Decimal::finalize(Decimal::parse("-1.99"), ctx).to_sci_string(), "-1.9")
 }
 
 ///|
-test "round up moves any discarded non-zero away from zero" {
+test "finalize up moves any discarded non-zero away from zero" {
   let ctx = Context::new(precision=2, rounding=Up)
   assert_eq(Decimal::finalize(Decimal::parse("1.01"), ctx).to_sci_string(), "1.1")
   assert_eq(Decimal::finalize(Decimal::parse("-1.01"), ctx).to_sci_string(), "-1.1")
