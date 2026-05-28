@@ -1,0 +1,369 @@
+///| `remainder` cases from `remainder.decTest`, restricted to the half_up
+/// rounding mode and precision >= 9 sections, with cases requiring
+/// rounding or Division_impossible (precision-driven outcome) excluded.
+/// Signal-only conditions like Invalid_operation and Division_by_zero
+/// are kept — only the result string is compared.
+let remainder_subset : String =
+  #|remx001 remainder  1     1    ->  0
+  #|remx002 remainder  2     1    ->  0
+  #|remx003 remainder  1     2    ->  1
+  #|remx004 remainder  2     2    ->  0
+  #|remx005 remainder  0     1    ->  0
+  #|remx006 remainder  0     2    ->  0
+  #|remx007 remainder  1     3    ->  1
+  #|remx008 remainder  2     3    ->  2
+  #|remx009 remainder  3     3    ->  0
+  #|remx010 remainder  2.4   1    ->  0.4
+  #|remx011 remainder  2.4   -1   ->  0.4
+  #|remx012 remainder  -2.4  1    ->  -0.4
+  #|remx013 remainder  -2.4  -1   ->  -0.4
+  #|remx014 remainder  2.40  1    ->  0.40
+  #|remx015 remainder  2.400 1    ->  0.400
+  #|remx016 remainder  2.4   2    ->  0.4
+  #|remx017 remainder  2.400 2    ->  0.400
+  #|remx018 remainder  2.    2    ->  0
+  #|remx019 remainder  20    20   ->  0
+  #|remx020 remainder  187   187    ->  0
+  #|remx021 remainder  5     2      ->  1
+  #|remx022 remainder  5     2.0    ->  1.0
+  #|remx023 remainder  5     2.000  ->  1.000
+  #|remx024 remainder  5     0.200  ->  0.000
+  #|remx025 remainder  5     0.200  ->  0.000
+  #|remx030 remainder  1     2      ->  1
+  #|remx031 remainder  1     4      ->  1
+  #|remx032 remainder  1     8      ->  1
+  #|remx033 remainder  1     16     ->  1
+  #|remx034 remainder  1     32     ->  1
+  #|remx035 remainder  1     64     ->  1
+  #|remx040 remainder  1    -2      ->  1
+  #|remx041 remainder  1    -4      ->  1
+  #|remx042 remainder  1    -8      ->  1
+  #|remx043 remainder  1    -16     ->  1
+  #|remx044 remainder  1    -32     ->  1
+  #|remx045 remainder  1    -64     ->  1
+  #|remx050 remainder -1     2      ->  -1
+  #|remx051 remainder -1     4      ->  -1
+  #|remx052 remainder -1     8      ->  -1
+  #|remx053 remainder -1     16     ->  -1
+  #|remx054 remainder -1     32     ->  -1
+  #|remx055 remainder -1     64     ->  -1
+  #|remx060 remainder -1    -2      ->  -1
+  #|remx061 remainder -1    -4      ->  -1
+  #|remx062 remainder -1    -8      ->  -1
+  #|remx063 remainder -1    -16     ->  -1
+  #|remx064 remainder -1    -32     ->  -1
+  #|remx065 remainder -1    -64     ->  -1
+  #|remx066 remainder  999999999     1  -> 0
+  #|remx067 remainder  999999999.4   1  -> 0.4
+  #|remx068 remainder  999999999.5   1  -> 0.5
+  #|remx069 remainder  999999999.9   1  -> 0.9
+  #|remx070 remainder  999999999.999 1  -> 0.999
+  #|remx080 remainder  0.            1  -> 0
+  #|remx081 remainder  .0            1  -> 0.0
+  #|remx082 remainder  0.00          1  -> 0.00
+  #|remx083 remainder  0.00E+9       1  -> 0
+  #|remx084 remainder  0.00E+3       1  -> 0
+  #|remx085 remainder  0.00E+2       1  -> 0
+  #|remx086 remainder  0.00E+1       1  -> 0.0
+  #|remx087 remainder  0.00E+0       1  -> 0.00
+  #|remx088 remainder  0.00E-0       1  -> 0.00
+  #|remx089 remainder  0.00E-1       1  -> 0.000
+  #|remx090 remainder  0.00E-2       1  -> 0.0000
+  #|remx091 remainder  0.00E-3       1  -> 0.00000
+  #|remx092 remainder  0.00E-4       1  -> 0.000000
+  #|remx093 remainder  0.00E-5       1  -> 0E-7
+  #|remx094 remainder  0.00E-6       1  -> 0E-8
+  #|remx095 remainder  0.0000E-50    1  -> 0E-54
+  #|remx101 remainder  0       0   -> NaN Division_undefined
+  #|remx102 remainder  0      -0   -> NaN Division_undefined
+  #|remx103 remainder -0       0   -> NaN Division_undefined
+  #|remx104 remainder -0      -0   -> NaN Division_undefined
+  #|remx105 remainder  0.0E5   0   -> NaN Division_undefined
+  #|remx106 remainder  0.000   0   -> NaN Division_undefined
+  #|remx107 remainder  0.0001  0   -> NaN Invalid_operation
+  #|remx108 remainder  0.01    0   -> NaN Invalid_operation
+  #|remx109 remainder  0.1     0   -> NaN Invalid_operation
+  #|remx110 remainder  1       0   -> NaN Invalid_operation
+  #|remx111 remainder  1       0.0 -> NaN Invalid_operation
+  #|remx112 remainder 10       0.0 -> NaN Invalid_operation
+  #|remx113 remainder 1E+100   0.0 -> NaN Invalid_operation
+  #|remx114 remainder 1E+1000  0   -> NaN Invalid_operation
+  #|remx115 remainder  0.0001 -0   -> NaN Invalid_operation
+  #|remx116 remainder  0.01   -0   -> NaN Invalid_operation
+  #|remx119 remainder  0.1    -0   -> NaN Invalid_operation
+  #|remx120 remainder  1      -0   -> NaN Invalid_operation
+  #|remx121 remainder  1      -0.0 -> NaN Invalid_operation
+  #|remx122 remainder 10      -0.0 -> NaN Invalid_operation
+  #|remx123 remainder 1E+100  -0.0 -> NaN Invalid_operation
+  #|remx124 remainder 1E+1000 -0   -> NaN Invalid_operation
+  #|remx130 remainder  0      1   ->  0
+  #|remx131 remainder  0     -1   ->  0
+  #|remx132 remainder  0.0    1   ->  0.0
+  #|remx133 remainder  0.0   -1   ->  0.0
+  #|remx134 remainder -0      1   -> -0
+  #|remx135 remainder -0     -1   -> -0
+  #|remx136 remainder -0.0    1   -> -0.0
+  #|remx137 remainder -0.0   -1   -> -0.0
+  #|remx143 remainder   0.5  2     ->  0.5
+  #|remx144 remainder   0.5  2.1   ->  0.5
+  #|remx145 remainder   0.5  2.01  ->  0.50
+  #|remx146 remainder   0.5  2.001 ->  0.500
+  #|remx147 remainder   0.50 2     ->  0.50
+  #|remx148 remainder   0.50 2.01  ->  0.50
+  #|remx149 remainder   0.50 2.001 ->  0.500
+  #|remx150 remainder  1  1   -> 0
+  #|remx151 remainder  1  2   -> 1
+  #|remx152 remainder  1  3   -> 1
+  #|remx153 remainder  1  4   -> 1
+  #|remx154 remainder  1  5   -> 1
+  #|remx155 remainder  1  6   -> 1
+  #|remx156 remainder  1  7   -> 1
+  #|remx157 remainder  1  8   -> 1
+  #|remx158 remainder  1  9   -> 1
+  #|remx159 remainder  1  10  -> 1
+  #|remx160 remainder  1  1   -> 0
+  #|remx161 remainder  2  1   -> 0
+  #|remx162 remainder  3  1   -> 0
+  #|remx163 remainder  4  1   -> 0
+  #|remx164 remainder  5  1   -> 0
+  #|remx165 remainder  6  1   -> 0
+  #|remx166 remainder  7  1   -> 0
+  #|remx167 remainder  8  1   -> 0
+  #|remx168 remainder  9  1   -> 0
+  #|remx169 remainder  10 1   -> 0
+  #|remx171 remainder   0.4  1.020 ->  0.400
+  #|remx172 remainder   0.50 1.020 ->  0.500
+  #|remx173 remainder   0.51 1.020 ->  0.510
+  #|remx174 remainder   0.52 1.020 ->  0.520
+  #|remx175 remainder   0.6  1.020 ->  0.600
+  #|remx201 remainder  0      0   -> NaN Division_undefined
+  #|remx202 remainder  0.0E5  0   -> NaN Division_undefined
+  #|remx203 remainder  0.000  0   -> NaN Division_undefined
+  #|remx204 remainder  0.0001 0   -> NaN Invalid_operation
+  #|remx205 remainder  0.01   0   -> NaN Invalid_operation
+  #|remx206 remainder  0.1    0   -> NaN Invalid_operation
+  #|remx207 remainder  1      0   -> NaN Invalid_operation
+  #|remx208 remainder  1      0.0 -> NaN Invalid_operation
+  #|remx209 remainder 10      0.0 -> NaN Invalid_operation
+  #|remx210 remainder 1E+100  0.0 -> NaN Invalid_operation
+  #|remx211 remainder 1E+1000 0   -> NaN Invalid_operation
+  #|remx231 remainder  -0.4  1.020 -> -0.400
+  #|remx232 remainder  -0.50 1.020 -> -0.500
+  #|remx233 remainder  -0.51 1.020 -> -0.510
+  #|remx234 remainder  -0.52 1.020 -> -0.520
+  #|remx235 remainder  -0.6  1.020 -> -0.600
+  #|remx240 remainder  1E+2  1.00  ->  0.00
+  #|remx270 remainder 1 1e999999999    -> 1
+  #|remx271 remainder 1 0.9e999999999  -> 1
+  #|remx272 remainder 1 0.99e999999999 -> 1
+  #|remx273 remainder 1 0.999999999e999999999 -> 1
+  #|remx301 remainder   1    3     ->  1
+  #|remx302 remainder   5    5     ->  0
+  #|remx303 remainder   13   10    ->  3
+  #|remx304 remainder   13   50    ->  13
+  #|remx305 remainder   13   100   ->  13
+  #|remx306 remainder   13   1000  ->  13
+  #|remx307 remainder   .13    1   ->  0.13
+  #|remx308 remainder   0.133  1   ->  0.133
+  #|remx309 remainder   0.1033 1   ->  0.1033
+  #|remx310 remainder   1.033  1   ->  0.033
+  #|remx311 remainder   10.33  1   ->  0.33
+  #|remx312 remainder   10.33 10   ->  0.33
+  #|remx313 remainder   103.3  1   ->  0.3
+  #|remx314 remainder   133   10   ->  3
+  #|remx315 remainder   1033  10   ->  3
+  #|remx316 remainder   1033  50   ->  33
+  #|remx317 remainder   101.0  3   ->  2.0
+  #|remx318 remainder   102.0  3   ->  0.0
+  #|remx319 remainder   103.0  3   ->  1.0
+  #|remx320 remainder   2.40   1   ->  0.40
+  #|remx321 remainder   2.400  1   ->  0.400
+  #|remx322 remainder   2.4    1   ->  0.4
+  #|remx323 remainder   2.4    2   ->  0.4
+  #|remx324 remainder   2.400  2   ->  0.400
+  #|remx325 remainder   1   0.3    ->  0.1
+  #|remx326 remainder   1   0.30   ->  0.10
+  #|remx327 remainder   1   0.300  ->  0.100
+  #|remx328 remainder   1   0.3000 ->  0.1000
+  #|remx329 remainder   1.0    0.3 ->  0.1
+  #|remx330 remainder   1.00   0.3 ->  0.10
+  #|remx331 remainder   1.000  0.3 ->  0.100
+  #|remx332 remainder   1.0000 0.3 ->  0.1000
+  #|remx333 remainder   0.5  2     ->  0.5
+  #|remx334 remainder   0.5  2.1   ->  0.5
+  #|remx335 remainder   0.5  2.01  ->  0.50
+  #|remx336 remainder   0.5  2.001 ->  0.500
+  #|remx337 remainder   0.50 2     ->  0.50
+  #|remx338 remainder   0.50 2.01  ->  0.50
+  #|remx339 remainder   0.50 2.001 ->  0.500
+  #|remx340 remainder   0.5   0.5000001    ->  0.5000000
+  #|remx341 remainder   0.5   0.50000001    ->  0.50000000
+  #|remx342 remainder   0.5   0.500000001    ->  0.500000000
+  #|remx345 remainder   0.5   0.4999999    ->  1E-7
+  #|remx346 remainder   0.5   0.49999999    ->  1E-8
+  #|remx347 remainder   0.5   0.499999999    ->  1E-9
+  #|remx348 remainder   0.5   0.4999999999    ->  1E-10
+  #|remx349 remainder   0.5   0.49999999999    ->  1E-11
+  #|remx350 remainder   0.5   0.499999999999    ->  1E-12
+  #|remx351 remainder   0.03  7  ->  0.03
+  #|remx352 remainder   5   2    ->  1
+  #|remx353 remainder   4.1   2    ->  0.1
+  #|remx354 remainder   4.01   2    ->  0.01
+  #|remx355 remainder   4.001   2    ->  0.001
+  #|remx356 remainder   4.0001   2    ->  0.0001
+  #|remx357 remainder   4.00001   2    ->  0.00001
+  #|remx358 remainder   4.000001   2    ->  0.000001
+  #|remx359 remainder   4.0000001   2    ->  1E-7
+  #|remx360 remainder   1.2   0.7345 ->  0.4655
+  #|remx361 remainder   0.8   12     ->  0.8
+  #|remx362 remainder   0.8   0.2    ->  0.0
+  #|remx363 remainder   0.8   0.3    ->  0.2
+  #|remx364 remainder   0.800   12   ->  0.800
+  #|remx365 remainder   0.800   1.7  ->  0.800
+  #|remx366 remainder   2.400   2    ->  0.400
+  #|remx401 remainder   0.5         1   ->  0.5
+  #|remx402 remainder   0.55        1   ->  0.55
+  #|remx403 remainder   0.555       1   ->  0.555
+  #|remx404 remainder   0.5555      1   ->  0.5555
+  #|remx405 remainder   0.55555     1   ->  0.55555
+  #|remx406 remainder   0.555555    1   ->  0.555555
+  #|remx407 remainder   0.5555555   1   ->  0.5555555
+  #|remx408 remainder   0.55555555  1   ->  0.55555555
+  #|remx409 remainder   0.555555555 1   ->  0.555555555
+  #|remx650 remainder  1  1 ->  0
+  #|remx651 remainder -1  1 -> -0
+  #|remx652 remainder  1 -1 ->  0
+  #|remx653 remainder -1 -1 -> -0
+  #|remx654 remainder  0  1 ->  0
+  #|remx655 remainder -0  1 -> -0
+  #|remx656 remainder  0 -1 ->  0
+  #|remx657 remainder -0 -1 -> -0
+  #|remx658 remainder  0.00  1  ->  0.00
+  #|remx659 remainder -0.00  1  -> -0.00
+  #|remx680 remainder  Inf  -Inf   ->  NaN Invalid_operation
+  #|remx681 remainder  Inf  -1000  ->  NaN Invalid_operation
+  #|remx682 remainder  Inf  -1     ->  NaN Invalid_operation
+  #|remx683 remainder  Inf   0     ->  NaN Invalid_operation
+  #|remx684 remainder  Inf  -0     ->  NaN Invalid_operation
+  #|remx685 remainder  Inf   1     ->  NaN Invalid_operation
+  #|remx686 remainder  Inf   1000  ->  NaN Invalid_operation
+  #|remx687 remainder  Inf   Inf   ->  NaN Invalid_operation
+  #|remx688 remainder -1000  Inf   -> -1000
+  #|remx689 remainder -Inf   Inf   ->  NaN Invalid_operation
+  #|remx691 remainder -1     Inf   -> -1
+  #|remx692 remainder  0     Inf   ->  0
+  #|remx693 remainder -0     Inf   -> -0
+  #|remx694 remainder  1     Inf   ->  1
+  #|remx695 remainder  1000  Inf   ->  1000
+  #|remx696 remainder  Inf   Inf   ->  NaN Invalid_operation
+  #|remx700 remainder -Inf  -Inf   ->  NaN Invalid_operation
+  #|remx701 remainder -Inf  -1000  ->  NaN Invalid_operation
+  #|remx702 remainder -Inf  -1     ->  NaN Invalid_operation
+  #|remx703 remainder -Inf  -0     ->  NaN Invalid_operation
+  #|remx704 remainder -Inf   0     ->  NaN Invalid_operation
+  #|remx705 remainder -Inf   1     ->  NaN Invalid_operation
+  #|remx706 remainder -Inf   1000  ->  NaN Invalid_operation
+  #|remx707 remainder -Inf   Inf   ->  NaN Invalid_operation
+  #|remx708 remainder -Inf  -Inf   ->  NaN Invalid_operation
+  #|remx709 remainder -1000  Inf   -> -1000
+  #|remx710 remainder -1    -Inf   -> -1
+  #|remx711 remainder -0    -Inf   -> -0
+  #|remx712 remainder  0    -Inf   ->  0
+  #|remx713 remainder  1    -Inf   ->  1
+  #|remx714 remainder  1000 -Inf   ->  1000
+  #|remx715 remainder  Inf  -Inf   ->  NaN Invalid_operation
+  #|remx721 remainder  NaN -Inf    ->  NaN
+  #|remx722 remainder  NaN -1000   ->  NaN
+  #|remx723 remainder  NaN -1      ->  NaN
+  #|remx724 remainder  NaN -0      ->  NaN
+  #|remx725 remainder -NaN  0      -> -NaN
+  #|remx726 remainder  NaN  1      ->  NaN
+  #|remx727 remainder  NaN  1000   ->  NaN
+  #|remx728 remainder  NaN  Inf    ->  NaN
+  #|remx729 remainder  NaN -NaN    ->  NaN
+  #|remx730 remainder -Inf  NaN    ->  NaN
+  #|remx731 remainder -1000 NaN    ->  NaN
+  #|remx732 remainder -1    NaN    ->  NaN
+  #|remx733 remainder -0   -NaN    -> -NaN
+  #|remx734 remainder  0    NaN    ->  NaN
+  #|remx735 remainder  1   -NaN    -> -NaN
+  #|remx736 remainder  1000 NaN    ->  NaN
+  #|remx737 remainder  Inf  NaN    ->  NaN
+  #|remx741 remainder  sNaN -Inf   ->  NaN  Invalid_operation
+  #|remx742 remainder  sNaN -1000  ->  NaN  Invalid_operation
+  #|remx743 remainder -sNaN -1     -> -NaN  Invalid_operation
+  #|remx744 remainder  sNaN -0     ->  NaN  Invalid_operation
+  #|remx745 remainder  sNaN  0     ->  NaN  Invalid_operation
+  #|remx746 remainder  sNaN  1     ->  NaN  Invalid_operation
+  #|remx747 remainder  sNaN  1000  ->  NaN  Invalid_operation
+  #|remx749 remainder  sNaN  NaN   ->  NaN  Invalid_operation
+  #|remx750 remainder  sNaN sNaN   ->  NaN  Invalid_operation
+  #|remx751 remainder  NaN  sNaN   ->  NaN  Invalid_operation
+  #|remx752 remainder -Inf  sNaN   ->  NaN  Invalid_operation
+  #|remx753 remainder -1000 sNaN   ->  NaN  Invalid_operation
+  #|remx754 remainder -1    sNaN   ->  NaN  Invalid_operation
+  #|remx755 remainder -0    sNaN   ->  NaN  Invalid_operation
+  #|remx756 remainder  0    sNaN   ->  NaN  Invalid_operation
+  #|remx757 remainder  1    sNaN   ->  NaN  Invalid_operation
+  #|remx758 remainder  1000 sNaN   ->  NaN  Invalid_operation
+  #|remx759 remainder  Inf -sNaN   -> -NaN  Invalid_operation
+  #|remx760 remainder  NaN1   NaN7   ->  NaN1
+  #|remx761 remainder sNaN2   NaN8   ->  NaN2 Invalid_operation
+  #|remx762 remainder  NaN3  sNaN9   ->  NaN9 Invalid_operation
+  #|remx763 remainder sNaN4  sNaN10  ->  NaN4 Invalid_operation
+  #|remx764 remainder    15   NaN11  ->  NaN11
+  #|remx765 remainder  NaN6   NaN12  ->  NaN6
+  #|remx766 remainder  Inf    NaN13  ->  NaN13
+  #|remx767 remainder  NaN14  -Inf   ->  NaN14
+  #|remx768 remainder    0    NaN15  ->  NaN15
+  #|remx769 remainder  NaN16   -0    ->  NaN16
+  #|remx770 remainder 1 1e999999999    -> 1
+  #|remx771 remainder 1 0.9e999999999  -> 1
+  #|remx772 remainder 1 0.99e999999999 -> 1
+  #|remx773 remainder 1 0.999999999e999999999 -> 1
+  #|remx801 remainder 12345678000 100 -> 0
+  #|remx802 remainder 1 12345678000   -> 1
+  #|remx803 remainder 1234567800  10  -> 0
+  #|remx804 remainder 1 1234567800    -> 1
+  #|remx805 remainder 1234567890  10  -> 0
+  #|remx806 remainder 1 1234567890    -> 1
+  #|remx807 remainder 1234567891  10  -> 1
+  #|remx808 remainder 1 1234567891    -> 1
+  #|remx809 remainder 12345678901 100 -> 1
+  #|remx810 remainder 1 12345678901   -> 1
+  #|remx811 remainder 1234567896  10  -> 6
+  #|remx812 remainder 1 1234567896    -> 1
+  #|remx821 remainder 12345678000 100 -> 0
+  #|remx822 remainder 1 12345678000   -> 1
+  #|remx823 remainder 1234567800  10  -> 0
+  #|remx824 remainder 1 1234567800    -> 1
+  #|remx825 remainder 1234567890  10  -> 0
+  #|remx826 remainder 1 1234567890    -> 1
+  #|remx827 remainder 1234567891  10  -> 1
+  #|remx828 remainder 1 1234567891    -> 1
+  #|remx829 remainder 12345678901 100 -> 1
+  #|remx830 remainder 1 12345678901   -> 1
+  #|remx831 remainder 1234567896  10  -> 6
+  #|remx832 remainder 1 1234567896    -> 1
+  #|remx992 remainder +0.100 9E+999999999               -> 0.100
+  #|remx993 remainder 9E-999999999 +9.100               -> 9E-999999999
+  #|remx997 remainder -0.100 9E+999999999               -> -0.100
+  #|remx998 remainder 9E-999999999 -9.100               -> 9E-999999999
+
+///|
+test "remainder.decTest subset round-trips through parse + remainder + toSci" {
+  let cases = parse_dectest(remainder_subset)
+  assert_eq(cases.length(), 345)
+  let (failures, _) = run_cases(cases)
+  if failures.length() > 0 {
+    println("\{failures.length()} of \{cases.length()} cases failed:")
+    let limit = if failures.length() < 20 { failures.length() } else { 20 }
+    for i in 0..<limit {
+      println("  \{failures[i]}")
+    }
+    if failures.length() > limit {
+      println("  ... \{failures.length() - limit} more")
+    }
+    abort("remainder.decTest failures")
+  }
+}

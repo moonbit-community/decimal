@@ -188,6 +188,10 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(unary(case, Decimal::copy_negate))
   } else if ascii_eq_ci(case.op, "copysign") {
     Some(binary(case, Decimal::copy_sign))
+  } else if ascii_eq_ci(case.op, "divideint") {
+    Some(binary(case, Decimal::divide_int))
+  } else if ascii_eq_ci(case.op, "remainder") {
+    Some(binary(case, Decimal::remainder))
   } else {
     None
   }
