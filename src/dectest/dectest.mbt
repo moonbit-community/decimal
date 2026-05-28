@@ -314,9 +314,39 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(unary_ctx(case, Decimal::to_integral_exact))
   } else if ascii_eq_ci(case.op, "reduce") {
     Some(unary_ctx(case, Decimal::reduce))
+  } else if ascii_eq_ci(case.op, "fma") {
+    Some(ternary_ctx(case, Decimal::fma))
   } else {
     None
   }
+}
+
+///| Apply a context-aware ternary op (`(Decimal, Decimal, Decimal, Context)
+/// -> Decimal`) to the three operands. Used by `fma`.
+fn ternary_ctx(
+  case : TestCase,
+  op : (Decimal, Decimal, Decimal, Context) -> Decimal,
+) -> String raise RunnerError {
+  if case.operands.length() != 3 {
+    raise RunnerError("expects 3 operands, got \{case.operands.length()}")
+  }
+  let a = try Decimal::parse(case.operands[0]) catch {
+    e => raise RunnerError("parse error in operand 0: \{e}")
+  }
+  let b = try Decimal::parse(case.operands[1]) catch {
+    e => raise RunnerError("parse error in operand 1: \{e}")
+  }
+  let c = try Decimal::parse(case.operands[2]) catch {
+    e => raise RunnerError("parse error in operand 2: \{e}")
+  }
+  let ctx = Context::new(
+    precision=case.precision,
+    rounding=case.rounding,
+    e_max=case.max_exponent,
+    e_min=case.min_exponent,
+    clamp=case.clamp,
+  )
+  op(a, b, c, ctx).to_sci_string()
 }
 
 ///| Apply a context-aware unary op to the single operand. Mirrors `unary`

@@ -33,6 +33,34 @@ pub fn Decimal::multiply(
   }
 }
 
+///| GDA `fused-multiply-add`: `(self * other) + addend` with a single
+/// rounding at the final addition. Equivalent to running the multiply at
+/// unbounded precision, then re-finalising the sum under the caller's
+/// context — so the precision-bounded product never loses digits that
+/// would have been recovered by the subsequent add.
+///
+/// NaN / Infinity / zero edge cases route through the existing
+/// `Decimal::multiply` and `Decimal::add`, which already implement the
+/// GDA propagation and `0 * Infinity` / `±Infinity + ∓Infinity` rules.
+/// The only subtlety is sNaN in the addend: the exact-context multiply
+/// can't see it, but the subsequent add will signal `Invalid_operation`
+/// and quieten it as required.
+pub fn Decimal::fma(
+  self : Decimal,
+  other : Decimal,
+  addend : Decimal,
+  ctx : Context,
+) -> Decimal {
+  let exact = Context::exact()
+  let product = Decimal::multiply(self, other, exact)
+  // Reflect the exact-context's signals into the caller context — multiply
+  // raises Invalid_operation for 0×∞, and the user ought to see that.
+  if exact.flags.invalid_operation {
+    ctx.raise_invalid_operation()
+  }
+  Decimal::add(product, addend, ctx)
+}
+
 ///| Multiply two finite Decimals: coefficients multiply, exponents add. The
 /// result sign is the XOR of operand signs even when the coefficient is zero
 /// (so `-0 * +5 = -0`, per GDA's "sign of zero result is XOR of operand signs"
