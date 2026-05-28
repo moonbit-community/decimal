@@ -174,6 +174,10 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(unary(case, Decimal::plus))
   } else if ascii_eq_ci(case.op, "abs") {
     Some(unary(case, Decimal::abs))
+  } else if ascii_eq_ci(case.op, "add") {
+    Some(binary(case, Decimal::add))
+  } else if ascii_eq_ci(case.op, "subtract") {
+    Some(binary(case, Decimal::subtract))
   } else {
     None
   }
@@ -189,6 +193,24 @@ fn unary(case : TestCase, op : (Decimal) -> Decimal) -> String raise RunnerError
     e => raise RunnerError("parse error: \{e}")
   }
   op(parsed).to_sci_string()
+}
+
+///| Apply a binary `Decimal, Decimal -> Decimal` operator to the two operands
+/// and render the result via `to_sci_string`.
+fn binary(
+  case : TestCase,
+  op : (Decimal, Decimal) -> Decimal,
+) -> String raise RunnerError {
+  if case.operands.length() != 2 {
+    raise RunnerError("expects 2 operands, got \{case.operands.length()}")
+  }
+  let lhs = try Decimal::parse(case.operands[0]) catch {
+    e => raise RunnerError("parse error in operand 0: \{e}")
+  }
+  let rhs = try Decimal::parse(case.operands[1]) catch {
+    e => raise RunnerError("parse error in operand 1: \{e}")
+  }
+  op(lhs, rhs).to_sci_string()
 }
 
 ///|
