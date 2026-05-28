@@ -316,6 +316,10 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(unary_ctx(case, Decimal::reduce))
   } else if ascii_eq_ci(case.op, "fma") {
     Some(ternary_ctx(case, Decimal::fma))
+  } else if ascii_eq_ci(case.op, "comparesig") {
+    Some(binary_ctx(case, Decimal::compare_signal))
+  } else if ascii_eq_ci(case.op, "canonical") {
+    Some(unary(case, Decimal::canonical))
   } else {
     None
   }

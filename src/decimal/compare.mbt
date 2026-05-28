@@ -63,6 +63,22 @@ fn compare_numeric_int(a : Decimal, b : Decimal) -> Int {
   }
 }
 
+///| GDA `compare-signal`: numerically compare like `compare`, but signal
+/// `Invalid_operation` on *any* NaN operand — quiet NaNs are treated as
+/// signaling.
+pub fn Decimal::compare_signal(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> Decimal {
+  if self.class is QNaN || other.class is QNaN {
+    ctx.raise_invalid_operation()
+  }
+  // sNaN already raises Invalid_operation inside propagate_nan, so
+  // `compare` handles the signaling/quietening for us.
+  Decimal::compare(self, other, ctx)
+}
+
 ///| GDA `max`: numeric maximum.
 ///
 /// Picks the larger operand; on a numerical tie GDA's sign / exponent

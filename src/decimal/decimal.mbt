@@ -153,3 +153,54 @@ pub fn Decimal::is_nan(self : Decimal) -> Bool {
 pub fn Decimal::is_signaling(self : Decimal) -> Bool {
   self.class is SNaN
 }
+
+///| GDA `canonical`: returns the canonical form of `self`. For this
+/// library every value is already canonical, so this is the identity —
+/// kept for API completeness alongside `is-canonical`.
+pub fn Decimal::canonical(self : Decimal) -> Decimal {
+  self
+}
+
+///| `true` for finite zero (sign-independent: `0` and `-0` both qualify).
+pub fn Decimal::is_zero(self : Decimal) -> Bool {
+  self.class is Finite && self.coefficient.is_zero()
+}
+
+///| Every value produced by this library is canonical — we don't have the
+/// IEEE-754 DPD representation's "non-canonical" encoding to worry about,
+/// so the answer is unconditionally `true`. Provided for API completeness
+/// (`is-canonical` is one of GDA's mandatory predicates).
+pub fn Decimal::is_canonical(self : Decimal) -> Bool {
+  let _ = self
+  true
+}
+
+///| `true` for non-zero finite values whose adjusted exponent is within
+/// `[ctx.e_min, ctx.e_max]` — i.e. the operand is representable in the
+/// "normal" range. Zero and the entire NaN / Infinity family are not
+/// normal.
+pub fn Decimal::is_normal(self : Decimal, ctx : Context) -> Bool {
+  if !(self.class is Finite) {
+    return false
+  }
+  if self.coefficient.is_zero() {
+    return false
+  }
+  let adj = self.exponent + digit_count(self.coefficient) - 1
+  adj >= ctx.e_min && adj <= ctx.e_max
+}
+
+///| `true` for finite non-zero values whose adjusted exponent is below
+/// `ctx.e_min` — i.e. the operand is representable but in the gradual-
+/// underflow region. `is_normal` and `is_subnormal` partition the
+/// finite-non-zero values.
+pub fn Decimal::is_subnormal(self : Decimal, ctx : Context) -> Bool {
+  if !(self.class is Finite) {
+    return false
+  }
+  if self.coefficient.is_zero() {
+    return false
+  }
+  let adj = self.exponent + digit_count(self.coefficient) - 1
+  adj < ctx.e_min
+}
