@@ -332,6 +332,12 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(binary_ctx(case, Decimal::rotate))
   } else if ascii_eq_ci(case.op, "shift") {
     Some(binary_ctx(case, Decimal::shift))
+  } else if ascii_eq_ci(case.op, "nextplus") {
+    Some(unary_ctx(case, Decimal::next_plus))
+  } else if ascii_eq_ci(case.op, "nextminus") {
+    Some(unary_ctx(case, Decimal::next_minus))
+  } else if ascii_eq_ci(case.op, "nexttoward") {
+    Some(binary_ctx(case, Decimal::next_toward))
   } else {
     None
   }
