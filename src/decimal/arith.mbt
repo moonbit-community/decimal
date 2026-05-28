@@ -151,6 +151,15 @@ fn add_finite(a : Decimal, b : Decimal) -> Decimal {
   if a.coefficient.is_zero() && a.negative == b.negative {
     return align_zero_add(b, a)
   }
+  // Small-int fast path: when both operands fit in `Int64` and the
+  // alignment factor isn't too large, do the whole add in primitive Int64,
+  // skipping BigInt allocations for scale_up / signed_add. The path bails
+  // out (returns `None`) on any overflow, falling through to the BigInt
+  // logic below.
+  match try_add_finite_small(a, b) {
+    Some(d) => return d
+    None => ()
+  }
   let result_exp = if a.exponent <= b.exponent {
     a.exponent
   } else {
@@ -160,6 +169,62 @@ fn add_finite(a : Decimal, b : Decimal) -> Decimal {
   let b_scaled = scale_up(b.coefficient, b.exponent - result_exp)
   let (sum, neg) = signed_add(a_scaled, a.negative, b_scaled, b.negative)
   { class: Finite, negative: neg, coefficient: sum, exponent: result_exp }
+}
+
+///| Attempt the add in Int64. Returns `None` if either coefficient or any
+/// intermediate overflows. Caller falls back to the BigInt path on `None`.
+fn try_add_finite_small(a : Decimal, b : Decimal) -> Decimal? {
+  let a64 = fits_int64(a.coefficient)
+  let b64 = fits_int64(b.coefficient)
+  guard a64 is Some(ai) else { return None }
+  guard b64 is Some(bi) else { return None }
+  let result_exp = if a.exponent <= b.exponent {
+    a.exponent
+  } else {
+    b.exponent
+  }
+  let a_shift = a.exponent - result_exp
+  let b_shift = b.exponent - result_exp
+  let ai_scaled = match scale_up_i64(ai, a_shift) {
+    Some(v) => v
+    None => return None
+  }
+  let bi_scaled = match scale_up_i64(bi, b_shift) {
+    Some(v) => v
+    None => return None
+  }
+  // Signed add at Int64 precision.
+  let (sum, neg) = if a.negative == b.negative {
+    match checked_add_i64(ai_scaled, bi_scaled) {
+      Some(s) => (s, a.negative)
+      None => return None
+    }
+  } else if ai_scaled > bi_scaled {
+    (ai_scaled - bi_scaled, a.negative)
+  } else if ai_scaled < bi_scaled {
+    (bi_scaled - ai_scaled, b.negative)
+  } else {
+    (0L, false)
+  }
+  Some({
+    class: Finite,
+    negative: neg,
+    coefficient: BigInt::from_int64(sum),
+    exponent: result_exp,
+  })
+}
+
+///| Multiply `n` by `10^shift` in `Int64`, returning `None` on overflow.
+/// `shift == 0` is the identity short-circuit; `shift >= 19` always
+/// overflows since `10^19 > Int64.MAX`.
+fn scale_up_i64(n : Int64, shift : Int) -> Int64? {
+  if shift == 0 || n == 0L {
+    return Some(n)
+  }
+  match pow10_int64(shift) {
+    Some(factor) => checked_mul_i64(n, factor)
+    None => None
+  }
 }
 
 ///| Fast path for `non_zero + zero` (and `zero + zero` when signs match):
@@ -268,6 +333,22 @@ fn multiply_finite(a : Decimal, b : Decimal) -> Decimal {
       coefficient: 0N,
       exponent: a.exponent + b.exponent,
     }
+  }
+  // Small-int fast path: if both fit Int64 and their product also fits, do
+  // the multiplication primitively. Saves the BigInt result allocation.
+  match (fits_int64(a.coefficient), fits_int64(b.coefficient)) {
+    (Some(ai), Some(bi)) =>
+      match checked_mul_i64(ai, bi) {
+        Some(p) =>
+          return {
+            class: Finite,
+            negative: a.negative != b.negative,
+            coefficient: BigInt::from_int64(p),
+            exponent: a.exponent + b.exponent,
+          }
+        None => ()
+      }
+    _ => ()
   }
   {
     class: Finite,

@@ -34,3 +34,57 @@ fn pow10(n : Int) -> BigInt {
     BigInt::pow(10N, BigInt::from_int(n))
   }
 }
+
+///| `10^n` as `Int64` if it fits, `None` if `n >= 19` (10^19 overflows
+/// Int64.MAX). The fast-path arithmetic routines use this to choose whether
+/// they can align coefficients without leaving the Int64 lane.
+let pow10_int64_table : FixedArray[Int64] = [
+  1L, 10L, 100L, 1000L, 10000L, 100000L, 1000000L, 10000000L, 100000000L,
+  1000000000L, 10000000000L, 100000000000L, 1000000000000L,
+  10000000000000L, 100000000000000L, 1000000000000000L, 10000000000000000L,
+  100000000000000000L, 1000000000000000000L,
+]
+
+///|
+fn pow10_int64(n : Int) -> Int64? {
+  if n >= 0 && n < pow10_int64_table.length() {
+    Some(pow10_int64_table[n])
+  } else {
+    None
+  }
+}
+
+///| Try to extract a non-negative `Int64` from a `BigInt` if it fits in 63
+/// bits. Returns `None` for values past `Int64.MAX`. The arithmetic ops use
+/// this to opt into a fast path for small operands.
+fn fits_int64(b : BigInt) -> Int64? {
+  if b.bit_length() < 63 {
+    Some(b.to_int64())
+  } else {
+    None
+  }
+}
+
+///| Multiply two non-negative `Int64`s and report overflow with `None`.
+/// Used by the small-int multiply fast path to bail out into BigInt when
+/// the product exceeds Int64.
+fn checked_mul_i64(a : Int64, b : Int64) -> Int64? {
+  // The straightforward overflow check: divide back if either is non-zero.
+  // For non-negative inputs, `a * b` overflows iff `a > Int64.MAX / b`.
+  if a == 0L || b == 0L {
+    Some(0L)
+  } else if a > 9223372036854775807L / b {
+    None
+  } else {
+    Some(a * b)
+  }
+}
+
+///| Add two non-negative `Int64`s and report overflow with `None`.
+fn checked_add_i64(a : Int64, b : Int64) -> Int64? {
+  if a > 9223372036854775807L - b {
+    None
+  } else {
+    Some(a + b)
+  }
+}
