@@ -168,6 +168,8 @@ fn run_one(case : TestCase) -> CaseOutcome {
 fn compute(case : TestCase) -> String? raise RunnerError {
   if ascii_eq_ci(case.op, "tosci") {
     Some(unary(case, fn(d) { d }))
+  } else if ascii_eq_ci(case.op, "minus") {
+    Some(unary(case, Decimal::minus))
   } else {
     None
   }
