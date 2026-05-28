@@ -1,0 +1,12 @@
+///| Re-import the decimal package's types into this per-op test package.
+pub using @decimal {
+  type Decimal,
+  type Class,
+  type ParseError,
+  type Context,
+  type Rounding,
+  type Flags,
+}
+
+///| Re-export the dectest runner's entry points.
+pub using @dectest { type TestCase, parse_dectest, run_cases }
