@@ -306,9 +306,38 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(binary(case, Decimal::compare_total_mag))
   } else if ascii_eq_ci(case.op, "samequantum") {
     Some(binary(case, Decimal::same_quantum))
+  } else if ascii_eq_ci(case.op, "quantize") {
+    Some(binary_ctx(case, Decimal::quantize))
+  } else if ascii_eq_ci(case.op, "tointegral") {
+    Some(unary_ctx(case, Decimal::to_integral_value))
+  } else if ascii_eq_ci(case.op, "tointegralx") {
+    Some(unary_ctx(case, Decimal::to_integral_exact))
   } else {
     None
   }
+}
+
+///| Apply a context-aware unary op to the single operand. Mirrors `unary`
+/// but threads the test case's precision / rounding / exponent-range
+/// directives through `Context::new`.
+fn unary_ctx(
+  case : TestCase,
+  op : (Decimal, Context) -> Decimal,
+) -> String raise RunnerError {
+  if case.operands.length() != 1 {
+    raise RunnerError("expects 1 operand, got \{case.operands.length()}")
+  }
+  let parsed = try Decimal::parse(case.operands[0]) catch {
+    e => raise RunnerError("parse error: \{e}")
+  }
+  let ctx = Context::new(
+    precision=case.precision,
+    rounding=case.rounding,
+    e_max=case.max_exponent,
+    e_min=case.min_exponent,
+    clamp=case.clamp,
+  )
+  op(parsed, ctx).to_sci_string()
 }
 
 ///| Apply a unary `Decimal -> Decimal` operator to the single operand and
