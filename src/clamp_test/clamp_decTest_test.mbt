@@ -32,13 +32,39 @@ let clamp_subset : String =
   #|addx1636 add -1E-401   1E-401 -> -0E-398 Clamped
   #|addx1637 add  1E-401  -1E-401 -> -0E-398 Clamped
 
+///| Pure-clamp case from `subtract.decTest` — opposite-sign cancellation
+/// producing a zero below etiny.
+let clamp_subset_subtract : String =
+  #|precision: 3
+  #|maxexponent: 999
+  #|minexponent: -999
+  #|rounding: half_up
+  #|subx1053 subtract  0.100E-999  0.1E-999  ->   0E-1001    Clamped
+
+///| Pure-clamp cases from `multiply.decTest` — zero × non-zero / non-zero ×
+/// zero where the product's exponent lies outside `[etiny, e_max]`.
+/// mulx505 specifically exercises the upper-bound clamp: a zero with
+/// exponent above `e_max` (not `etop`) gets folded to `e_max`,
+/// unconditionally. This was missing from the original implementation.
+let clamp_subset_multiply : String =
+  #|precision: 7
+  #|rounding: half_up
+  #|maxexponent: 92
+  #|minexponent: -92
+  #|mulx504  multiply  0E-60 1000E-60  -> 0E-98 Clamped
+  #|mulx505  multiply  100E+60 0E+60   -> 0E+92 Clamped
+
 ///|
-test "clamp.decTest subset: zero results below etiny are lifted to etiny" {
-  let cases = parse_dectest(clamp_subset)
-  assert_eq(cases.length(), 12)
+fn run_clamp_subset(
+  label : String,
+  subset : String,
+  expected : Int,
+) -> Unit raise {
+  let cases = parse_dectest(subset)
+  assert_eq(cases.length(), expected)
   let (failures, _) = run_cases(cases)
   if failures.length() > 0 {
-    println("\{failures.length()} of \{cases.length()} cases failed:")
+    println("\{label}: \{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 20 { failures.length() } else { 20 }
     for i in 0..<limit {
       println("  \{failures[i]}")
@@ -46,6 +72,21 @@ test "clamp.decTest subset: zero results below etiny are lifted to etiny" {
     if failures.length() > limit {
       println("  ... \{failures.length() - limit} more")
     }
-    abort("clamp.decTest failures")
+    abort("\{label}.decTest failures")
   }
+}
+
+///|
+test "clamp add subset: zero results below etiny are lifted to etiny" {
+  run_clamp_subset("add", clamp_subset, 12)
+}
+
+///|
+test "clamp subtract subset: opposite-sign cancellation below etiny" {
+  run_clamp_subset("subtract", clamp_subset_subtract, 1)
+}
+
+///|
+test "clamp multiply subset: zero exponent clamps to [etiny, e_max]" {
+  run_clamp_subset("multiply", clamp_subset_multiply, 2)
 }
