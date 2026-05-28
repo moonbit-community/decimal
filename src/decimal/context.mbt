@@ -130,7 +130,7 @@ fn round_finite(d : Decimal, ctx : Context) -> Decimal {
   if ctx.precision == 0 {
     return d
   }
-  let n = d.coefficient.to_string().length()
+  let n = digit_count(d.coefficient)
   if n <= ctx.precision {
     return d
   }

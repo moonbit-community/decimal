@@ -54,6 +54,32 @@ fn pow10_int64(n : Int) -> Int64? {
   }
 }
 
+///| Number of decimal digits in the magnitude of `b`. Zero counts as one
+/// digit. Uses `bit_length() * log10(2)` for an O(1) estimate, then a single
+/// power-of-ten comparison to refine the boundary case where the estimate
+/// could be off by one.
+///
+/// This replaces `b.to_string().length()` in every hot-path digit-count
+/// reader (`round_finite`, `compare_magnitudes`). For the small coefficients
+/// dectest exercises (< 30 digits), avoiding `to_string` is a measurable
+/// win — `to_string` does O(n²) grade-school divisions just to discard the
+/// resulting characters past their `.length()`.
+fn digit_count(b : BigInt) -> Int {
+  if b.is_zero() {
+    return 1
+  }
+  let bits = b.bit_length()
+  // `log10(2) ≈ 0.30102999566`. The fixed-point factor `30103 / 100000` is
+  // accurate enough that the estimate lands either on the true digit count
+  // or one off; the comparison against `pow10(estimate)` resolves the tie.
+  let estimate = bits * 30103 / 100000 + 1
+  if estimate > 0 && b < pow10(estimate - 1) {
+    estimate - 1
+  } else {
+    estimate
+  }
+}
+
 ///| Try to extract a non-negative `Int64` from a `BigInt` if it fits in 63
 /// bits. Returns `None` for values past `Int64.MAX`. The arithmetic ops use
 /// this to opt into a fast path for small operands.

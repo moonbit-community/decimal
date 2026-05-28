@@ -503,8 +503,8 @@ pub fn Decimal::divide_int(
 /// quotient digit count is implausibly large we surface `NaN` (GDA's
 /// `Division_impossible`) instead of attempting an intractable BigInt op.
 fn divide_int_finite(a : Decimal, b : Decimal) -> Decimal {
-  let adj_a = a.exponent + a.coefficient.to_string().length() - 1
-  let adj_b = b.exponent + b.coefficient.to_string().length() - 1
+  let adj_a = a.exponent + digit_count(a.coefficient) - 1
+  let adj_b = b.exponent + digit_count(b.coefficient) - 1
   if adj_a < adj_b {
     return {
       class: Finite,
