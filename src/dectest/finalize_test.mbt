@@ -191,12 +191,12 @@ test "finalize clamp folds exponent down" {
 
 ///|
 test "finalize clamp leaves in-range exponents alone" {
-  // precision=3, e_max=5 → etop=3. Input has exponent exactly at etop, so
-  // there's nothing to fold; the value passes through unchanged.
+  // precision=3, e_max=5 → etop=3. Input parses to (coef=123, exp=0):
+  // exponent 0 ≤ etop, no fold. Renders as "123" per GDA's plain-form rule
+  // (exp ≤ 0 && adj ≥ -6), same as basx068.
   let ctx = Context::new(precision=3, e_max=5, clamp=true)
   assert_eq(
-    Decimal::finalize(Decimal::parse("1.23E+5"), ctx).to_sci_string(),
-    "1.23E+5",
+    Decimal::finalize(Decimal::parse("1.23E+2"), ctx).to_sci_string(), "123",
   )
   assert_false(ctx.flags.clamped)
 }
