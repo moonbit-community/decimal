@@ -292,6 +292,14 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(binary_ctx(case, Decimal::remainder))
   } else if ascii_eq_ci(case.op, "compare") {
     Some(binary_ctx(case, Decimal::compare))
+  } else if ascii_eq_ci(case.op, "max") {
+    Some(binary_ctx(case, Decimal::max))
+  } else if ascii_eq_ci(case.op, "min") {
+    Some(binary_ctx(case, Decimal::min))
+  } else if ascii_eq_ci(case.op, "maxmag") {
+    Some(binary_ctx(case, Decimal::max_magnitude))
+  } else if ascii_eq_ci(case.op, "minmag") {
+    Some(binary_ctx(case, Decimal::min_magnitude))
   } else if ascii_eq_ci(case.op, "comparetotal") {
     Some(binary(case, Decimal::compare_total))
   } else if ascii_eq_ci(case.op, "comparetotmag") {

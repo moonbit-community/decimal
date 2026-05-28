@@ -63,6 +63,129 @@ fn compare_numeric_int(a : Decimal, b : Decimal) -> Int {
   }
 }
 
+///| GDA `max`: numeric maximum.
+///
+/// Picks the larger operand; on a numerical tie GDA's sign / exponent
+/// rule applies (positive over negative; if same sign, larger exponent
+/// for the positive chain, smaller exponent for the negative chain).
+///
+/// NaN handling diverges from `compare`: a single quiet NaN is ignored,
+/// and `max(qNaN, x) = x` (with x re-finalised). A signaling NaN still
+/// signals and quietens. Both qNaN: canonical NaN returned (the left
+/// operand here).
+pub fn Decimal::max(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> Decimal {
+  max_min_choose(self, other, ctx, true, false)
+}
+
+///| GDA `min`: numeric minimum. Mirrors `max`'s sign / exponent tiebreak.
+pub fn Decimal::min(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> Decimal {
+  max_min_choose(self, other, ctx, false, false)
+}
+
+///| GDA `max-magnitude`: compare by absolute value, returning the operand
+/// whose magnitude is larger. Sign of the returned operand is preserved.
+/// On a magnitude tie the same sign / exponent rule as `max` applies.
+pub fn Decimal::max_magnitude(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> Decimal {
+  max_min_choose(self, other, ctx, true, true)
+}
+
+///| GDA `min-magnitude`: compare by absolute value, returning the operand
+/// whose magnitude is smaller.
+pub fn Decimal::min_magnitude(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> Decimal {
+  max_min_choose(self, other, ctx, false, true)
+}
+
+///| Shared backbone for max / min / max-magnitude / min-magnitude.
+///
+/// NaN routing follows decNumber's `decCompareOp(COMPMAX/COMPMIN)`:
+/// * Any sNaN → signal `Invalid_operation`, return it quietened.
+/// * Exactly one qNaN → return the other operand (finalised under ctx).
+/// * Both qNaN → return `self` as the canonical NaN (no signal).
+///
+/// For non-NaN pairs the chosen operand is finalised under ctx — `max`
+/// rounds its result the way an arithmetic op would.
+fn max_min_choose(
+  a : Decimal,
+  b : Decimal,
+  ctx : Context,
+  is_max : Bool,
+  magnitude : Bool,
+) -> Decimal {
+  if a.class is SNaN {
+    ctx.raise_invalid_operation()
+    return { ..a, class: QNaN }
+  }
+  if b.class is SNaN {
+    ctx.raise_invalid_operation()
+    return { ..b, class: QNaN }
+  }
+  let a_qnan = a.class is QNaN
+  let b_qnan = b.class is QNaN
+  if a_qnan && b_qnan {
+    return a
+  }
+  if a_qnan {
+    return b.finalize(ctx)
+  }
+  if b_qnan {
+    return a.finalize(ctx)
+  }
+  let cmp = if magnitude {
+    compare_numeric_int({ ..a, negative: false }, { ..b, negative: false })
+  } else {
+    compare_numeric_int(a, b)
+  }
+  let mut pick_a = if cmp > 0 {
+    1
+  } else if cmp < 0 {
+    -1
+  } else {
+    // Numerical tie — GDA / decNumber §decCompareOp tiebreak.
+    if a.negative != b.negative {
+      if a.negative {
+        -1
+      } else {
+        1
+      }
+    } else if a.negative {
+      // Both negative: smaller exponent wins for max, larger for min.
+      if a.exponent < b.exponent {
+        1
+      } else {
+        -1
+      }
+    } else {
+      // Both positive: larger exponent wins for max, smaller for min.
+      if a.exponent > b.exponent {
+        1
+      } else {
+        -1
+      }
+    }
+  }
+  if !is_max {
+    pick_a = -pick_a
+  }
+  let choice = if pick_a > 0 { a } else { b }
+  choice.finalize(ctx)
+}
+
 ///| GDA `compare-total`: total ordering across every Decimal value,
 /// including NaNs. Returns `-1`, `0`, or `1` as a `Decimal`.
 ///
