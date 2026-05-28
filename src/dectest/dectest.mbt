@@ -170,6 +170,10 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(unary(case, fn(d) { d }))
   } else if ascii_eq_ci(case.op, "minus") {
     Some(unary(case, Decimal::minus))
+  } else if ascii_eq_ci(case.op, "plus") {
+    Some(unary(case, Decimal::plus))
+  } else if ascii_eq_ci(case.op, "abs") {
+    Some(unary(case, Decimal::abs))
   } else {
     None
   }

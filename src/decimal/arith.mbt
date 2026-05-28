@@ -21,3 +21,32 @@ pub fn Decimal::minus(self : Decimal) -> Decimal {
     Infinity => { ..self, negative: !self.negative }
   }
 }
+
+///| GDA `plus`: equivalent to `add('0', N)`. Differs from `minus` only on
+/// finite non-zero and Infinity (where it preserves the sign instead of
+/// flipping). Zero is canonicalized to `+0`, QNaN propagates unchanged, and
+/// sNaN is silently quietened.
+pub fn Decimal::plus(self : Decimal) -> Decimal {
+  match self.class {
+    QNaN => self
+    SNaN => { ..self, class: QNaN }
+    Finite =>
+      if self.coefficient.is_zero() {
+        { ..self, negative: false }
+      } else {
+        self
+      }
+    Infinity => self
+  }
+}
+
+///| GDA `abs`: `minus` if the operand's sign bit is set, `plus` otherwise.
+/// Note that for NaN inputs the sign bit is *not* cleared — NaN propagation
+/// wins over the "absolute value" intuition, so e.g. `abs(-NaN22) = -NaN22`.
+pub fn Decimal::abs(self : Decimal) -> Decimal {
+  if self.negative {
+    Decimal::minus(self)
+  } else {
+    Decimal::plus(self)
+  }
+}
