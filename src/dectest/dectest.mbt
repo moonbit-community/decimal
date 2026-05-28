@@ -340,6 +340,8 @@ fn compute(case : TestCase) -> String? raise RunnerError {
     Some(binary_ctx(case, Decimal::next_toward))
   } else if ascii_eq_ci(case.op, "squareroot") {
     Some(unary_ctx(case, Decimal::sqrt))
+  } else if ascii_eq_ci(case.op, "class") {
+    Some(unary_ctx_string(case, Decimal::number_class))
   } else {
     None
   }
@@ -371,6 +373,29 @@ fn ternary_ctx(
     clamp=case.clamp,
   )
   op(a, b, c, ctx).to_sci_string()
+}
+
+///| Apply a context-aware unary op that returns a raw `String` (rather
+/// than a `Decimal` rendered via `to_sci_string`). Used by `class`, whose
+/// result is a category label like `+Normal`.
+fn unary_ctx_string(
+  case : TestCase,
+  op : (Decimal, Context) -> String,
+) -> String raise RunnerError {
+  if case.operands.length() != 1 {
+    raise RunnerError("expects 1 operand, got \{case.operands.length()}")
+  }
+  let parsed = try Decimal::parse(case.operands[0]) catch {
+    e => raise RunnerError("parse error: \{e}")
+  }
+  let ctx = Context::new(
+    precision=case.precision,
+    rounding=case.rounding,
+    e_max=case.max_exponent,
+    e_min=case.min_exponent,
+    clamp=case.clamp,
+  )
+  op(parsed, ctx)
 }
 
 ///| Apply a context-aware unary op to the single operand. Mirrors `unary`

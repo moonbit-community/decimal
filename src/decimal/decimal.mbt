@@ -161,6 +161,31 @@ pub fn Decimal::canonical(self : Decimal) -> Decimal {
   self
 }
 
+///| GDA `class`: render the operand's category as one of the ten symbolic
+/// labels from §3.5: `sNaN`, `NaN`, `+Infinity`, `-Infinity`, `+Normal`,
+/// `-Normal`, `+Subnormal`, `-Subnormal`, `+Zero`, `-Zero`. The Normal /
+/// Subnormal distinction needs the active `Context` to know `e_min`.
+///
+/// Named `number_class` rather than `class` because `class` is a field
+/// name on `Decimal`; the GDA op name `class` would clash with field
+/// access syntax.
+pub fn Decimal::number_class(self : Decimal, ctx : Context) -> String {
+  let sign = if self.negative { "-" } else { "+" }
+  match self.class {
+    SNaN => "sNaN"
+    QNaN => "NaN"
+    Infinity => sign + "Infinity"
+    Finite =>
+      if self.coefficient.is_zero() {
+        sign + "Zero"
+      } else if self.is_subnormal(ctx) {
+        sign + "Subnormal"
+      } else {
+        sign + "Normal"
+      }
+  }
+}
+
 ///| `true` for finite zero (sign-independent: `0` and `-0` both qualify).
 pub fn Decimal::is_zero(self : Decimal) -> Bool {
   self.class is Finite && self.coefficient.is_zero()
