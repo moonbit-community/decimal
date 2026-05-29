@@ -20,7 +20,19 @@
 /// alongside the subnormal handling and the `clamp` field on Context.
 pub fn Decimal::finalize(self : Decimal, ctx : Context) -> Decimal {
   match self.class {
-    Finite => check_range(round_finite(self, ctx), ctx)
+    Finite => {
+      // Capture the operand's adjusted exponent *before* rounding so the
+      // subnormal check uses the GDA-defined "pre-round adj < e_min"
+      // rule. Without this, results that round up to the e_min boundary
+      // (e.g., 0.999E-999 → 1.00E-999 at precision 3) would miss
+      // Subnormal/Underflow because their post-round adj equals e_min.
+      let pre_adj = if self.coefficient.is_zero() {
+        0
+      } else {
+        adjusted_exponent(self)
+      }
+      check_range(round_finite(self, ctx), pre_adj, ctx)
+    }
     _ => self
   }
 }
@@ -41,7 +53,7 @@ pub fn Decimal::finalize(self : Decimal, ctx : Context) -> Decimal {
 /// Non-zero subnormal (where the coefficient has more digits than fits at
 /// etiny) needs the underflow re-rounding path; that depends on quantize
 /// and lands separately.
-fn check_range(d : Decimal, ctx : Context) -> Decimal {
+fn check_range(d : Decimal, pre_adj : Int, ctx : Context) -> Decimal {
   if ctx.precision == 0 {
     return d
   }
@@ -51,15 +63,20 @@ fn check_range(d : Decimal, ctx : Context) -> Decimal {
       ctx.raise_clamped()
       return { ..d, exponent: etiny }
     }
-    // The storable upper bound for a zero exponent is `e_max`, not `etop`:
-    // a zero has no significant digits, so its exponent isn't constrained
-    // by the "leading digit at e_max" rule that defines etop for finite
-    // non-zero. Clamp unconditionally (matches apd's setExponent zero
-    // branch and decNumber's "clamp zero exponent into [etiny, emax]"
-    // invariant).
     if d.exponent > ctx.e_max {
       ctx.raise_clamped()
       return { ..d, exponent: ctx.e_max }
+    }
+    // A zero that arose from underflow rounding still needs the
+    // Subnormal / Underflow / Clamped trio raised — the *pre-round*
+    // operand was subnormal, even though the rounded result is exactly
+    // zero at etiny.
+    if pre_adj < ctx.e_min {
+      ctx.raise_subnormal()
+      if ctx.flags.inexact {
+        ctx.raise_underflow()
+      }
+      ctx.raise_clamped()
     }
     return if ctx.clamp { apply_clamp(d, ctx) } else { d }
   }
@@ -67,7 +84,11 @@ fn check_range(d : Decimal, ctx : Context) -> Decimal {
   if adj > ctx.e_max {
     return apply_overflow(d, ctx)
   }
-  if adj < ctx.e_min {
+  // Subnormal status is decided by the *pre-round* adjusted exponent
+  // (GDA §9.5.2): a result whose unrounded value sat below e_min is
+  // subnormal even when the rounded coefficient happens to land at
+  // adj == e_min (e.g., 0.999E-999 → 1.00E-999 at precision 3).
+  if pre_adj < ctx.e_min {
     return apply_subnormal(d, ctx)
   }
   if ctx.clamp {
@@ -86,41 +107,22 @@ fn check_range(d : Decimal, ctx : Context) -> Decimal {
 /// exponent is below etiny, the coefficient is re-rounded so the
 /// exponent lifts to etiny, and `Underflow` + `Inexact` fire when the
 /// re-rounding discards non-zero digits.
+///| Mark a subnormal result and raise associated flags. `round_finite`
+/// already pushed the rounding past both the precision and etiny cuts,
+/// so this is purely a flag-raising step — no re-rounding.
 fn apply_subnormal(d : Decimal, ctx : Context) -> Decimal {
   ctx.raise_subnormal()
-  // GDA: Underflow fires when a subnormal result is also inexact. The
-  // upstream `round_finite` may already have raised inexact (from the
-  // original precision cut) — if so, Underflow must follow even when the
-  // subnormal re-rounding itself drops only zero digits.
+  // Underflow fires when the subnormal result is also inexact (raised
+  // upstream by round_finite when non-zero digits were discarded).
   if ctx.flags.inexact {
     ctx.raise_underflow()
   }
-  let etiny = ctx.e_min - ctx.precision + 1
-  if d.exponent >= etiny {
-    return d
-  }
-  let drop = etiny - d.exponent
-  let divisor = pow10(drop)
-  let kept = d.coefficient / divisor
-  let dropped = d.coefficient % divisor
-  let round_up = round_decision(
-    dropped, drop, kept, d.negative, ctx.rounding,
-  )
-  let candidate = if round_up { kept + 1N } else { kept }
-  // Reaching this branch means we dropped at least one digit; Rounded
-  // fires whether or not those digits were zero (consistent with how
-  // round_finite raises Rounded for any precision-cut, exact or not).
-  ctx.raise_rounded()
-  if !dropped.is_zero() {
-    ctx.raise_inexact()
-    ctx.raise_underflow()
-  }
-  if candidate.is_zero() {
-    // Rounded all the way to zero — etiny clamp applies as Clamped (per
-    // the zero etiny rule above).
+  // If the rounding collapsed the value to zero at the etiny floor, the
+  // etiny clamp rule fires alongside Subnormal.
+  if d.coefficient.is_zero() {
     ctx.raise_clamped()
   }
-  { ..d, coefficient: candidate, exponent: etiny }
+  d
 }
 
 ///| GDA §9.5.3 clamp. When the result's exponent exceeds `etop`, fold it
@@ -170,18 +172,36 @@ fn apply_overflow(d : Decimal, ctx : Context) -> Decimal {
   }
 }
 
-///| The finite rounding path. Splits the coefficient into kept and
-/// dropped parts via BigInt div/mod (no String round-trip), decides whether
-/// to round up, and handles the `999→1000` carry-over.
+///| The finite rounding path. Decides how many digits to drop based on
+/// *both* the precision cap and the etiny floor — taking the larger of
+/// the two so a single rounding pass produces a result that already
+/// satisfies both constraints, avoiding the double-rounding bias from
+/// rounding to precision and then re-rounding to etiny separately.
+///
+/// e.g., `1.52445E-80` with precision 5 and etiny -83:
+/// * Precision alone would drop 1 digit (six → five) and round half-up
+///   to `1.5245E-80`, then a subsequent subnormal pass would drop one
+///   more and round to `1.525E-80`.
+/// * Combined drop is 2 digits, rounding `1.52445E-80` once gives
+///   `1.524E-80` (the correctly-rounded subnormal result).
 fn round_finite(d : Decimal, ctx : Context) -> Decimal {
   if ctx.precision == 0 {
     return d
   }
-  let n = digit_count(d.coefficient)
-  if n <= ctx.precision {
+  // Zero coefficients have nothing to round; the etiny / e_max exponent
+  // clamp lives in check_range's zero branch, where it surfaces Clamped
+  // rather than Rounded.
+  if d.coefficient.is_zero() {
     return d
   }
-  let dropped_len = n - ctx.precision
+  let n = digit_count(d.coefficient)
+  let prec_drop = if n > ctx.precision { n - ctx.precision } else { 0 }
+  let etiny = ctx.e_min - ctx.precision + 1
+  let sub_drop = if etiny > d.exponent { etiny - d.exponent } else { 0 }
+  let dropped_len = if prec_drop > sub_drop { prec_drop } else { sub_drop }
+  if dropped_len == 0 {
+    return d
+  }
   let divisor = pow10(dropped_len)
   let kept = d.coefficient / divisor
   let dropped = d.coefficient % divisor
