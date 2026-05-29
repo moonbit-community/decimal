@@ -202,6 +202,32 @@ fn round_finite(d : Decimal, ctx : Context) -> Decimal {
   if dropped_len == 0 {
     return d
   }
+  // Short-circuit: if every digit lies past the drop point (`dropped_len >
+  // n`), `pow10(dropped_len)` would explode for cases like
+  // `multiply(0.1, 9E-999999998)` where the natural exponent (-999999999)
+  // sits a billion places below etiny. The first-dropped-digit is then a
+  // leading zero (the coefficient is padded on the left to dropped_len),
+  // so we can decide round_decision by hand without materialising any
+  // big factor.
+  if dropped_len > n {
+    let coef_nonzero = !d.coefficient.is_zero()
+    let round_up = match ctx.rounding {
+      Down => false
+      Up => coef_nonzero
+      HalfUp => false
+      HalfDown => false
+      HalfEven => false
+      Ceiling => !d.negative && coef_nonzero
+      Floor => d.negative && coef_nonzero
+      ZeroFiveUp => coef_nonzero
+    }
+    let candidate : BigInt = if round_up { 1N } else { 0N }
+    ctx.raise_rounded()
+    if coef_nonzero {
+      ctx.raise_inexact()
+    }
+    return { ..d, coefficient: candidate, exponent: etiny }
+  }
   let divisor = pow10(dropped_len)
   let kept = d.coefficient / divisor
   let dropped = d.coefficient % divisor
@@ -209,10 +235,12 @@ fn round_finite(d : Decimal, ctx : Context) -> Decimal {
     dropped, dropped_len, kept, d.negative, ctx.rounding,
   )
   let candidate = if round_up { kept + 1N } else { kept }
-  // 999 → 1000: candidate gained a digit. The new digit count is exactly
-  // `precision + 1`; comparing against `10^precision` is the cheap check.
-  let precision_cap = pow10(ctx.precision)
-  let (final_coeff, extra) = if candidate >= precision_cap {
+  // 999 → 1000: candidate gained a digit. Check via digit count rather
+  // than `candidate >= pow10(precision)` — the latter materialises a
+  // huge BigInt when precision is large (e.g. multiply.decTest has
+  // sections with precision 999_999, where pow10(999_999) is a
+  // million-digit number).
+  let (final_coeff, extra) = if digit_count(candidate) > ctx.precision {
     (candidate / 10N, 1)
   } else {
     (candidate, 0)
