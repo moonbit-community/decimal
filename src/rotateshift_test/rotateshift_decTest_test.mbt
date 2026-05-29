@@ -1,4 +1,5 @@
-///| First 60 cases each from `rotate.decTest` and `shift.decTest`.
+///|
+/// First 60 cases each from `rotate.decTest` and `shift.decTest`.
 /// Skips sNaN cases pending runner-side flag validation.
 let rotate_subset : String =
   #|precision:   9
@@ -66,6 +67,7 @@ let rotate_subset : String =
   #|rotx145 rotate  1E-999              -1  -> 1.00000000E-991
   #|rotx146 rotate  1E-999              -8  -> 1.0E-998
 
+///|
 let shift_subset : String =
   #|precision:   9
   #|rounding:    half_up

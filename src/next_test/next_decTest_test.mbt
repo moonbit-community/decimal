@@ -1,4 +1,5 @@
-///| First 60 cases each from `nextplus.decTest`, `nextminus.decTest`,
+///|
+/// First 60 cases each from `nextplus.decTest`, `nextminus.decTest`,
 /// `nexttoward.decTest`.
 let nextplus_subset : String =
   #|precision:   9
@@ -66,6 +67,7 @@ let nextplus_subset : String =
   #|nextp063 nextplus -1E-99999       ->  -0E-391
   #|nextp064 nextplus -1E-999999999   ->  -0E-391
 
+///|
 let nextminus_subset : String =
   #|precision:   9
   #|rounding:    half_up
@@ -132,6 +134,7 @@ let nextminus_subset : String =
   #|nextm063 nextminus -1E-99999       ->  -1E-391
   #|nextm064 nextminus -1E-999999999   ->  -1E-391
 
+///|
 let nexttoward_subset : String =
   #|precision:   9
   #|rounding:    half_up
@@ -197,6 +200,8 @@ let nexttoward_subset : String =
   #|nextt221 nexttoward -0.999999995 Infinity ->  -0.999999994
   #|nextt222 nexttoward -0.999999996 Infinity ->  -0.999999995
   #|nextt223 nexttoward -0.999999997 Infinity ->  -0.999999996
+  #|nextt511 nexttoward  0.00   -0.0000 -> -0.00
+  #|nextt512 nexttoward -0.00    0.0000 ->  0.00
 
 ///|
 fn run_subset(label : String, subset : String, expected : Int) -> Unit raise {
@@ -228,5 +233,5 @@ test "nextminus.decTest subset" {
 
 ///|
 test "nexttoward.decTest subset" {
-  run_subset("nexttoward", nexttoward_subset, 60)
+  run_subset("nexttoward", nexttoward_subset, 62)
 }

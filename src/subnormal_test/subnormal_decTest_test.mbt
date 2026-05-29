@@ -1,4 +1,5 @@
-///| Subnormal cluster from `add.decTest` (addx910-937). Tests both
+///|
+/// Subnormal cluster from `add.decTest` (addx910-937). Tests both
 /// "natural subnormal" cases (where exponent ≥ etiny but adjusted < emin)
 /// and "underflow re-rounded" cases (where exponent < etiny so digits
 /// are dropped to lift the exponent to etiny). Excludes the

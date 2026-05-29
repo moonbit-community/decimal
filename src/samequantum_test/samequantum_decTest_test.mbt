@@ -1,4 +1,5 @@
-///| `samequantum` cases from `samequantum.decTest`, restricted to half_up
+///|
+/// `samequantum` cases from `samequantum.decTest`, restricted to half_up
 /// rounding mode and precision >= 9 sections. Bit-level ops, so no
 /// rounding-related skips are needed.
 let samequantum_subset : String =

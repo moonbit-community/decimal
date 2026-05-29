@@ -1,4 +1,5 @@
-///| `comparetotmag` cases from `comparetotmag.decTest`, restricted to half_up
+///|
+/// `comparetotmag` cases from `comparetotmag.decTest`, restricted to half_up
 /// rounding mode and precision >= 9 sections. Bit-level ops, so no
 /// rounding-related skips are needed.
 let comparetotmag_subset : String =

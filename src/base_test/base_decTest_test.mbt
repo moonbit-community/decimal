@@ -1,4 +1,5 @@
-///| `toSci` cases from `base.decTest` (Mike Cowlishaw's General Decimal
+///|
+/// `toSci` cases from `base.decTest` (Mike Cowlishaw's General Decimal
 /// Arithmetic conformance suite), filtered to those that do not require
 /// rounding (no `Inexact`/`Rounded` conditions) and that GDA classifies as
 /// valid input (no `Conversion_syntax`).
@@ -402,7 +403,9 @@ test "base.decTest basx subset round-trips through parse + toSci" {
   let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     let buf = StringBuilder::new()
-    buf.write_string("\{failures.length()} of \{cases.length()} cases failed:\n")
+    buf.write_string(
+      "\{failures.length()} of \{cases.length()} cases failed:\n",
+    )
     for f in failures {
       buf.write_string("  ")
       buf.write_string(f)

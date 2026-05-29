@@ -1,6 +1,6 @@
-///| Full `multiply.decTest` corpus, split into chunks for bisecting
+///|
+/// Full `multiply.decTest` corpus, split into chunks for bisecting
 /// slow cases.
-
 let multiply_subset_0 : String =
   #|precision:   9
   #|rounding:    half_up
@@ -138,6 +138,7 @@ let multiply_subset_0 : String =
   #|mulx147 multiply 3 30000000000000000   -> 90000000000000000
   #|mulx148 multiply 3 300000000000000000   -> 900000000000000000
 
+///|
 let multiply_subset_1 : String =
   #|rounding: half_up
   #|maxexponent: 9999
@@ -310,6 +311,7 @@ let multiply_subset_1 : String =
   #|mulx565 multiply -1     0.0   -> -0.0
   #|mulx566 multiply -1    -0.0   ->  0.0
 
+///|
 let multiply_subset_2 : String =
   #|rounding: half_up
   #|maxexponent: 999999999
@@ -437,6 +439,7 @@ let multiply_subset_2 : String =
   #|mulx768 multiply 1e-600000000 1e-400000009 -> 0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
   #|mulx769 multiply 1e-600000000 1e-400000010 -> 0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
 
+///|
 let multiply_subset_3 : String =
   #|rounding: half_up
   #|maxexponent: 999999999
@@ -590,7 +593,7 @@ let multiply_subset_3 : String =
   #|precision: 5
 
 ///|
-fn run_subset(label : String, subset : String) -> Unit raise {
+fn run_subset(label : String, subset : String) -> Unit {
   let cases = parse_dectest(subset)
   let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
@@ -600,10 +603,21 @@ fn run_subset(label : String, subset : String) -> Unit raise {
 }
 
 ///|
-test "multiply chunk 0" { run_subset("mul0", multiply_subset_0) }
+test "multiply chunk 0" {
+  run_subset("mul0", multiply_subset_0)
+}
+
 ///|
-test "multiply chunk 1" { run_subset("mul1", multiply_subset_1) }
+test "multiply chunk 1" {
+  run_subset("mul1", multiply_subset_1)
+}
+
 ///|
-test "multiply chunk 2" { run_subset("mul2", multiply_subset_2) }
+test "multiply chunk 2" {
+  run_subset("mul2", multiply_subset_2)
+}
+
 ///|
-test "multiply chunk 3" { run_subset("mul3", multiply_subset_3) }
+test "multiply chunk 3" {
+  run_subset("mul3", multiply_subset_3)
+}

@@ -1,4 +1,5 @@
-///| Re-import the decimal package's types into this per-op test package.
+///|
+/// Re-import the decimal package's types into this per-op test package.
 pub using @decimal {
   type Decimal,
   type Class,
@@ -8,4 +9,10 @@ pub using @decimal {
   type Flags,
 }
 
-pub using @dectest { type TestCase, parse_dectest, run_cases, run_cases_with_flags }
+///|
+pub using @dectest {
+  type TestCase,
+  parse_dectest,
+  run_cases,
+  run_cases_with_flags,
+}

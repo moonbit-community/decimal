@@ -1,9 +1,9 @@
-///| First 100 cases from `divide.decTest` (the sanity / sign / trailing-zero
+///|
+/// First 100 cases from `divide.decTest` (the sanity / sign / trailing-zero
 /// section). Skips cases tagged `Subnormal`, `Overflow`, `Underflow`,
 /// `Clamped`, `Conversion_syntax`, or `Division_impossible` — those need
 /// either subnormal handling (not yet shipped) or runner-side flag
 /// validation (currently we only compare the rendered result string).
-
 let divide_subset : String =
   #|precision:   9
   #|rounding:    half_up

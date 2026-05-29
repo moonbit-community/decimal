@@ -1,4 +1,5 @@
-///| Overflow-relevant cases from `add.decTest` / `subtract.decTest` /
+///|
+/// Overflow-relevant cases from `add.decTest` / `subtract.decTest` /
 /// `multiply.decTest`, organised by source file so the context directives
 /// (precision, rounding, maxExponent, minExponent) match how each file
 /// scopes them. Validates that finalize's overflow gate produces
@@ -25,7 +26,8 @@ let overflow_subset_add : String =
   #|addx906 add      0  9.999E+999999999   ->  Infinity Inexact Overflow Rounded
   #|addx907 add         9.999E+999999999 0 ->  Infinity Inexact Overflow Rounded
 
-///| `subtract.decTest` overflow cluster (subx710–727). Exercises both the
+///|
+/// `subtract.decTest` overflow cluster (subx710–727). Exercises both the
 /// Infinity branch (half_up) and the largest-finite branch (down) of
 /// apply_overflow.
 let overflow_subset_subtract : String =
@@ -46,7 +48,8 @@ let overflow_subset_subtract : String =
   #|subx722 subtract    9.999E+999999999 1 ->  Infinity Inexact Overflow Rounded
   #|subx723 subtract   -9.999E+999999999 1 -> -Infinity Inexact Overflow Rounded
 
-///| `multiply.decTest` overflow cluster (mulx730–752). Both half_up paths
+///|
+/// `multiply.decTest` overflow cluster (mulx730–752). Both half_up paths
 /// to ±Infinity. mulx745+ exercises overflow from multiplying two
 /// large-exponent operands.
 let overflow_subset_multiply : String =
@@ -65,7 +68,8 @@ let overflow_subset_multiply : String =
   #|mulx751 multiply  1e+777777777  1e+411111111 ->  Infinity Overflow Inexact Rounded
   #|mulx752 multiply  1e+777777777 -1e+411111111 -> -Infinity Overflow Inexact Rounded
 
-///| Shared body — parse, run, abort with diagnostics on failure.
+///|
+/// Shared body — parse, run, abort with diagnostics on failure.
 fn run_overflow_subset(
   label : String,
   subset : String,

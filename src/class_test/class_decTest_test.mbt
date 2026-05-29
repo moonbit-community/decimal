@@ -1,4 +1,5 @@
-///| First 80 cases from `class.decTest`. The op returns a category label
+///|
+/// First 80 cases from `class.decTest`. The op returns a category label
 /// string (+Normal / +Subnormal / +Zero / -Zero / -Subnormal / -Normal /
 /// +Infinity / -Infinity / NaN / sNaN) rather than a Decimal value.
 let class_subset : String =
@@ -110,4 +111,20 @@ test "class.decTest subset" {
     }
     abort("class.decTest failures")
   }
+}
+
+///|
+test "is_normal gates on the lower exponent bound only" {
+  let ctx = @decimal.Context::new(precision=9, e_max=9, e_min=-9)
+  let big = @decimal.Decimal::parse("1E+20") catch {
+    _ => @decimal.Decimal::zero()
+  }
+  let tiny = @decimal.Decimal::parse("1E-20") catch {
+    _ => @decimal.Decimal::zero()
+  }
+  // adjusted exponent 20 exceeds e_max, but a finite non-zero value there is
+  // still Normal — is_normal imposes no upper bound (only adj >= e_min).
+  assert_true(big.is_normal(ctx))
+  // below e_min the value is subnormal, not normal.
+  assert_false(tiny.is_normal(ctx))
 }

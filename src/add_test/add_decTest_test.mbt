@@ -1,8 +1,8 @@
-///| All `addx*` cases from `add.decTest` (sNaN and `#`-malformed cases
+///|
+/// All `addx*` cases from `add.decTest` (sNaN and `#`-malformed cases
 /// excluded — those need binary-dispatcher sNaN flag plumbing and
 /// parser-error→Conversion_syntax routing respectively). 2006 cases
 /// split into four chunks for readability.
-
 let add_subset_0 : String =
   #|precision:   9
   #|rounding:    half_up
@@ -621,6 +621,7 @@ let add_subset_0 : String =
   #|precision:  13
   #|addx684 add 98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 98471174166.42                         Inexact Rounded
 
+///|
 let add_subset_1 : String =
   #|maxexponent: +384
   #|minexponent: -383
@@ -1190,6 +1191,7 @@ let add_subset_1 : String =
   #|addx1527 add -0E-400  -0E-19  -> -0E-398 Clamped
   #|addx1531 add  1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
 
+///|
 let add_subset_2 : String =
   #|precision: 16
   #|maxexponent: 384
@@ -1745,6 +1747,7 @@ let add_subset_2 : String =
   #|addx6704 add 0E-3  00.00  -> 0.000
   #|addx6710 add 0E+3  00.00  -> 0.00
 
+///|
 let add_subset_3 : String =
   #|precision: 16
   #|maxexponent: 384
@@ -2266,7 +2269,7 @@ let add_subset_3 : String =
   #|addx62103 add     -11  -NaN123456789 -> -NaN56789
 
 ///|
-fn run_subset(label : String, subset : String) -> Unit raise {
+fn run_subset(label : String, subset : String) -> Unit {
   let cases = parse_dectest(subset)
   let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
@@ -2283,10 +2286,21 @@ fn run_subset(label : String, subset : String) -> Unit raise {
 }
 
 ///|
-test "add.decTest chunk 0" { run_subset("add0", add_subset_0) }
+test "add.decTest chunk 0" {
+  run_subset("add0", add_subset_0)
+}
+
 ///|
-test "add.decTest chunk 1" { run_subset("add1", add_subset_1) }
+test "add.decTest chunk 1" {
+  run_subset("add1", add_subset_1)
+}
+
 ///|
-test "add.decTest chunk 2" { run_subset("add2", add_subset_2) }
+test "add.decTest chunk 2" {
+  run_subset("add2", add_subset_2)
+}
+
 ///|
-test "add.decTest chunk 3" { run_subset("add3", add_subset_3) }
+test "add.decTest chunk 3" {
+  run_subset("add3", add_subset_3)
+}

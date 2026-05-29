@@ -1,4 +1,5 @@
-///| Pure-clamp cases from `add.decTest` — results whose only condition is
+///|
+/// Pure-clamp cases from `add.decTest` — results whose only condition is
 /// `Clamped`. These exercise the etiny-floor branch in finalize: a finite
 /// zero (either an input zero or one produced by exact cancellation) with
 /// `exponent < etiny` has its exponent lifted to `etiny = e_min -
@@ -32,7 +33,8 @@ let clamp_subset : String =
   #|addx1636 add -1E-401   1E-401 -> -0E-398 Clamped
   #|addx1637 add  1E-401  -1E-401 -> -0E-398 Clamped
 
-///| Pure-clamp case from `subtract.decTest` — opposite-sign cancellation
+///|
+/// Pure-clamp case from `subtract.decTest` — opposite-sign cancellation
 /// producing a zero below etiny.
 let clamp_subset_subtract : String =
   #|precision: 3
@@ -41,7 +43,8 @@ let clamp_subset_subtract : String =
   #|rounding: half_up
   #|subx1053 subtract  0.100E-999  0.1E-999  ->   0E-1001    Clamped
 
-///| Pure-clamp cases from `multiply.decTest` — zero × non-zero / non-zero ×
+///|
+/// Pure-clamp cases from `multiply.decTest` — zero × non-zero / non-zero ×
 /// zero where the product's exponent lies outside `[etiny, e_max]`.
 /// mulx505 specifically exercises the upper-bound clamp: a zero with
 /// exponent above `e_max` (not `etop`) gets folded to `e_max`,

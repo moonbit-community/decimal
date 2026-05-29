@@ -1,11 +1,11 @@
-///| `remainder` cases from `remainder.decTest`, restricted to precision >= 9
+///|
+/// `remainder` cases from `remainder.decTest`, restricted to precision >= 9
 /// sections. `precision:` and `rounding:` directive lines are kept
 /// alongside the test lines so the runner can build the matching
 /// Context for each test. Skipped: Subnormal / Underflow / Overflow /
 /// Clamped (need e_min/e_max enforcement), Conversion_syntax (parse
 /// errors surface as ParseError), Division_impossible (precision-
 /// bounded quotient check not yet implemented).
-
 let remainder_subset : String =
   #|precision:   9
   #|rounding:    half_up

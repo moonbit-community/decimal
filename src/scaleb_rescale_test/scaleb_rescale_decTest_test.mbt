@@ -1,4 +1,5 @@
-///| First 60 cases each from `scaleb.decTest` and `rescale.decTest`.
+///|
+/// First 60 cases each from `scaleb.decTest` and `rescale.decTest`.
 let scaleb_subset : String =
   #|precision:   9
   #|rounding:    half_up
@@ -65,6 +66,7 @@ let scaleb_subset : String =
   #|scbx055 scaleb       7.50   -2  -> 0.0750
   #|scbx056 scaleb      -7.50   -2  -> -0.0750
 
+///|
 let rescale_subset : String =
   #|precision:   9
   #|rounding:    half_up

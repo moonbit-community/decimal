@@ -1,4 +1,5 @@
-///| First 80 cases from `reduce.decTest`. Skips Conversion_syntax and
+///|
+/// First 80 cases from `reduce.decTest`. Skips Conversion_syntax and
 /// sNaN-input cases pending runner-side flag validation.
 let reduce_subset : String =
   #|precision:   9

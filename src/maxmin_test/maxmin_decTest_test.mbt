@@ -1,4 +1,5 @@
-///| First 80 cases each from `max.decTest`, `min.decTest`,
+///|
+/// First 80 cases each from `max.decTest`, `min.decTest`,
 /// `maxmag.decTest`, `minmag.decTest`. Skips cases tagged
 /// `Invalid_operation` and sNaN cases pending runner-side flag
 /// validation.
@@ -89,6 +90,7 @@ let max_subset : String =
   #|maxx125 max -Inf   1     ->  1
   #|maxx126 max -Inf   1000  ->  1000
 
+///|
 let min_subset : String =
   #|precision:   9
   #|rounding:    half_up
@@ -176,6 +178,7 @@ let min_subset : String =
   #|mnmx135 min  Inf  -Inf   -> -Infinity
   #|mnmx141 min  NaN -Inf    ->  -Infinity
 
+///|
 let maxmag_subset : String =
   #|precision:   9
   #|rounding:    half_up
@@ -263,6 +266,7 @@ let maxmag_subset : String =
   #|mxgx125 maxmag -Inf   1     -> -Infinity
   #|mxgx126 maxmag -Inf   1000  -> -Infinity
 
+///|
 let minmag_subset : String =
   #|precision:   9
   #|rounding:    half_up
@@ -351,11 +355,7 @@ let minmag_subset : String =
   #|mngx141 minmag  NaN -Inf    ->  -Infinity
 
 ///|
-fn run_subset(
-  label : String,
-  subset : String,
-  expected : Int,
-) -> Unit raise {
+fn run_subset(label : String, subset : String, expected : Int) -> Unit raise {
   let cases = parse_dectest(subset)
   assert_eq(cases.length(), expected)
   let (failures, _) = run_cases_with_flags(cases)

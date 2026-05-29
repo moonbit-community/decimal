@@ -1,4 +1,5 @@
-///| First 80 cases from `quantize.decTest` — sanity sample of the
+///|
+/// First 80 cases from `quantize.decTest` — sanity sample of the
 /// rescale-to-target-exponent path. Skips Subnormal / Underflow / Overflow /
 /// Conversion_syntax / sNaN cases pending runner-side flag validation
 /// (and, for subnormal, the underflow re-rounding branch in finalize).

@@ -1,4 +1,5 @@
-///| First 60 cases each from `and.decTest`, `or.decTest`, `xor.decTest`,
+///|
+/// First 60 cases each from `and.decTest`, `or.decTest`, `xor.decTest`,
 /// `invert.decTest`. Validates the digit-wise bit-string semantics: each
 /// operand has a coefficient whose decimal digits are all 0 or 1, with
 /// exponent 0 and non-negative sign; the op runs position-by-position on
@@ -69,6 +70,7 @@ let and_subset : String =
   #|andx067 and        111  0  ->  0
   #|andx068 and         11  0  ->  0
 
+///|
 let or_subset : String =
   #|-- or specification.  The tests are not exhaustive.                   --
   #|precision:   9
@@ -135,6 +137,7 @@ let or_subset : String =
   #|orx070 or 1  1111111111  ->  111111111
   #|orx071 or 1   111111111  ->  111111111
 
+///|
 let xor_subset : String =
   #|precision:   9
   #|rounding:    half_up
@@ -201,6 +204,7 @@ let xor_subset : String =
   #|xorx070 xor 1  1111111111  ->  111111110
   #|xorx071 xor 1   111111111  ->  111111110
 
+///|
 let invert_subset : String =
   #|precision:   9
   #|rounding:    half_up

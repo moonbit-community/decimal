@@ -1,4 +1,5 @@
-///| `comparetotal` cases from `comparetotal.decTest`, restricted to half_up
+///|
+/// `comparetotal` cases from `comparetotal.decTest`, restricted to half_up
 /// rounding mode and precision >= 9 sections. Bit-level ops, so no
 /// rounding-related skips are needed.
 let comparetotal_subset : String =

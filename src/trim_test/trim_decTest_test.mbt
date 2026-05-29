@@ -1,4 +1,5 @@
-///| First 60 cases from `trim.decTest`.
+///|
+/// First 60 cases from `trim.decTest`.
 let trim_subset : String =
   #|precision:   9
   #|rounding:    half_up

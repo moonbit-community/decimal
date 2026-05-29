@@ -1,4 +1,5 @@
-///| First 60 cases each from `tointegral.decTest` and `tointegralx.decTest`.
+///|
+/// First 60 cases each from `tointegral.decTest` and `tointegralx.decTest`.
 /// Distinct test bodies because the two ops differ only in whether
 /// `Inexact` / `Rounded` are raised on rounded results — the runner
 /// currently only validates output strings, so the visible result is
@@ -70,6 +71,7 @@ let tointegral_subset : String =
   #|intx073 tointegral '1.23E+96'    -> '1.23E+96'
   #|intx074 tointegral '1.23E+384'   -> '1.23E+384'
 
+///|
 let tointegralx_subset : String =
   #|precision:   9
   #|rounding:    half_up
@@ -138,11 +140,7 @@ let tointegralx_subset : String =
   #|intxx074 tointegralx '1.23E+384'   -> '1.23E+384'
 
 ///|
-fn run_subset(
-  label : String,
-  subset : String,
-  expected : Int,
-) -> Unit raise {
+fn run_subset(label : String, subset : String, expected : Int) -> Unit raise {
   let cases = parse_dectest(subset)
   assert_eq(cases.length(), expected)
   let (failures, _) = run_cases_with_flags(cases)
