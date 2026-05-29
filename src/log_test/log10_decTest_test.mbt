@@ -1,12 +1,38 @@
 ///|
-/// First 30 cases from `log10.decTest`.
+/// Full `log10.decTest` corpus (IBM General Decimal Arithmetic
+/// testcases), embedded verbatim.
 let log10_subset : String =
-  #|version: 2.62
+  #|------------------------------------------------------------------------
+  #|-- log10.decTest -- decimal logarithm in base 10                      --
+  #|-- Copyright (c) IBM Corporation, 2005, 2008.  All rights reserved.   --
+  #|------------------------------------------------------------------------
+  #|-- Please see the document "General Decimal Arithmetic Testcases"     --
+  #|-- at http://www2.hursley.ibm.com/decimal for the description of      --
+  #|-- these testcases.                                                   --
+  #|--                                                                    --
+  #|-- These testcases are experimental ('beta' versions), and they       --
+  #|-- may contain errors.  They are offered on an as-is basis.  In       --
+  #|-- particular, achieving the same results as the tests here is not    --
+  #|-- a guarantee that an implementation complies with any Standard      --
+  #|-- or specification.  The tests are not exhaustive.                   --
+  #|--                                                                    --
+  #|-- Please send comments, suggestions, and corrections to the author:  --
+  #|--   Mike Cowlishaw, IBM Fellow                                       --
+  #|--   IBM UK, PO Box 31, Birmingham Road, Warwick CV34 5JL, UK         --
+  #|--   mfc@uk.ibm.com                                                   --
+  #|------------------------------------------------------------------------
+  #|version: 2.59
+  #|
+  #|-- This emphasises the testing of notable cases, as they will often
+  #|-- have unusual paths (especially the 10**n results).
+  #|
   #|extended:    1
   #|precision:   16
   #|rounding:    half_even
   #|maxExponent: 384
   #|minexponent: -383
+  #|
+  #|-- examples in specification
   #|precision:   9
   #|logxs000 log10  0                 -> -Infinity
   #|logxs001 log10  0.001             -> -3
@@ -15,6 +41,9 @@ let log10_subset : String =
   #|logxs004 log10  10                ->  1
   #|logxs005 log10  70                ->  1.84509804          Inexact Rounded
   #|logxs006 log10 +Infinity          ->  Infinity
+  #|
+  #|
+  #|-- basics (examples in specification, etc.)
   #|precision:   16
   #|logx0000 log10  0                 -> -Infinity
   #|logx0001 log10  7E-1000           -> -999.1549019599857   Inexact Rounded
@@ -38,6 +67,9 @@ let log10_subset : String =
   #|logx0019 log10  1.1E+9            ->  9.041392685158225   Inexact Rounded
   #|logx0020 log10  7E+1000           ->  1000.845098040014   Inexact Rounded
   #|logx0021 log10 +Infinity          ->  Infinity
+  #|
+  #|-- notable cases
+  #|-- negatives
   #|logx0031 log10 -1E-9              -> NaN Invalid_operation
   #|logx0032 log10 -0.0007            -> NaN Invalid_operation
   #|logx0033 log10 -0.1               -> NaN Invalid_operation
@@ -52,15 +84,20 @@ let log10_subset : String =
   #|logx0042 log10 -0                 -> -Infinity
   #|logx0043 log10 -0E+17             -> -Infinity
   #|logx0044 log10 -0E-17             -> -Infinity
+  #|-- other zeros
   #|logx0051 log10  0                 -> -Infinity
   #|logx0052 log10  0E+17             -> -Infinity
   #|logx0053 log10  0E-17             -> -Infinity
+  #|-- infinities
   #|logx0055 log10 -Infinity          -> NaN Invalid_operation
   #|logx0056 log10 +Infinity          -> Infinity
+  #|-- ones
   #|logx0061 log10  1                 ->   0
   #|logx0062 log10  1.0               ->   0
   #|logx0063 log10  1.000000000000000 ->   0
   #|logx0064 log10  1.000000000000000000 ->   0
+  #|
+  #|-- notable cases -- exact powers of 10
   #|logx1100 log10 1             -> 0
   #|logx1101 log10 10            -> 1
   #|logx1102 log10 100           -> 2
@@ -88,6 +125,8 @@ let log10_subset : String =
   #|logx1124 log10 1E-99  -> -99
   #|logx1125 log10 1E-100 -> -100
   #|logx1126 log10 1E-383 -> -383
+  #|
+  #|-- check normally exact cases round properly
   #|precision: 1
   #|logx1141 log10 10000000000   -> 1E+1         Rounded
   #|logx1142 log10 1000000000000 -> 1E+1 Inexact Rounded
@@ -96,6 +135,7 @@ let log10_subset : String =
   #|logx1145 log10 1E+126        -> 1E+2 Inexact Rounded
   #|logx1146 log10 1E+916        -> 9E+2 Inexact Rounded
   #|logx1147 log10 1E+999        -> 1E+3 Inexact Rounded
+  #|
   #|precision: 2
   #|logx1151 log10 10000000000   -> 10
   #|logx1152 log10 1000000000000 -> 12
@@ -104,6 +144,7 @@ let log10_subset : String =
   #|logx1155 log10 1E+126        -> 1.3E+2 Inexact Rounded
   #|logx1156 log10 1E+916        -> 9.2E+2 Inexact Rounded
   #|logx1157 log10 1E+999        -> 1.0E+3 Inexact Rounded
+  #|-- some half-way point rounds, other cases, and negatives
   #|logx1158 log10 1E+125        -> 1.2E+2 Inexact Rounded
   #|logx1159 log10 1E+135        -> 1.4E+2 Inexact Rounded
   #|logx1160 log10 1E+129        -> 1.3E+2 Inexact Rounded
@@ -116,6 +157,7 @@ let log10_subset : String =
   #|logx1167 log10 1E-135        -> -1.4E+2 Inexact Rounded
   #|logx1168 log10 1E-129        -> -1.3E+2 Inexact Rounded
   #|logx1169 log10 1E-131        -> -1.3E+2 Inexact Rounded
+  #|
   #|precision: 3
   #|logx1171 log10 10000000000   -> 10
   #|logx1172 log10 1000000000000 -> 12
@@ -124,6 +166,8 @@ let log10_subset : String =
   #|logx1175 log10 1E+126        -> 126
   #|logx1176 log10 1E+916        -> 916
   #|logx1177 log10 1E+999        -> 999
+  #|
+  #|-- log10(2) .. tests both ln(2) and ln(10) constants, too
   #|precision: 50
   #|logx1201 log10 2     -> 0.30102999566398119521373889472449302676818988146211 Inexact Rounded
   #|logx1202 log10 2.000 -> 0.30102999566398119521373889472449302676818988146211 Inexact Rounded
@@ -226,10 +270,13 @@ let log10_subset : String =
   #|logx1251 log10 2 -> 0.30                                                Inexact Rounded
   #|precision:  1
   #|logx1252 log10 2 -> 0.3                                                 Inexact Rounded
+  #|
   #|maxExponent: 384
   #|minExponent: -383
   #|precision:   16
   #|rounding:    half_even
+  #|
+  #|-- More close-to-e, etc., tests
   #|precision:   34
   #|logx1301 log10 2.718281828459045235360287471352661  -> 0.4342944819032518276511289189166048 Inexact Rounded
   #|logx1302 log10 2.718281828459045235360287471352662  -> 0.4342944819032518276511289189166050 Inexact Rounded
@@ -241,6 +288,7 @@ let log10_subset : String =
   #|logx1308 log10 1.0000000000000000000000000000000001 -> 4.342944819032518276511289189166051E-35 Inexact Rounded
   #|logx1309 log10 1.000000000000000000000000000000001  -> 4.342944819032518276511289189166049E-34 Inexact Rounded
   #|logx1310 log10 1.00000000000000000000000000000001   -> 4.342944819032518276511289189166029E-33 Inexact Rounded
+  #|-- lower p
   #|precision:    7
   #|logx1320 log10 0.999999    -> -4.342947E-7  Inexact Rounded
   #|logx1321 log10 0.9999999   -> -4.342945E-8  Inexact Rounded
@@ -250,6 +298,8 @@ let log10_subset : String =
   #|logx1325 log10 1.00000001  ->  4.342945E-9  Inexact Rounded
   #|logx1326 log10 1.0000001   ->  4.342945E-8  Inexact Rounded
   #|logx1327 log10 1.000001    ->  4.342943E-7  Inexact Rounded
+  #|
+  #|-- near 10^3
   #|precision:   9
   #|logx1331 log10  999.9999998  -> 3.00000000 Inexact Rounded
   #|logx1332 log10  999.9999999  -> 3.00000000 Inexact Rounded
@@ -262,6 +312,8 @@ let log10_subset : String =
   #|logx1343 log10 1000.000000   -> 3
   #|logx1344 log10 1000.000001   -> 3.000000000434294 Inexact Rounded
   #|logx1345 log10 1000.000002   -> 3.000000000868589 Inexact Rounded
+  #|
+  #|-- suggestions from Ilan Nehama
   #|logx1400 log10 10E-3    -> -2
   #|logx1401 log10 10E-2    -> -1
   #|logx1402 log10 100E-2   ->  0
@@ -283,6 +335,9 @@ let log10_subset : String =
   #|logx1418 log10 100E2    ->  4
   #|logx1419 log10 1000E2   ->  5
   #|logx1420 log10 10000E2  ->  6
+  #|
+  #|-- Randoms
+  #|-- P=50, within 0-9999
   #|Precision: 50
   #|logx2501 log10 0.00035448001667968141775891246991912655961163345904 ->  -3.4504082425411775290864053318247274944685586188505 Inexact Rounded
   #|logx2502 log10 70.636455726424311228255338637935330826995136597644  ->   1.8490288998408492045793070255302335558140975719247 Inexact Rounded
@@ -324,6 +379,8 @@ let log10_subset : String =
   #|logx2538 log10 5.8610949526439529489252302463450302981511714144330  ->   0.76797875722452549281028552067645732490929361952278 Inexact Rounded
   #|logx2539 log10 6.6282432221115923372151148990137179611977576327206  ->   0.82139843639227213211012044000785757267155736071361 Inexact Rounded
   #|logx2540 log10 0.00000000001994071862386846626954819923923344413454 -> -10.700259194632339980266559224447212260115021637626 Inexact Rounded
+  #|
+  #|-- P=34, within 0-9999
   #|Precision: 34
   #|logx2201 log10 1.522513203889714179088327328864183  -> 0.1825610677098896250496651330492109 Inexact Rounded
   #|logx2202 log10 0.171123774769717316154080888930404  -> -0.7666896483548462582461898092764408 Inexact Rounded
@@ -365,6 +422,8 @@ let log10_subset : String =
   #|logx2238 log10 60.24078375568814769010333711509928  -> 1.779890613567084253168373266648922 Inexact Rounded
   #|logx2239 log10 0.0012058738711757669337600252986093 -> -2.918698115012605915753728220896010 Inexact Rounded
   #|logx2240 log10 230.9450930197841600611503095185600  -> 2.363508739056822846742942599628966 Inexact Rounded
+  #|
+  #|-- P=16, within 0-999
   #|Precision: 16
   #|logx2101 log10 0.0072067119605184 -> -2.142262835573038 Inexact Rounded
   #|logx2102 log10 503.6828482226624  -> 2.702157162195652 Inexact Rounded
@@ -406,6 +465,8 @@ let log10_subset : String =
   #|logx2138 log10 0.7360702733062529 -> -0.1330807211893611 Inexact Rounded
   #|logx2139 log10 8.417059176469655  -> 0.9251603805112778 Inexact Rounded
   #|logx2140 log10 0.0002926570767968 -> -3.533640969664818 Inexact Rounded
+  #|
+  #|-- P=7, within 0-99
   #|Precision: 7
   #|logx2001 log10 57.26089  -> 1.757858 Inexact Rounded
   #|logx2002 log10 0.0575421 -> -1.240014 Inexact Rounded
@@ -447,20 +508,33 @@ let log10_subset : String =
   #|logx2038 log10 7.135417  -> 0.8534194 Inexact Rounded
   #|logx2039 log10 12.49570  -> 1.096761 Inexact Rounded
   #|logx2040 log10 6.356276  -> 0.8032027 Inexact Rounded
+  #|
+  #|--------
   #|maxExponent: 384
   #|minExponent: -383
   #|precision:   16
   #|rounding:    half_even
+  #|
+  #|-- special values
   #|logx820  log10   Infinity ->   Infinity
   #|logx821  log10   0        ->  -Infinity
   #|logx822  log10   NaN      ->   NaN
+  #|logx823  log10   sNaN     ->   NaN     Invalid_operation
+  #|-- propagating NaNs
+  #|logx824  log10   sNaN123  ->   NaN123  Invalid_operation
+  #|logx825  log10   -sNaN321 ->  -NaN321  Invalid_operation
   #|logx826  log10   NaN456   ->   NaN456
   #|logx827  log10   -NaN654  ->  -NaN654
   #|logx828  log10   NaN1     ->   NaN1
+  #|
+  #|
+  #|-- Invalid operations due to restrictions
+  #|-- [next two probably skipped by most test harnesses]
   #|precision: 100000000
   #|logx901  log10 1 ->  NaN            Invalid_context
   #|precision:  99999999
   #|logx902  log10 0 ->  NaN            Invalid_context
+  #|
   #|precision: 9
   #|maxExponent:   1000000
   #|minExponent:   -999999
@@ -474,11 +548,17 @@ let log10_subset : String =
   #|maxExponent:    999999
   #|minExponent:   -999998
   #|logx906  log10 0 ->  -Infinity
+  #|
+  #|-- Null test
+  #|logx900  log10 #   -> NaN Invalid_operation
 
 ///|
 test "log10.decTest subset" {
   let cases = parse_dectest(log10_subset)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, skipped) = run_cases_with_flags(cases)
+  if skipped > 0 {
+    println("\{skipped} cases skipped (format-encoding / reference-specific)")
+  }
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 30 { failures.length() } else { 30 }

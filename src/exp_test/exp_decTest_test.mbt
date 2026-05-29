@@ -1,12 +1,38 @@
 ///|
-/// First 40 cases from `exp.decTest`.
+/// Full `exp.decTest` corpus (IBM General Decimal Arithmetic
+/// testcases), embedded verbatim.
 let exp_subset : String =
-  #|version: 2.62
+  #|------------------------------------------------------------------------
+  #|-- exp.decTest -- decimal natural exponentiation                      --
+  #|-- Copyright (c) IBM Corporation, 2005, 2008.  All rights reserved.   --
+  #|------------------------------------------------------------------------
+  #|-- Please see the document "General Decimal Arithmetic Testcases"     --
+  #|-- at http://www2.hursley.ibm.com/decimal for the description of      --
+  #|-- these testcases.                                                   --
+  #|--                                                                    --
+  #|-- These testcases are experimental ('beta' versions), and they       --
+  #|-- may contain errors.  They are offered on an as-is basis.  In       --
+  #|-- particular, achieving the same results as the tests here is not    --
+  #|-- a guarantee that an implementation complies with any Standard      --
+  #|-- or specification.  The tests are not exhaustive.                   --
+  #|--                                                                    --
+  #|-- Please send comments, suggestions, and corrections to the author:  --
+  #|--   Mike Cowlishaw, IBM Fellow                                       --
+  #|--   IBM UK, PO Box 31, Birmingham Road, Warwick CV34 5JL, UK         --
+  #|--   mfc@uk.ibm.com                                                   --
+  #|------------------------------------------------------------------------
+  #|version: 2.59
+  #|
+  #|-- Tests of the exponential function.  Currently all testcases here
+  #|-- show results which are correctly rounded (within <= 0.5 ulp).
+  #|
   #|extended:    1
   #|precision:   9
   #|rounding:    half_even
   #|maxExponent: 384
   #|minexponent: -383
+  #|
+  #|-- basics (examples in specification, etc.)
   #|expx001 exp  -Infinity     -> 0
   #|expx002 exp  -10           -> 0.0000453999298 Inexact Rounded
   #|expx003 exp  -1            -> 0.367879441 Inexact Rounded
@@ -16,6 +42,8 @@ let exp_subset : String =
   #|expx007 exp   0.693147181  -> 2.00000000  Inexact Rounded
   #|expx008 exp   10           -> 22026.4658  Inexact Rounded
   #|expx009 exp  +Infinity     -> Infinity
+  #|
+  #|-- tiny edge cases
   #|precision:   7
   #|expx011 exp  0.1          ->  1.105171  Inexact Rounded
   #|expx012 exp  0.01         ->  1.010050  Inexact Rounded
@@ -35,12 +63,16 @@ let exp_subset : String =
   #|expx026 exp  0.00000005   ->  1.000000  Inexact Rounded
   #|expx027 exp  0.00000004   ->  1.000000  Inexact Rounded
   #|expx028 exp  0.00000001   ->  1.000000  Inexact Rounded
+  #|
+  #|-- and some more zeros
   #|expx030 exp  0.00000000   ->  1
   #|expx031 exp  0E+100       ->  1
   #|expx032 exp  0E-100       ->  1
   #|expx033 exp -0.00000000   ->  1
   #|expx034 exp -0E+100       ->  1
   #|expx035 exp -0E-100       ->  1
+  #|
+  #|-- basic e=0, e=1, e=2, e=4, e>=8 cases
   #|precision:   7
   #|expx041 exp  1          ->  2.718282  Inexact Rounded
   #|expx042 exp -1          ->  0.3678794 Inexact Rounded
@@ -52,8 +84,13 @@ let exp_subset : String =
   #|expx048 exp -1000       ->  0E-389 Underflow Inexact Rounded Clamped Subnormal
   #|expx049 exp  100000000  ->  Infinity Overflow Inexact Rounded
   #|expx050 exp -100000000  ->  0E-389 Underflow Inexact Rounded Clamped Subnormal
+  #|
+  #|-- miscellanea
+  #|-- similar to 'VF bug' test, at 17, but with last digit corrected for decimal
   #|precision: 16
   #|expx055 exp -5.42410311287441459172E+2 -> 2.717658486884572E-236 Inexact Rounded
+  #|--  result from NetRexx/Java prototype -> 2.7176584868845721117677929628617246054459644711108E-236
+  #|--   result from Rexx (series) version -> 2.717658486884572111767792962861724605446E-236
   #|precision: 17
   #|expx056 exp -5.42410311287441459172E+2 -> 2.7176584868845721E-236 Inexact Rounded
   #|precision: 18
@@ -62,6 +99,8 @@ let exp_subset : String =
   #|expx058 exp -5.42410311287441459172E+2 -> 2.717658486884572112E-236 Inexact Rounded
   #|precision: 20
   #|expx059 exp -5.42410311287441459172E+2 -> 2.7176584868845721118E-236 Inexact Rounded
+  #|
+  #|-- rounding in areas of ..500.., ..499.., ..100.., ..999.. sequences
   #|precision:   50
   #|expx101 exp -9E-8 -> 0.99999991000000404999987850000273374995079250073811 Inexact Rounded
   #|precision:   31
@@ -126,58 +165,108 @@ let exp_subset : String =
   #|expx131 exp -9E-8 -> 1.0                               Inexact Rounded
   #|precision:    1
   #|expx132 exp -9E-8 -> 1                                 Inexact Rounded
+  #|
+  #|
+  #|-- sanity checks, with iteration counts [normalized so 0<=|x|<1]
   #|precision:   50
+  #|
   #|expx210 exp 0 -> 1
+  #|-- iterations: 2
   #|expx211 exp -1E-40 -> 0.99999999999999999999999999999999999999990000000000 Inexact Rounded
+  #|-- iterations: 8
   #|expx212 exp -9E-7 -> 0.99999910000040499987850002733749507925073811240510 Inexact Rounded
+  #|-- iterations: 6
   #|expx213 exp -9E-8 -> 0.99999991000000404999987850000273374995079250073811 Inexact Rounded
+  #|-- iterations: 15
   #|expx214 exp -0.003 -> 0.99700449550337297601206623409756091074177480489845 Inexact Rounded
+  #|-- iterations: 14
   #|expx215 exp -0.001 -> 0.99900049983337499166805535716765597470235590236008 Inexact Rounded
+  #|-- iterations: 26
   #|expx216 exp -0.1 -> 0.90483741803595957316424905944643662119470536098040 Inexact Rounded
+  #|-- iterations: 39
   #|expx217 exp -0.7 -> 0.49658530379140951470480009339752896170766716571182 Inexact Rounded
+  #|-- iterations: 41
   #|expx218 exp -0.9 -> 0.40656965974059911188345423964562598783370337617038 Inexact Rounded
+  #|-- iterations: 43
   #|expx219 exp -0.99 -> 0.37157669102204569053152411990820138691802885490501 Inexact Rounded
+  #|-- iterations: 26
   #|expx220 exp -1 -> 0.36787944117144232159552377016146086744581113103177 Inexact Rounded
+  #|-- iterations: 26
   #|expx221 exp -1.01 -> 0.36421897957152331975704629563734548959589139192482 Inexact Rounded
+  #|-- iterations: 27
   #|expx222 exp -1.1 -> 0.33287108369807955328884690643131552161247952156921 Inexact Rounded
+  #|-- iterations: 28
   #|expx223 exp -1.5 -> 0.22313016014842982893328047076401252134217162936108 Inexact Rounded
+  #|-- iterations: 30
   #|expx224 exp -2 -> 0.13533528323661269189399949497248440340763154590958 Inexact Rounded
+  #|-- iterations: 36
   #|expx225 exp -5 -> 0.0067379469990854670966360484231484242488495850273551 Inexact Rounded
+  #|-- iterations: 26
   #|expx226 exp -10 -> 0.000045399929762484851535591515560550610237918088866565 Inexact Rounded
+  #|-- iterations: 28
   #|expx227 exp -14 -> 8.3152871910356788406398514256526229460765836498457E-7 Inexact Rounded
+  #|-- iterations: 29
   #|expx228 exp -15 -> 3.0590232050182578837147949770228963937082078081856E-7 Inexact Rounded
+  #|-- iterations: 30
   #|expx233 exp 0 -> 1
+  #|-- iterations: 2
   #|expx234 exp 1E-40 -> 1.0000000000000000000000000000000000000001000000000 Inexact Rounded
+  #|-- iterations: 7
   #|expx235 exp 9E-7 -> 1.0000009000004050001215000273375049207507381125949 Inexact Rounded
+  #|-- iterations: 6
   #|expx236 exp 9E-8 -> 1.0000000900000040500001215000027337500492075007381 Inexact Rounded
+  #|-- iterations: 15
   #|expx237 exp 0.003 -> 1.0030045045033770260129340913489002053318727195619 Inexact Rounded
+  #|-- iterations: 13
   #|expx238 exp 0.001 -> 1.0010005001667083416680557539930583115630762005807 Inexact Rounded
+  #|-- iterations: 25
   #|expx239 exp 0.1 -> 1.1051709180756476248117078264902466682245471947375 Inexact Rounded
+  #|-- iterations: 38
   #|expx240 exp 0.7 -> 2.0137527074704765216245493885830652700175423941459 Inexact Rounded
+  #|-- iterations: 41
   #|expx241 exp 0.9 -> 2.4596031111569496638001265636024706954217723064401 Inexact Rounded
+  #|-- iterations: 42
   #|expx242 exp 0.99 -> 2.6912344723492622890998794040710139721802931841030 Inexact Rounded
+  #|-- iterations: 26
   #|expx243 exp 1 -> 2.7182818284590452353602874713526624977572470937000 Inexact Rounded
+  #|-- iterations: 26
   #|expx244 exp 1.01 -> 2.7456010150169164939897763166603876240737508195960 Inexact Rounded
+  #|-- iterations: 26
   #|expx245 exp 1.1 -> 3.0041660239464331120584079535886723932826810260163 Inexact Rounded
+  #|-- iterations: 28
   #|expx246 exp 1.5 -> 4.4816890703380648226020554601192758190057498683697 Inexact Rounded
+  #|-- iterations: 29
   #|expx247 exp 2 -> 7.3890560989306502272304274605750078131803155705518 Inexact Rounded
+  #|-- iterations: 36
   #|expx248 exp 5 -> 148.41315910257660342111558004055227962348766759388 Inexact Rounded
+  #|-- iterations: 26
   #|expx249 exp 10 -> 22026.465794806716516957900645284244366353512618557 Inexact Rounded
+  #|-- iterations: 28
   #|expx250 exp 14 -> 1202604.2841647767777492367707678594494124865433761 Inexact Rounded
+  #|-- iterations: 28
   #|expx251 exp 15 -> 3269017.3724721106393018550460917213155057385438200 Inexact Rounded
+  #|-- iterations: 29
+  #|
+  #|-- a biggie [result verified 3 ways]
   #|precision: 250
   #|expx260 exp 1 -> 2.718281828459045235360287471352662497757247093699959574966967627724076630353547594571382178525166427427466391932003059921817413596629043572900334295260595630738132328627943490763233829880753195251019011573834187930702154089149934884167509244761460668 Inexact Rounded
+  #|
+  #|-- extreme range boundaries
   #|precision:   16
   #|maxExponent: 999999
   #|minExponent: -999999
+  #|-- Ntiny boundary
   #|expx290 exp  -2302618.022332529 -> 0E-1000014 Underflow Subnormal Inexact Rounded Clamped
   #|expx291 exp  -2302618.022332528 -> 1E-1000014 Underflow Subnormal Inexact Rounded
+  #|-- Nmax/10 and Nmax boundary
   #|expx292 exp  2302582.790408952 -> 9.999999993100277E+999998  Inexact Rounded
   #|expx293 exp  2302582.790408953 -> 1.000000000310028E+999999  Inexact Rounded
   #|expx294 exp  2302585.092993946 -> 9.999999003159870E+999999 Inexact Rounded
   #|expx295 exp  2302585.092994036 -> 9.999999903159821E+999999 Inexact Rounded
   #|expx296 exp  2302585.092994045 -> 9.999999993159820E+999999 Inexact Rounded
   #|expx297 exp  2302585.092994046 -> Infinity Overflow         Inexact Rounded
+  #|
+  #|-- 0<-x<<1 effects
   #|precision:    30
   #|expx320 exp -4.9999999999999E-8 -> 0.999999950000001250000979166617 Inexact Rounded
   #|expx321 exp -5.0000000000000E-8 -> 0.999999950000001249999979166667 Inexact Rounded
@@ -190,6 +279,7 @@ let exp_subset : String =
   #|expx326 exp -4.9999999999999E-8 -> 0.99999995000000 Inexact Rounded
   #|expx327 exp -5.0000000000000E-8 -> 0.99999995000000 Inexact Rounded
   #|expx328 exp -5.0000000000001E-8 -> 0.99999995000000 Inexact Rounded
+  #|-- overprecise and 0<-x<<1
   #|precision:    8
   #|expx330 exp -4.9999999999999E-8 -> 0.99999995       Inexact Rounded
   #|expx331 exp -5.0000000000000E-8 -> 0.99999995       Inexact Rounded
@@ -202,6 +292,8 @@ let exp_subset : String =
   #|expx336 exp -4.9999999999999E-8 -> 1.00             Inexact Rounded
   #|expx337 exp -5.0000000000000E-8 -> 1.00             Inexact Rounded
   #|expx338 exp -5.0000000000001E-8 -> 1.00             Inexact Rounded
+  #|
+  #|-- 0<x<<1 effects
   #|precision:    30
   #|expx340 exp  4.9999999999999E-8 -> 1.00000005000000124999902083328  Inexact Rounded
   #|expx341 exp  5.0000000000000E-8 -> 1.00000005000000125000002083333  Inexact Rounded
@@ -214,6 +306,7 @@ let exp_subset : String =
   #|expx346 exp  4.9999999999999E-8 -> 1.0000000500000  Inexact Rounded
   #|expx347 exp  5.0000000000000E-8 -> 1.0000000500000  Inexact Rounded
   #|expx348 exp  5.0000000000001E-8 -> 1.0000000500000  Inexact Rounded
+  #|-- overprecise and 0<x<<1
   #|precision:    8
   #|expx350 exp  4.9999999999999E-8 -> 1.0000001        Inexact Rounded
   #|expx351 exp  5.0000000000000E-8 -> 1.0000001        Inexact Rounded
@@ -226,6 +319,8 @@ let exp_subset : String =
   #|expx356 exp  4.9999999999999E-8 -> 1.00             Inexact Rounded
   #|expx357 exp  5.0000000000000E-8 -> 1.00             Inexact Rounded
   #|expx358 exp  5.0000000000001E-8 -> 1.00             Inexact Rounded
+  #|
+  #|-- cases near 1              --  1 2345678901234567890
   #|precision:    20
   #|expx401 exp 0.99999999999996  -> 2.7182818284589365041  Inexact Rounded
   #|expx402 exp 0.99999999999997  -> 2.7182818284589636869  Inexact Rounded
@@ -242,6 +337,7 @@ let exp_subset : String =
   #|expx415 exp 1.0000000000000   -> 2.7182818284590  Inexact Rounded
   #|expx416 exp 1.0000000000001   -> 2.7182818284593  Inexact Rounded
   #|expx417 exp 1.0000000000002   -> 2.7182818284596  Inexact Rounded
+  #|-- overprecise...
   #|precision:    7
   #|expx421 exp 0.99999999999996  -> 2.718282         Inexact Rounded
   #|expx422 exp 0.99999999999997  -> 2.718282         Inexact Rounded
@@ -258,6 +354,8 @@ let exp_subset : String =
   #|expx435 exp 1.0000000000001   -> 2.7              Inexact Rounded
   #|expx436 exp 1.0000000000002   -> 2.7              Inexact Rounded
   #|expx437 exp 1.0000000000003   -> 2.7              Inexact Rounded
+  #|
+  #|-- basics at low precisions
   #|precision: 3
   #|expx501 exp  -Infinity     -> 0
   #|expx502 exp  -10           -> 0.0000454   Inexact Rounded
@@ -288,6 +386,8 @@ let exp_subset : String =
   #|expx527 exp   0.693147181  -> 2           Inexact Rounded
   #|expx528 exp   10           -> 2E+4        Inexact Rounded
   #|expx529 exp  +Infinity     -> Infinity
+  #|
+  #|-- overflows, including some overprecise borderlines
   #|precision:   7
   #|maxExponent: 384
   #|minExponent: -383
@@ -309,6 +409,7 @@ let exp_subset : String =
   #|expx724 exp  886.49526080270758   -> 9.999999999999917E+384 Inexact Rounded
   #|expx725 exp  886.4952608027076    -> Infinity Overflow Inexact Rounded
   #|expx726 exp  886.4952608027075    -> 9.999999999999117E+384 Inexact Rounded
+  #|-- and by special request ...
   #|precision:   15
   #|expx731 exp  886.495260802708     -> Infinity Overflow Inexact Rounded
   #|expx732 exp  886.495260802707     -> 9.99999999999412E+384 Inexact Rounded
@@ -318,6 +419,8 @@ let exp_subset : String =
   #|expx735 exp  2302.58509299405    -> Infinity Overflow Inexact Rounded
   #|expx736 exp  2302.58509299404    -> 9.99999999994316E+999 Inexact Rounded
   #|expx737 exp  2302.58509299403    -> 9.99999999984316E+999 Inexact Rounded
+  #|
+  #|-- subnormals and underflows, including underflow-to-zero edge point
   #|precision:   7
   #|maxExponent: 384
   #|minExponent: -383
@@ -343,18 +446,28 @@ let exp_subset : String =
   #|expx772 exp -896.3988     ->  0E-389        Inexact Rounded Underflow Subnormal Clamped
   #|expx773 exp -898.0081     ->  0E-389        Inexact Rounded Underflow Subnormal Clamped
   #|expx774 exp -898.0082     ->  0E-389        Inexact Rounded Underflow Subnormal Clamped
+  #|
+  #|-- special values
   #|maxexponent: 999
   #|minexponent: -999
   #|expx820 exp   Inf    -> Infinity
   #|expx821 exp  -Inf    -> 0
   #|expx822 exp   NaN    -> NaN
+  #|expx823 exp  sNaN    -> NaN Invalid_operation
+  #|-- propagating NaNs
+  #|expx824 exp  sNaN123 ->  NaN123 Invalid_operation
+  #|expx825 exp -sNaN321 -> -NaN321 Invalid_operation
   #|expx826 exp   NaN456 ->  NaN456
   #|expx827 exp  -NaN654 -> -NaN654
   #|expx828 exp   NaN1   ->  NaN1
+  #|
+  #|-- Invalid operations due to restrictions
+  #|-- [next two probably skipped by most test harnesses]
   #|precision: 100000000
   #|expx901 exp  -Infinity     -> NaN Invalid_context
   #|precision:  99999999
   #|expx902 exp  -Infinity     -> NaN Invalid_context
+  #|
   #|precision: 9
   #|maxExponent:   1000000
   #|minExponent:   -999999
@@ -368,10 +481,18 @@ let exp_subset : String =
   #|maxExponent:    999999
   #|minExponent:   -999998
   #|expx906 exp  -Infinity     -> 0
+  #|
+  #|--
   #|maxExponent: 384
   #|minExponent: -383
   #|precision:   16
   #|rounding:    half_even
+  #|
+  #|-- Null test
+  #|expx900 exp  # -> NaN Invalid_operation
+  #|
+  #|
+  #|-- Randoms P=50, within 0-999
   #|Precision: 50
   #|maxExponent: 384
   #|minExponent: -383
@@ -415,8 +536,12 @@ let exp_subset : String =
   #|expx1538 exp 9.7898079803906215094140010009583375537259810398659  -> 17850.878119912208888217100998019986634620368538426 Inexact Rounded
   #|expx1539 exp 89.157697327174521542502447953032536541038636966347  -> 525649152320166503771224149330448089550.67293829227 Inexact Rounded
   #|expx1540 exp 25.022947600123328912029051897171319573322888514885  -> 73676343442.952517824345431437683153304645851960524 Inexact Rounded
+  #|
+  #|-- exp(1) at 34
   #|Precision: 34
   #|expx1200 exp 1 -> 2.718281828459045235360287471352662 Inexact Rounded
+  #|
+  #|-- Randoms P=34, within 0-999
   #|Precision: 34
   #|maxExponent: 6144
   #|minExponent: -6143
@@ -460,6 +585,8 @@ let exp_subset : String =
   #|expx1238 exp 0.0000001306740266408976840228440255 -> 1.000000130674035178748675187648098 Inexact Rounded
   #|expx1239 exp 0.3182210609022267704811502412335163 -> 1.374680115667798185758927247894859 Inexact Rounded
   #|expx1240 exp 0.0147741234179104437440264644295501 -> 1.014883800239950682628277534839222 Inexact Rounded
+  #|
+  #|-- Randoms P=16, within 0-99
   #|Precision: 16
   #|maxExponent: 384
   #|minExponent: -383
@@ -503,6 +630,8 @@ let exp_subset : String =
   #|expx1138 exp 0.0064183412981502 -> 1.006438982988835 Inexact Rounded
   #|expx1139 exp 9.346991220814677  -> 11464.27802035082 Inexact Rounded
   #|expx1140 exp 33.09087139999152  -> 235062229168763.5 Inexact Rounded
+  #|
+  #|-- Randoms P=7, within 0-9
   #|Precision: 7
   #|maxExponent: 96
   #|minExponent: -95
@@ -550,7 +679,10 @@ let exp_subset : String =
 ///|
 test "exp.decTest subset" {
   let cases = parse_dectest(exp_subset)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, skipped) = run_cases_with_flags(cases)
+  if skipped > 0 {
+    println("\{skipped} cases skipped (format-encoding / reference-specific)")
+  }
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 30 { failures.length() } else { 30 }

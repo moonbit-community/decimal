@@ -1,14 +1,35 @@
 ///|
-/// First 100 cases from `divide.decTest` (the sanity / sign / trailing-zero
-/// section). Skips cases tagged `Subnormal`, `Overflow`, `Underflow`,
-/// `Clamped`, `Conversion_syntax`, or `Division_impossible` — those need
-/// either subnormal handling (not yet shipped) or runner-side flag
-/// validation (currently we only compare the rendered result string).
+/// Full `divide.decTest` corpus (IBM General Decimal Arithmetic
+/// testcases), embedded verbatim.
 let divide_subset : String =
+  #|------------------------------------------------------------------------
+  #|-- divide.decTest -- decimal division                                 --
+  #|-- Copyright (c) IBM Corporation, 1981, 2008.  All rights reserved.   --
+  #|------------------------------------------------------------------------
+  #|-- Please see the document "General Decimal Arithmetic Testcases"     --
+  #|-- at http://www2.hursley.ibm.com/decimal for the description of      --
+  #|-- these testcases.                                                   --
+  #|--                                                                    --
+  #|-- These testcases are experimental ('beta' versions), and they       --
+  #|-- may contain errors.  They are offered on an as-is basis.  In       --
+  #|-- particular, achieving the same results as the tests here is not    --
+  #|-- a guarantee that an implementation complies with any Standard      --
+  #|-- or specification.  The tests are not exhaustive.                   --
+  #|--                                                                    --
+  #|-- Please send comments, suggestions, and corrections to the author:  --
+  #|--   Mike Cowlishaw, IBM Fellow                                       --
+  #|--   IBM UK, PO Box 31, Birmingham Road, Warwick CV34 5JL, UK         --
+  #|--   mfc@uk.ibm.com                                                   --
+  #|------------------------------------------------------------------------
+  #|version: 2.59
+  #|
+  #|extended:    1
   #|precision:   9
   #|rounding:    half_up
   #|maxExponent: 384
   #|minexponent: -383
+  #|
+  #|-- sanity checks
   #|divx001 divide  1     1    ->  1
   #|divx002 divide  2     1    ->  2
   #|divx003 divide  1     2    ->  0.5
@@ -18,6 +39,7 @@ let divide_subset : String =
   #|divx007 divide  1     3    ->  0.333333333 Inexact Rounded
   #|divx008 divide  2     3    ->  0.666666667 Inexact Rounded
   #|divx009 divide  3     3    ->  1
+  #|
   #|divx010 divide  2.4   1    ->  2.4
   #|divx011 divide  2.4   -1   ->  -2.4
   #|divx012 divide  -2.4  1    ->  -2.4
@@ -28,6 +50,7 @@ let divide_subset : String =
   #|divx017 divide  2.400 2    ->  1.200
   #|divx018 divide  2.    2    ->  1
   #|divx019 divide  20    20   ->  1
+  #|
   #|divx020 divide  187   187    ->  1
   #|divx021 divide  5     2      ->  2.5
   #|divx022 divide  50    20     ->  2.5
@@ -42,6 +65,7 @@ let divide_subset : String =
   #|divx031 divide  100   1      ->  100
   #|divx032 divide  1000  1      ->  1000
   #|divx033 divide  1000  100    ->  10
+  #|
   #|divx035 divide  1     2      ->  0.5
   #|divx036 divide  1     4      ->  0.25
   #|divx037 divide  1     8      ->  0.125
@@ -66,6 +90,7 @@ let divide_subset : String =
   #|divx056 divide -1    -16     ->  0.0625
   #|divx057 divide -1    -32     ->  0.03125
   #|divx058 divide -1    -64     ->  0.015625
+  #|
   #|divx070 divide  999999999        1    ->  999999999
   #|divx071 divide  999999999.4      1    ->  999999999 Inexact Rounded
   #|divx072 divide  999999999.5      1    ->  1.00000000E+9 Inexact Rounded
@@ -81,17 +106,20 @@ let divide_subset : String =
   #|divx086 divide  999           1  ->  999
   #|divx087 divide  99            1  ->  99
   #|divx088 divide  9             1  ->  9
+  #|
   #|precision: 9
   #|divx090 divide  0.            1    ->  0
   #|divx091 divide  .0            1    ->  0.0
   #|divx092 divide  0.00          1    ->  0.00
   #|divx093 divide  0.00E+9       1    ->  0E+7
   #|divx094 divide  0.0000E-50    1    ->  0E-54
+  #|
   #|divx095 divide  1            1E-8  ->  1E+8
   #|divx096 divide  1            1E-9  ->  1E+9
   #|divx097 divide  1            1E-10 ->  1E+10
   #|divx098 divide  1            1E-11 ->  1E+11
   #|divx099 divide  1            1E-12 ->  1E+12
+  #|
   #|divx100 divide  1  1   -> 1
   #|divx101 divide  1  2   -> 0.5
   #|divx102 divide  1  3   -> 0.333333333 Inexact Rounded
@@ -112,8 +140,10 @@ let divide_subset : String =
   #|divx117 divide  8  1   -> 8
   #|divx118 divide  9  1   -> 9
   #|divx119 divide  10 1   -> 10
+  #|
   #|divx120 divide  3E+1 0.001  -> 3E+4
   #|divx121 divide  2.200 2     -> 1.100
+  #|
   #|divx130 divide  12345  4.999  ->  2469.49390 Inexact Rounded
   #|divx131 divide  12345  4.99   ->  2473.94790 Inexact Rounded
   #|divx132 divide  12345  4.9    ->  2519.38776 Inexact Rounded
@@ -121,13 +151,18 @@ let divide_subset : String =
   #|divx134 divide  12345  5.1    ->  2420.58824 Inexact Rounded
   #|divx135 divide  12345  5.01   ->  2464.07186 Inexact Rounded
   #|divx136 divide  12345  5.001  ->  2468.50630 Inexact Rounded
+  #|
   #|precision:   9
   #|maxexponent: 999999999
   #|minexponent: -999999999
+  #|
+  #|-- test possibly imprecise results
   #|divx220 divide 391   597 ->  0.654941374 Inexact Rounded
   #|divx221 divide 391  -597 -> -0.654941374 Inexact Rounded
   #|divx222 divide -391  597 -> -0.654941374 Inexact Rounded
   #|divx223 divide -391 -597 ->  0.654941374 Inexact Rounded
+  #|
+  #|-- test some cases that are close to exponent overflow
   #|maxexponent: 999999999
   #|minexponent: -999999999
   #|divx270 divide 1 1e999999999    -> 1E-999999999
@@ -138,15 +173,20 @@ let divide_subset : String =
   #|divx275 divide 9.9e999999999  1 -> 9.9E+999999999
   #|divx276 divide 9.99e999999999 1 -> 9.99E+999999999
   #|divx277 divide 9.99999999e999999999 1 -> 9.99999999E+999999999
+  #|
   #|divx280 divide 0.1 9e-999999999   -> 1.11111111E+999999997 Inexact Rounded
   #|divx281 divide 0.1 99e-999999999  -> 1.01010101E+999999996 Inexact Rounded
   #|divx282 divide 0.1 999e-999999999 -> 1.00100100E+999999995 Inexact Rounded
+  #|
   #|divx283 divide 0.1 9e-999999998     -> 1.11111111E+999999996 Inexact Rounded
   #|divx284 divide 0.1 99e-999999998    -> 1.01010101E+999999995 Inexact Rounded
   #|divx285 divide 0.1 999e-999999998   -> 1.00100100E+999999994 Inexact Rounded
   #|divx286 divide 0.1 999e-999999997   -> 1.00100100E+999999993 Inexact Rounded
   #|divx287 divide 0.1 9999e-999999997  -> 1.00010001E+999999992 Inexact Rounded
   #|divx288 divide 0.1 99999e-999999997 -> 1.00001000E+999999991 Inexact Rounded
+  #|
+  #|-- Divide into 0 tests
+  #|
   #|divx301 divide    0    7     -> 0
   #|divx302 divide    0    7E-5  -> 0E+5
   #|divx303 divide    0    7E-1  -> 0E+1
@@ -169,6 +209,7 @@ let divide_subset : String =
   #|divx320 divide    0  700E+6  -> 0.000000
   #|divx321 divide    0  700E+7  -> 0E-7
   #|divx322 divide    0  700E+77 -> 0E-77
+  #|
   #|divx331 divide 0E-3    7E-5  -> 0E+2
   #|divx332 divide 0E-3    7E-1  -> 0.00
   #|divx333 divide 0E-3    7E+1  -> 0.0000
@@ -185,6 +226,7 @@ let divide_subset : String =
   #|divx344 divide 0E+3    7E-1  -> 0E+4
   #|divx345 divide 0E+3    7E+1  -> 0E+2
   #|divx346 divide 0E+3    7E+5  -> 0.00
+  #|
   #|maxexponent: 92
   #|minexponent: -92
   #|precision:    7
@@ -201,6 +243,7 @@ let divide_subset : String =
   #|divx361 divide 0E-92 777E+6  -> 0E-98
   #|divx362 divide 0E-92 777E+7  -> 0E-98 Clamped
   #|divx363 divide 0E-92   7E+92 -> 0E-98 Clamped
+  #|
   #|divx371 divide 0E-92 700E-1  -> 0E-91
   #|divx372 divide 0E-92 700E+1  -> 0E-93
   #|divx373 divide 0E-92 700E+3  -> 0E-95
@@ -208,6 +251,7 @@ let divide_subset : String =
   #|divx375 divide 0E-92 700E+5  -> 0E-97
   #|divx376 divide 0E-92 700E+6  -> 0E-98
   #|divx377 divide 0E-92 700E+7  -> 0E-98 Clamped
+  #|
   #|divx381 divide 0E+92   7E+1  -> 0E+91
   #|divx382 divide 0E+92   7E+0  -> 0E+92
   #|divx383 divide 0E+92   7E-1  -> 0E+92 Clamped
@@ -216,11 +260,14 @@ let divide_subset : String =
   #|divx386 divide 0E+90 777E-2  -> 0E+92
   #|divx387 divide 0E+90 777E-3  -> 0E+92 Clamped
   #|divx388 divide 0E+90 777E-4  -> 0E+92 Clamped
+  #|
   #|divx391 divide 0E+90 700E+1  -> 0E+89
   #|divx392 divide 0E+90 700E-1  -> 0E+91
   #|divx393 divide 0E+90 700E-2  -> 0E+92
   #|divx394 divide 0E+90 700E-3  -> 0E+92 Clamped
   #|divx395 divide 0E+90 700E-4  -> 0E+92 Clamped
+  #|
+  #|-- input rounding checks
   #|maxexponent: 999
   #|minexponent: -999
   #|precision: 9
@@ -242,6 +289,7 @@ let divide_subset : String =
   #|divx416 divide 1 1234567900  -> 8.10000001E-10 Inexact Rounded
   #|divx417 divide 1 1234567901  -> 8.10000000E-10 Inexact Rounded
   #|divx418 divide 1 1234567902  -> 8.09999999E-10 Inexact Rounded
+  #|-- some longies
   #|divx421 divide 1234567896.000000000000  1 -> 1.23456790E+9  Inexact Rounded
   #|divx422 divide 1 1234567896.000000000000  -> 8.10000003E-10 Inexact Rounded
   #|divx423 divide 1234567896.000000000001  1 -> 1.23456790E+9  Inexact Rounded
@@ -250,7 +298,9 @@ let divide_subset : String =
   #|divx426 divide 1 1234567896.000000000000000000000000000000000000000009  -> 8.10000003E-10 Inexact Rounded
   #|divx427 divide 1234567897.900010000000000000000000000000000000000009  1 -> 1.23456790E+9  Inexact Rounded
   #|divx428 divide 1 1234567897.900010000000000000000000000000000000000009  -> 8.10000002E-10 Inexact Rounded
+  #|
   #|precision: 15
+  #|-- still checking...
   #|divx441 divide 12345678000 1 -> 12345678000
   #|divx442 divide 1 12345678000 -> 8.10000066420005E-11 Inexact Rounded
   #|divx443 divide 1234567800  1 -> 1234567800
@@ -263,12 +313,16 @@ let divide_subset : String =
   #|divx450 divide 1 12345678901 -> 8.10000007305390E-11 Inexact Rounded
   #|divx451 divide 1234567896  1 -> 1234567896
   #|divx452 divide 1 1234567896  -> 8.10000003434400E-10 Inexact Rounded
+  #|
+  #|-- high-lows
   #|divx453 divide 1e+1   1    ->   1E+1
   #|divx454 divide 1e+1   1.0  ->   1E+1
   #|divx455 divide 1e+1   1.00 ->   1E+1
   #|divx456 divide 1e+2   2    ->   5E+1
   #|divx457 divide 1e+2   2.0  ->   5E+1
   #|divx458 divide 1e+2   2.00 ->   5E+1
+  #|
+  #|-- some from IEEE discussions
   #|divx460 divide 3e0      2e0     -> 1.5
   #|divx461 divide 30e-1    2e0     -> 1.5
   #|divx462 divide 300e-2   2e0     -> 1.50
@@ -285,35 +339,46 @@ let divide_subset : String =
   #|divx474 divide 30e-1    2000e-3 -> 1.5
   #|divx475 divide 300e-2   2000e-3 -> 1.5
   #|divx476 divide 3000e-3  2000e-3 -> 1.5
+  #|
+  #|-- some reciprocals
   #|divx480 divide 1        1.0E+33 -> 1E-33
   #|divx481 divide 1        10E+33  -> 1E-34
   #|divx482 divide 1        1.0E-33 -> 1E+33
   #|divx483 divide 1        10E-33  -> 1E+32
+  #|
+  #|-- RMS discussion table
   #|maxexponent:  96
   #|minexponent: -95
   #|precision:     7
+  #|
   #|divx484 divide 0e5     1e3 ->   0E+2
   #|divx485 divide 0e5     2e3 ->   0E+2
   #|divx486 divide 0e5    10e2 ->   0E+3
   #|divx487 divide 0e5    20e2 ->   0E+3
   #|divx488 divide 0e5   100e1 ->   0E+4
   #|divx489 divide 0e5   200e1 ->   0E+4
+  #|
   #|divx491 divide 1e5     1e3 ->   1E+2
   #|divx492 divide 1e5     2e3 ->   5E+1
   #|divx493 divide 1e5    10e2 ->   1E+2
   #|divx494 divide 1e5    20e2 ->   5E+1
   #|divx495 divide 1e5   100e1 ->   1E+2
   #|divx496 divide 1e5   200e1 ->   5E+1
+  #|
+  #|-- tryzeros cases
   #|precision:   7
   #|rounding:    half_up
   #|maxExponent: 92
   #|minexponent: -92
   #|divx497  divide  0E+86 1000E-13  -> 0E+92 Clamped
   #|divx498  divide  0E-98 1000E+13  -> 0E-98 Clamped
+  #|
   #|precision:   9
   #|rounding:    half_up
   #|maxExponent: 999
   #|minexponent: -999
+  #|
+  #|-- focus on trailing zeros issues
   #|precision:   9
   #|divx500 divide  1      9.9    ->  0.101010101  Inexact Rounded
   #|precision:   8
@@ -323,6 +388,7 @@ let divide_subset : String =
   #|precision:   6
   #|divx503 divide  1      9.9    ->  0.101010     Inexact Rounded
   #|precision:   9
+  #|
   #|divx511 divide 1         2    -> 0.5
   #|divx512 divide 1.0       2    -> 0.5
   #|divx513 divide 1.00      2    -> 0.50
@@ -332,6 +398,7 @@ let divide_subset : String =
   #|divx517 divide 1.000000  2    -> 0.500000
   #|divx518 divide 1.0000000 2    -> 0.5000000
   #|divx519 divide 1.00      2.00 -> 0.5
+  #|
   #|divx521 divide 2    1         -> 2
   #|divx522 divide 2    1.0       -> 2
   #|divx523 divide 2    1.00      -> 2
@@ -341,6 +408,7 @@ let divide_subset : String =
   #|divx527 divide 2    1.000000  -> 2
   #|divx528 divide 2    1.0000000 -> 2
   #|divx529 divide 2.00 1.00      -> 2
+  #|
   #|divx530 divide  2.40   2      ->  1.20
   #|divx531 divide  2.40   4      ->  0.60
   #|divx532 divide  2.40  10      ->  0.24
@@ -361,6 +429,7 @@ let divide_subset : String =
   #|divx547 divide  2.400  2      ->  1.200
   #|divx548 divide  2.400  2.0    ->  1.20
   #|divx549 divide  2.400  2.400  ->  1
+  #|
   #|divx550 divide  240    1      ->  240
   #|divx551 divide  240    10     ->  24
   #|divx552 divide  240    100    ->  2.4
@@ -369,6 +438,8 @@ let divide_subset : String =
   #|divx555 divide  2400   10     ->  240
   #|divx556 divide  2400   100    ->  24
   #|divx557 divide  2400   1000   ->  2.4
+  #|
+  #|-- +ve exponent
   #|precision: 5
   #|divx570 divide  2.4E+6     2  ->  1.2E+6
   #|divx571 divide  2.40E+6    2  ->  1.20E+6
@@ -405,6 +476,8 @@ let divide_subset : String =
   #|divx605 divide  240E+7     2  ->  1.20E+9
   #|divx606 divide  2400E+6    2  ->  1.200E+9
   #|divx607 divide  24000E+5   2  ->  1.2000E+9
+  #|
+  #|-- long operand triangle
   #|precision: 33
   #|divx610 divide -3374988581607586061255542201048 82293895124.90045271504836568681 -> -41011408883796817797.8131097703792 Inexact Rounded
   #|precision: 32
@@ -471,16 +544,20 @@ let divide_subset : String =
   #|divx641 divide -3374988581607586061255542201048 82293895124.90045271504836568681 -> -4.1E+19         Inexact Rounded
   #|precision:  1
   #|divx642 divide -3374988581607586061255542201048 82293895124.90045271504836568681 -> -4E+19         Inexact Rounded
+  #|
+  #|-- more zeros, etc.
   #|precision:   16
   #|rounding:    half_up
   #|maxExponent: 384
   #|minExponent: -383
+  #|
   #|divx731 divide 5.00 1E-3    -> 5.00E+3
   #|divx732 divide 00.00 0.000  -> NaN Division_undefined
   #|divx733 divide 00.00 0E-3   -> NaN Division_undefined
   #|divx734 divide  0    -0     -> NaN Division_undefined
   #|divx735 divide -0     0     -> NaN Division_undefined
   #|divx736 divide -0    -0     -> NaN Division_undefined
+  #|
   #|divx741 divide  0    -1     -> -0
   #|divx742 divide -0    -1     ->  0
   #|divx743 divide  0     1     ->  0
@@ -489,6 +566,7 @@ let divide_subset : String =
   #|divx746 divide -1    -0     ->  Infinity Division_by_zero
   #|divx747 divide  1     0     ->  Infinity Division_by_zero
   #|divx748 divide  1    -0     -> -Infinity Division_by_zero
+  #|
   #|divx751 divide  0.0  -1     -> -0.0
   #|divx752 divide -0.0  -1     ->  0.0
   #|divx753 divide  0.0   1     ->  0.0
@@ -497,6 +575,7 @@ let divide_subset : String =
   #|divx756 divide -1.0  -0     ->  Infinity Division_by_zero
   #|divx757 divide  1.0   0     ->  Infinity Division_by_zero
   #|divx758 divide  1.0  -0     -> -Infinity Division_by_zero
+  #|
   #|divx761 divide  0    -1.0   -> -0E+1
   #|divx762 divide -0    -1.0   ->  0E+1
   #|divx763 divide  0     1.0   ->  0E+1
@@ -505,6 +584,7 @@ let divide_subset : String =
   #|divx766 divide -1    -0.0   ->  Infinity Division_by_zero
   #|divx767 divide  1     0.0   ->  Infinity Division_by_zero
   #|divx768 divide  1    -0.0   -> -Infinity Division_by_zero
+  #|
   #|divx771 divide  0.0  -1.0   -> -0
   #|divx772 divide -0.0  -1.0   ->  0
   #|divx773 divide  0.0   1.0   ->  0
@@ -513,6 +593,8 @@ let divide_subset : String =
   #|divx776 divide -1.0  -0.0   ->  Infinity Division_by_zero
   #|divx777 divide  1.0   0.0   ->  Infinity Division_by_zero
   #|divx778 divide  1.0  -0.0   -> -Infinity Division_by_zero
+  #|
+  #|-- Specials
   #|divx780 divide  Inf  -Inf   ->  NaN Invalid_operation
   #|divx781 divide  Inf  -1000  -> -Infinity
   #|divx782 divide  Inf  -1     -> -Infinity
@@ -529,6 +611,7 @@ let divide_subset : String =
   #|divx793 divide  1     Inf   ->  0E-398 Clamped
   #|divx794 divide  1000  Inf   ->  0E-398 Clamped
   #|divx795 divide  Inf   Inf   ->  NaN Invalid_operation
+  #|
   #|divx800 divide -Inf  -Inf   ->  NaN Invalid_operation
   #|divx801 divide -Inf  -1000  ->  Infinity
   #|divx802 divide -Inf  -1     ->  Infinity
@@ -545,6 +628,7 @@ let divide_subset : String =
   #|divx813 divide  1    -Inf   -> -0E-398 Clamped
   #|divx814 divide  1000 -Inf   -> -0E-398 Clamped
   #|divx815 divide  Inf  -Inf   ->  NaN Invalid_operation
+  #|
   #|divx821 divide  NaN -Inf    ->  NaN
   #|divx822 divide  NaN -1000   ->  NaN
   #|divx823 divide  NaN -1      ->  NaN
@@ -562,6 +646,28 @@ let divide_subset : String =
   #|divx835 divide  1    NaN    ->  NaN
   #|divx836 divide  1000 NaN    ->  NaN
   #|divx837 divide  Inf  NaN    ->  NaN
+  #|
+  #|divx841 divide  sNaN -Inf   ->  NaN  Invalid_operation
+  #|divx842 divide  sNaN -1000  ->  NaN  Invalid_operation
+  #|divx843 divide  sNaN -1     ->  NaN  Invalid_operation
+  #|divx844 divide  sNaN -0     ->  NaN  Invalid_operation
+  #|divx845 divide  sNaN  0     ->  NaN  Invalid_operation
+  #|divx846 divide  sNaN  1     ->  NaN  Invalid_operation
+  #|divx847 divide  sNaN  1000  ->  NaN  Invalid_operation
+  #|divx848 divide  sNaN  NaN   ->  NaN  Invalid_operation
+  #|divx849 divide  sNaN sNaN   ->  NaN  Invalid_operation
+  #|divx850 divide  NaN  sNaN   ->  NaN  Invalid_operation
+  #|divx851 divide -Inf  sNaN   ->  NaN  Invalid_operation
+  #|divx852 divide -1000 sNaN   ->  NaN  Invalid_operation
+  #|divx853 divide -1    sNaN   ->  NaN  Invalid_operation
+  #|divx854 divide -0    sNaN   ->  NaN  Invalid_operation
+  #|divx855 divide  0    sNaN   ->  NaN  Invalid_operation
+  #|divx856 divide  1    sNaN   ->  NaN  Invalid_operation
+  #|divx857 divide  1000 sNaN   ->  NaN  Invalid_operation
+  #|divx858 divide  Inf  sNaN   ->  NaN  Invalid_operation
+  #|divx859 divide  NaN  sNaN   ->  NaN  Invalid_operation
+  #|
+  #|-- propagating NaNs
   #|divx861 divide  NaN9 -Inf   ->  NaN9
   #|divx862 divide  NaN8  1000  ->  NaN8
   #|divx863 divide  NaN7  Inf   ->  NaN7
@@ -569,6 +675,17 @@ let divide_subset : String =
   #|divx865 divide -Inf   NaN4  ->  NaN4
   #|divx866 divide -1000  NaN3  ->  NaN3
   #|divx867 divide  Inf   NaN2  ->  NaN2
+  #|
+  #|divx871 divide  sNaN99 -Inf    ->  NaN99 Invalid_operation
+  #|divx872 divide  sNaN98 -1      ->  NaN98 Invalid_operation
+  #|divx873 divide  sNaN97  NaN    ->  NaN97 Invalid_operation
+  #|divx874 divide  sNaN96 sNaN94  ->  NaN96 Invalid_operation
+  #|divx875 divide  NaN95  sNaN93  ->  NaN93 Invalid_operation
+  #|divx876 divide -Inf    sNaN92  ->  NaN92 Invalid_operation
+  #|divx877 divide  0      sNaN91  ->  NaN91 Invalid_operation
+  #|divx878 divide  Inf    sNaN90  ->  NaN90 Invalid_operation
+  #|divx879 divide  NaN    sNaN89  ->  NaN89 Invalid_operation
+  #|
   #|divx881 divide  -NaN9  -Inf   ->  -NaN9
   #|divx882 divide  -NaN8   1000  ->  -NaN8
   #|divx883 divide  -NaN7   Inf   ->  -NaN7
@@ -576,8 +693,21 @@ let divide_subset : String =
   #|divx885 divide  -Inf   -NaN4  ->  -NaN4
   #|divx886 divide  -1000  -NaN3  ->  -NaN3
   #|divx887 divide   Inf   -NaN2  ->  -NaN2
+  #|
+  #|divx891 divide -sNaN99 -Inf    -> -NaN99 Invalid_operation
+  #|divx892 divide -sNaN98 -1      -> -NaN98 Invalid_operation
+  #|divx893 divide -sNaN97  NaN    -> -NaN97 Invalid_operation
+  #|divx894 divide -sNaN96 -sNaN94 -> -NaN96 Invalid_operation
+  #|divx895 divide -NaN95  -sNaN93 -> -NaN93 Invalid_operation
+  #|divx896 divide -Inf    -sNaN92 -> -NaN92 Invalid_operation
+  #|divx897 divide  0      -sNaN91 -> -NaN91 Invalid_operation
+  #|divx898 divide  Inf    -sNaN90 -> -NaN90 Invalid_operation
+  #|divx899 divide -NaN    -sNaN89 -> -NaN89 Invalid_operation
+  #|
   #|maxexponent: 999999999
   #|minexponent: -999999999
+  #|
+  #|-- Various flavours of divide by 0
   #|divx901 divide    0       0   ->  NaN Division_undefined
   #|divx902 divide    0.0E5   0   ->  NaN Division_undefined
   #|divx903 divide    0.000   0   ->  NaN Division_undefined
@@ -589,6 +719,7 @@ let divide_subset : String =
   #|divx909 divide   10       0.0 ->  Infinity Division_by_zero
   #|divx910 divide   1E+100   0.0 ->  Infinity Division_by_zero
   #|divx911 divide   1E+1000  0   ->  Infinity Division_by_zero
+  #|
   #|divx921 divide   -0.0001  0   -> -Infinity Division_by_zero
   #|divx922 divide   -0.01    0   -> -Infinity Division_by_zero
   #|divx923 divide   -0.1     0   -> -Infinity Division_by_zero
@@ -597,6 +728,7 @@ let divide_subset : String =
   #|divx926 divide  -10       0.0 -> -Infinity Division_by_zero
   #|divx927 divide  -1E+100   0.0 -> -Infinity Division_by_zero
   #|divx928 divide  -1E+1000  0   -> -Infinity Division_by_zero
+  #|
   #|divx931 divide    0.0001 -0   -> -Infinity Division_by_zero
   #|divx932 divide    0.01   -0   -> -Infinity Division_by_zero
   #|divx933 divide    0.1    -0   -> -Infinity Division_by_zero
@@ -605,6 +737,7 @@ let divide_subset : String =
   #|divx936 divide   10      -0.0 -> -Infinity Division_by_zero
   #|divx937 divide   1E+100  -0.0 -> -Infinity Division_by_zero
   #|divx938 divide   1E+1000 -0   -> -Infinity Division_by_zero
+  #|
   #|divx941 divide   -0.0001 -0   ->  Infinity Division_by_zero
   #|divx942 divide   -0.01   -0   ->  Infinity Division_by_zero
   #|divx943 divide   -0.1    -0   ->  Infinity Division_by_zero
@@ -613,6 +746,8 @@ let divide_subset : String =
   #|divx946 divide  -10      -0.0 ->  Infinity Division_by_zero
   #|divx947 divide  -1E+100  -0.0 ->  Infinity Division_by_zero
   #|divx948 divide  -1E+1000 -0   ->  Infinity Division_by_zero
+  #|
+  #|-- overflow and underflow tests
   #|precision: 9
   #|maxexponent: 999999999
   #|minexponent: -999999999
@@ -625,6 +760,10 @@ let divide_subset : String =
   #|divx957 divide 9E+999999999 -0.83456789012345E-0 -> -Infinity Inexact Overflow Rounded
   #|divx958 divide -0.100 9E+999999999 -> -1.111111E-1000000001 Subnormal Inexact Rounded Underflow
   #|divx959 divide 9E-999999999 -9.100 -> -9.8901099E-1000000000 Inexact Rounded Underflow Subnormal
+  #|
+  #|-- overflow and underflow (additional edge tests in multiply.decTest)
+  #|-- 'subnormal' results now possible (all hard underflow or overflow in
+  #|-- base arithmetic)
   #|divx960 divide 1e-600000000 1e+400000001 -> 1E-1000000001 Subnormal
   #|divx961 divide 1e-600000000 1e+400000002 -> 1E-1000000002 Subnormal
   #|divx962 divide 1e-600000000 1e+400000003 -> 1E-1000000003 Subnormal
@@ -635,6 +774,7 @@ let divide_subset : String =
   #|divx967 divide 1e-600000000 1e+400000008 -> 0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
   #|divx968 divide 1e-600000000 1e+400000009 -> 0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
   #|divx969 divide 1e-600000000 1e+400000010 -> 0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
+  #|-- [no equivalent of 'subnormal' for overflow]
   #|divx970 divide 1e+600000000 1e-400000001 -> Infinity Overflow Inexact Rounded
   #|divx971 divide 1e+600000000 1e-400000002 -> Infinity Overflow Inexact Rounded
   #|divx972 divide 1e+600000000 1e-400000003 -> Infinity Overflow Inexact Rounded
@@ -645,6 +785,8 @@ let divide_subset : String =
   #|divx977 divide 1e+600000000 1e-400000008 -> Infinity Overflow Inexact Rounded
   #|divx978 divide 1e+600000000 1e-400000009 -> Infinity Overflow Inexact Rounded
   #|divx979 divide 1e+600000000 1e-400000010 -> Infinity Overflow Inexact Rounded
+  #|
+  #|-- Sign after overflow and underflow
   #|divx980 divide  1e-600000000  1e+400000009 ->  0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
   #|divx981 divide  1e-600000000 -1e+400000009 -> -0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
   #|divx982 divide -1e-600000000  1e+400000009 -> -0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
@@ -653,26 +795,37 @@ let divide_subset : String =
   #|divx985 divide  1e+600000000 -1e-400000009 -> -Infinity Overflow Inexact Rounded
   #|divx986 divide -1e+600000000  1e-400000009 -> -Infinity Overflow Inexact Rounded
   #|divx987 divide -1e+600000000 -1e-400000009 ->  Infinity Overflow Inexact Rounded
+  #|
+  #|-- Long operand overflow may be a different path
   #|precision: 3
   #|divx990 divide 1000  9.999E-999999999      ->  Infinity Inexact Overflow Rounded
   #|divx991 divide 1000 -9.999E-999999999      -> -Infinity Inexact Overflow Rounded
   #|divx992 divide       9.999E+999999999 0.01 ->  Infinity Inexact Overflow Rounded
   #|divx993 divide      -9.999E+999999999 0.01 -> -Infinity Inexact Overflow Rounded
+  #|
+  #|-- check for double-rounded subnormals
   #|precision:   5
   #|maxexponent: 79
   #|minexponent: -79
   #|divx1001 divide    1.52444E-80 1      -> 1.524E-80 Inexact Rounded Subnormal Underflow
   #|divx1002 divide    1.52445E-80 1      -> 1.524E-80 Inexact Rounded Subnormal Underflow
   #|divx1003 divide    1.52446E-80 1      -> 1.524E-80 Inexact Rounded Subnormal Underflow
+  #|
+  #|-- a rounding problem in one implementation
   #|precision:   34
   #|rounding:    half_up
   #|maxExponent: 6144
   #|minExponent: -6143
+  #|-- Unbounded answer to 40 digits:
+  #|--   1.465811965811965811965811965811965811966E+7000
   #|divx1010 divide 343E6000  234E-1000 -> Infinity Overflow Inexact Rounded
+  #|
   #|precision:   34
   #|rounding:    half_up
   #|maxExponent: 6144
   #|minExponent: -6143
+  #|
+  #|-- Examples from SQL proposal (Krishna Kulkarni)
   #|precision: 7
   #|divx1021  divide 1E0          1E0 -> 1
   #|divx1022  divide 1E0          2E0 -> 0.5
@@ -687,17 +840,29 @@ let divide_subset : String =
   #|divx1031  divide 5E0        20E-2 -> 25
   #|divx1032  divide 480E-2       3E0 -> 1.60
   #|divx1033  divide 47E-1        2E0 -> 2.35
+  #|
+  #|-- ECMAScript bad examples
   #|rounding:    half_down
   #|precision: 7
   #|divx1050  divide 5 9  -> 0.5555556 Inexact Rounded
   #|rounding:    half_even
   #|divx1051  divide 5 11 -> 0.4545455 Inexact Rounded
+  #|
+  #|-- payload decapitate
   #|precision: 5
+  #|divx1055  divide   sNaN987654321 1 ->  NaN54321  Invalid_operation
+  #|
+  #|-- Null tests
+  #|divx9998 divide 10  # -> NaN Invalid_operation
+  #|divx9999 divide  # 10 -> NaN Invalid_operation
 
 ///|
 test "divide.decTest subset round-trips through parse + divide + toSci" {
   let cases = parse_dectest(divide_subset)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, skipped) = run_cases_with_flags(cases)
+  if skipped > 0 {
+    println("\{skipped} cases skipped (format-encoding / reference-specific)")
+  }
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 30 { failures.length() } else { 30 }

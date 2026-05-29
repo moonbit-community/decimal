@@ -1,18 +1,44 @@
 ///|
-/// First 40 cases from `ln.decTest`.
+/// Full `ln.decTest` corpus (IBM General Decimal Arithmetic
+/// testcases), embedded verbatim.
 let ln_subset : String =
-  #|version: 2.62
+  #|------------------------------------------------------------------------
+  #|-- ln.decTest -- decimal natural logarithm                            --
+  #|-- Copyright (c) IBM Corporation, 2005, 2008.  All rights reserved.   --
+  #|------------------------------------------------------------------------
+  #|-- Please see the document "General Decimal Arithmetic Testcases"     --
+  #|-- at http://www2.hursley.ibm.com/decimal for the description of      --
+  #|-- these testcases.                                                   --
+  #|--                                                                    --
+  #|-- These testcases are experimental ('beta' versions), and they       --
+  #|-- may contain errors.  They are offered on an as-is basis.  In       --
+  #|-- particular, achieving the same results as the tests here is not    --
+  #|-- a guarantee that an implementation complies with any Standard      --
+  #|-- or specification.  The tests are not exhaustive.                   --
+  #|--                                                                    --
+  #|-- Please send comments, suggestions, and corrections to the author:  --
+  #|--   Mike Cowlishaw, IBM Fellow                                       --
+  #|--   IBM UK, PO Box 31, Birmingham Road, Warwick CV34 5JL, UK         --
+  #|--   mfc@uk.ibm.com                                                   --
+  #|------------------------------------------------------------------------
+  #|version: 2.59
+  #|
   #|extended:    1
   #|precision:   16
   #|rounding:    half_even
   #|maxExponent: 384
   #|minexponent: -383
+  #|
+  #|-- basics (examples in specification)
   #|precision: 9
   #|lnxs001 ln  0                 -> -Infinity
   #|lnxs002 ln  1.000             ->   0
   #|lnxs003 ln  2.71828183        ->   1.00000000         Inexact Rounded
   #|lnxs004 ln  10                ->   2.30258509         Inexact Rounded
   #|lnxs005 ln +Infinity          ->  Infinity
+  #|
+  #|
+  #|-- basics
   #|precision:   16
   #|lnx0001 ln  0                 -> -Infinity
   #|lnx0002 ln  1E-9              -> -20.72326583694641   Inexact Rounded
@@ -32,6 +58,9 @@ let ln_subset : String =
   #|lnx0016 ln  1E6               ->  13.81551055796427   Inexact Rounded
   #|lnx0017 ln  1E+9              ->  20.72326583694641   Inexact Rounded
   #|lnx0018 ln +Infinity          ->  Infinity
+  #|
+  #|-- notable cases
+  #|-- negatives
   #|lnx0021 ln -1E-9              -> NaN Invalid_operation
   #|lnx0022 ln -0.0007            -> NaN Invalid_operation
   #|lnx0023 ln -0.1               -> NaN Invalid_operation
@@ -46,15 +75,20 @@ let ln_subset : String =
   #|lnx0032 ln -0                 -> -Infinity
   #|lnx0033 ln -0E+17             -> -Infinity
   #|lnx0034 ln -0E-17             -> -Infinity
+  #|-- other zeros
   #|lnx0041 ln  0                 -> -Infinity
   #|lnx0042 ln  0E+17             -> -Infinity
   #|lnx0043 ln  0E-17             -> -Infinity
+  #|-- infinities
   #|lnx0045 ln -Infinity          -> NaN Invalid_operation
   #|lnx0046 ln +Infinity          -> Infinity
+  #|-- ones
   #|lnx0050 ln  1                 ->   0
   #|lnx0051 ln  1.0               ->   0
   #|lnx0052 ln  1.000000000000000 ->   0
   #|lnx0053 ln  1.000000000000000000 ->   0
+  #|
+  #|-- lower precision basics
   #|Precision: 7
   #|lnx0101 ln  0                 -> -Infinity
   #|lnx0102 ln  1E-9              -> -20.72327            Inexact Rounded
@@ -109,6 +143,8 @@ let ln_subset : String =
   #|lnx0155 ln  1E6               ->  1E+1                Inexact Rounded
   #|lnx0156 ln  1E+9              ->  2E+1                Inexact Rounded
   #|lnx0157 ln +Infinity          ->  Infinity
+  #|
+  #|-- group low-precision ln(1)s:
   #|precision: 1
   #|lnx0161 ln  1 -> 0
   #|precision: 2
@@ -125,6 +161,8 @@ let ln_subset : String =
   #|lnx0167 ln  1 -> 0
   #|precision: 8
   #|lnx0168 ln  1 -> 0
+  #|
+  #|-- edge-test ln(2) and ln(10) in case of lookasides
   #|precision: 45
   #|lnx201  ln  2 -> 0.693147180559945309417232121458176568075500134  Inexact Rounded
   #|lnx202  ln 10 -> 2.30258509299404568401799145468436420760110149   Inexact Rounded
@@ -173,15 +211,19 @@ let ln_subset : String =
   #|precision: 30
   #|lnx231  ln  2 -> 0.693147180559945309417232121458                 Inexact Rounded
   #|lnx232  ln 10 -> 2.30258509299404568401799145468                  Inexact Rounded
+  #|
+  #|-- extreme input range values
   #|maxExponent: 384
   #|minExponent: -383
   #|Precision: 16
+  #|
   #|lnx0901 ln 1e-400    -> -921.0340371976183  Inexact Rounded
   #|lnx0902 ln 1e+400    ->  921.0340371976183  Inexact Rounded
   #|lnx0903 ln 1e-999999 -> -2302582.790408953  Inexact Rounded
   #|lnx0904 ln 1e+999999 ->  2302582.790408953  Inexact Rounded
   #|lnx0905 ln 1e-1000013                -> -2302615.026600255  Inexact Rounded
   #|lnx0906 ln 2e-1000013                -> -2302614.333453074  Inexact Rounded
+  #|
   #|lnx0910 ln 9.999999e+999999          ->  2302585.092993946  Inexact Rounded
   #|lnx0911 ln 9.9999999e+999999         ->  2302585.092994036  Inexact Rounded
   #|lnx0912 ln 9.99999999e+999999        ->  2302585.092994045  Inexact Rounded
@@ -189,6 +231,9 @@ let ln_subset : String =
   #|lnx0914 ln 9.999999999999e+999999    ->  2302585.092994046  Inexact Rounded
   #|lnx0915 ln 9.999999999999999e+999999 ->  2302585.092994046  Inexact Rounded
   #|lnx0916 ln 9.999999999999999999999999e+999999 ->  2302585.092994046  Inexact Rounded
+  #|
+  #|-- randoms
+  #|-- P=50, within 0-999
   #|Precision: 50
   #|maxExponent: 384
   #|minExponent: -383
@@ -232,6 +277,8 @@ let ln_subset : String =
   #|lnx1538 ln 0.00000006006035907843890918832481099660639553666078 -> -16.627915795747112566532705974853114454405010472043 Inexact Rounded
   #|lnx1539 ln 0.00000000085242024937414906371333826574632450587590 -> -20.882941460268101080186482230657774997273494107221 Inexact Rounded
   #|lnx1540 ln 0.00000000000043671099499262350316173246550771951561 -> -28.459504757285639221776305968469058854558726593945 Inexact Rounded
+  #|
+  #|-- P=34, within 0-999
   #|Precision: 34
   #|lnx1201 ln 0.0086732880815927182997566810334394 -> -4.747507311920844752486938187973721 Inexact Rounded
   #|lnx1202 ln 0.0007104103693460260609792222569854 -> -7.249667769903503023005549250347695 Inexact Rounded
@@ -273,6 +320,8 @@ let ln_subset : String =
   #|lnx1238 ln 499.1277448846130709827154556125942  -> 6.212862064761427967461188083514774 Inexact Rounded
   #|lnx1239 ln 0.0000003960192300284787663712417647 -> -14.74180306619298548093697608293284 Inexact Rounded
   #|lnx1240 ln 41.08268350829477451667228892495136  -> 3.715586706887278039173584859218960 Inexact Rounded
+  #|
+  #|-- P=16, within 0-99
   #|Precision: 16
   #|lnx1101 ln 7.964875261033948  -> 2.075041282352241 Inexact Rounded
   #|lnx1102 ln 13.54527396845394  -> 2.606037701870263 Inexact Rounded
@@ -314,6 +363,8 @@ let ln_subset : String =
   #|lnx1138 ln 62.59363259642255  -> 4.136663557220559 Inexact Rounded
   #|lnx1139 ln 4.373828261137201  -> 1.475638657912000 Inexact Rounded
   #|lnx1140 ln 0.994483524148738  -> -0.005531747794938690 Inexact Rounded
+  #|
+  #|-- P=7, within 0-9
   #|Precision: 7
   #|lnx1001 ln 0.0912025 -> -2.394673 Inexact Rounded
   #|lnx1002 ln 0.9728626 -> -0.02751242 Inexact Rounded
@@ -355,22 +406,29 @@ let ln_subset : String =
   #|lnx1038 ln 0.0049382 -> -5.310754 Inexact Rounded
   #|lnx1039 ln 2.786840  -> 1.024908 Inexact Rounded
   #|lnx1040 ln 0.0091073 -> -4.698679 Inexact Rounded
+  #|
+  #|-- from here 3-digit tests are based on reverse exp tests
   #|precision:   9
   #|rounding:    half_even
   #|maxExponent: 384
   #|minexponent: -383
+  #|
   #|lnx001  ln 0           ->  -Infinity
   #|lnx002  ln 0.367879441 ->  -1.00000000    Inexact Rounded
   #|lnx003  ln 1           ->   0
   #|lnx005  ln 2.71828183  ->   1.00000000    Inexact Rounded
   #|lnx006  ln 2.00000000  ->   0.693147181   Inexact Rounded
   #|lnx007  ln +Infinity   ->   Infinity
+  #|
+  #|-- tiny edge cases
   #|precision:   7
   #|lnx011  ln 1.105171 ->  0.1000001       Inexact Rounded
   #|lnx012  ln 1.010050 ->  0.009999835     Inexact Rounded
   #|lnx013  ln 1.000010 ->  0.000009999950  Inexact Rounded
   #|lnx014  ln 1.000001 ->  9.999995E-7     Inexact Rounded
   #|lnx015  ln 1.000000 ->  0
+  #|
+  #|-- basic e=0, e=1, e=2, e=4, e>=8 cases
   #|precision:   7
   #|lnx041  ln 2.718282      ->  1.000000    Inexact Rounded
   #|lnx042  ln 0.3678794     -> -1.000000    Inexact Rounded
@@ -380,6 +438,8 @@ let ln_subset : String =
   #|lnx046  ln 3.720076E-44  -> -100.0000    Inexact Rounded
   #|lnx047  ln Infinity      ->  Infinity
   #|lnx048  ln 0E-389        -> -Infinity
+  #|
+  #|-- miscellanea
   #|precision: 16
   #|lnx055  ln 2.717658486884572E-236     -> -542.4103112874415       Inexact Rounded
   #|precision: 17
@@ -390,6 +450,8 @@ let ln_subset : String =
   #|lnx058  ln 2.717658486884572112E-236  -> -542.4103112874414592    Inexact Rounded
   #|precision: 20
   #|lnx059  ln 2.7176584868845721118E-236 -> -542.41031128744145917   Inexact Rounded
+  #|
+  #|-- inputs ending in ..500.., ..499.., ..100.., ..999.. sequences
   #|precision:   50
   #|lnx102  ln 0.9999999100000040499998785000027 -> -9.0000000000000000000000033749953829996446124861750E-8  Inexact Rounded
   #|precision:   30
@@ -418,6 +480,8 @@ let ln_subset : String =
   #|lnx114  ln 0.9999999100000040500 -> -8.999999999999987850E-8              Inexact Rounded
   #|precision:   18
   #|lnx115  ln 0.999999910000004050 -> -8.99999999999998785E-8               Inexact Rounded
+  #|-- next may be a > 0.5ulp case; a more precise answer is:
+  #|--                                -8.99999999999998784999918E-8
   #|precision:   17
   #|lnx116  ln 0.99999991000000405 -> -8.9999999999999878E-8               Inexact Rounded
   #|precision:   16
@@ -454,6 +518,9 @@ let ln_subset : String =
   #|lnx131  ln 0.99 -> -0.010                              Inexact Rounded
   #|precision:    1
   #|lnx132  ln 0.9 -> -0.1                                 Inexact Rounded
+  #|
+  #|
+  #|-- cases near 1              --  1 2345678901234567890
   #|precision:    20
   #|lnx401  ln 2.7182818284589365041 -> 0.99999999999996000000 Inexact Rounded
   #|lnx402  ln 2.7182818284589636869 -> 0.99999999999997000000 Inexact Rounded
@@ -467,6 +534,8 @@ let ln_subset : String =
   #|lnx413  ln 2.7182818284590 -> 0.99999999999998    Inexact Rounded
   #|lnx416  ln 2.7182818284591 -> 1.0000000000000     Inexact Rounded
   #|lnx417  ln 2.7182818284592 -> 1.0000000000001     Inexact Rounded
+  #|
+  #|-- overflows, including some exp overprecise borderlines
   #|precision:   7
   #|maxExponent: 384
   #|minExponent: -383
@@ -476,13 +545,18 @@ let ln_subset : String =
   #|lnx722  ln 9.999999999999999E+384 ->  886.4952608027076     Inexact Rounded
   #|lnx724  ln 9.999999999999917E+384 ->  886.4952608027076     Inexact Rounded
   #|lnx726  ln 9.999999999999117E+384 ->  886.4952608027075     Inexact Rounded
+  #|-- and more...
   #|precision:   15
   #|maxExponent: 999
   #|minExponent: -999
   #|lnx731  ln 9.99999999999999E+999 -> 2302.58509299405       Inexact Rounded
+  #|-- next may be a > 0.5ulp case; a more precise answer is:
+  #|--                                  2302.58509299404495001799145442
   #|lnx732  ln 9.99999999999266E+999 -> 2302.58509299404       Inexact Rounded
   #|lnx733  ln 9.99999999999265E+999 -> 2302.58509299404       Inexact Rounded
   #|lnx734  ln 9.99999999999264E+999 -> 2302.58509299404       Inexact Rounded
+  #|
+  #|-- subnormals and underflows for exp, including underflow-to-zero edge point
   #|precision:   7
   #|maxExponent: 384
   #|minExponent: -383
@@ -497,16 +571,26 @@ let ln_subset : String =
   #|lnx765  ln 9E-389 -> -893.5084             Inexact Rounded
   #|lnx766  ln 1E-389 -> -895.7056             Inexact Rounded
   #|lnx774  ln 0E-389 -> -Infinity
+  #|
+  #|-- special values
   #|lnx820  ln Infinity ->   Infinity
   #|lnx821  ln 0        ->  -Infinity
   #|lnx822  ln NaN      ->   NaN
+  #|lnx823  ln sNaN     ->   NaN     Invalid_operation
+  #|-- propagating NaNs
+  #|lnx824  ln sNaN123  ->   NaN123  Invalid_operation
+  #|lnx825  ln -sNaN321 ->  -NaN321  Invalid_operation
   #|lnx826  ln NaN456   ->   NaN456
   #|lnx827  ln -NaN654  ->  -NaN654
   #|lnx828  ln NaN1     ->   NaN1
+  #|
+  #|-- Invalid operations due to restrictions
+  #|-- [next two probably skipped by most test harnesses]
   #|precision: 100000000
   #|lnx901  ln 1 ->  NaN            Invalid_context
   #|precision:  99999999
   #|lnx902  ln 0 ->  NaN            Invalid_context
+  #|
   #|precision: 9
   #|maxExponent:   1000000
   #|minExponent:   -999999
@@ -520,12 +604,21 @@ let ln_subset : String =
   #|maxExponent:    999999
   #|minExponent:   -999998
   #|lnx906  ln 0 ->  -Infinity
+  #|
+  #|-- payload decapitate
   #|precision: 5
+  #|lnx910  ln -sNaN1234567890 -> -NaN67890  Invalid_operation
+  #|
+  #|-- Null test
+  #|lnx900  ln #   -> NaN Invalid_operation
 
 ///|
 test "ln.decTest subset" {
   let cases = parse_dectest(ln_subset)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, skipped) = run_cases_with_flags(cases)
+  if skipped > 0 {
+    println("\{skipped} cases skipped (format-encoding / reference-specific)")
+  }
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 30 { failures.length() } else { 30 }

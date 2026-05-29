@@ -1,16 +1,35 @@
 ///|
-/// `remainder` cases from `remainder.decTest`, restricted to precision >= 9
-/// sections. `precision:` and `rounding:` directive lines are kept
-/// alongside the test lines so the runner can build the matching
-/// Context for each test. Skipped: Subnormal / Underflow / Overflow /
-/// Clamped (need e_min/e_max enforcement), Conversion_syntax (parse
-/// errors surface as ParseError), Division_impossible (precision-
-/// bounded quotient check not yet implemented).
+/// Full `remainder.decTest` corpus (IBM General Decimal
+/// Arithmetic testcases), embedded verbatim.
 let remainder_subset : String =
+  #|------------------------------------------------------------------------
+  #|-- remainder.decTest -- decimal remainder                             --
+  #|-- Copyright (c) IBM Corporation, 1981, 2008.  All rights reserved.   --
+  #|------------------------------------------------------------------------
+  #|-- Please see the document "General Decimal Arithmetic Testcases"     --
+  #|-- at http://www2.hursley.ibm.com/decimal for the description of      --
+  #|-- these testcases.                                                   --
+  #|--                                                                    --
+  #|-- These testcases are experimental ('beta' versions), and they       --
+  #|-- may contain errors.  They are offered on an as-is basis.  In       --
+  #|-- particular, achieving the same results as the tests here is not    --
+  #|-- a guarantee that an implementation complies with any Standard      --
+  #|-- or specification.  The tests are not exhaustive.                   --
+  #|--                                                                    --
+  #|-- Please send comments, suggestions, and corrections to the author:  --
+  #|--   Mike Cowlishaw, IBM Fellow                                       --
+  #|--   IBM UK, PO Box 31, Birmingham Road, Warwick CV34 5JL, UK         --
+  #|--   mfc@uk.ibm.com                                                   --
+  #|------------------------------------------------------------------------
+  #|version: 2.59
+  #|
+  #|extended:    1
   #|precision:   9
   #|rounding:    half_up
   #|maxExponent: 384
   #|minexponent: -383
+  #|
+  #|-- sanity checks (as base, above)
   #|remx001 remainder  1     1    ->  0
   #|remx002 remainder  2     1    ->  0
   #|remx003 remainder  1     2    ->  1
@@ -20,6 +39,7 @@ let remainder_subset : String =
   #|remx007 remainder  1     3    ->  1
   #|remx008 remainder  2     3    ->  2
   #|remx009 remainder  3     3    ->  0
+  #|
   #|remx010 remainder  2.4   1    ->  0.4
   #|remx011 remainder  2.4   -1   ->  0.4
   #|remx012 remainder  -2.4  1    ->  -0.4
@@ -30,15 +50,18 @@ let remainder_subset : String =
   #|remx017 remainder  2.400 2    ->  0.400
   #|remx018 remainder  2.    2    ->  0
   #|remx019 remainder  20    20   ->  0
+  #|
   #|remx020 remainder  187   187    ->  0
   #|remx021 remainder  5     2      ->  1
   #|remx022 remainder  5     2.0    ->  1.0
   #|remx023 remainder  5     2.000  ->  1.000
   #|remx024 remainder  5     0.200  ->  0.000
   #|remx025 remainder  5     0.200  ->  0.000
+  #|
   #|remx030 remainder  1     2      ->  1
   #|remx031 remainder  1     4      ->  1
   #|remx032 remainder  1     8      ->  1
+  #|
   #|remx033 remainder  1     16     ->  1
   #|remx034 remainder  1     32     ->  1
   #|remx035 remainder  1     64     ->  1
@@ -60,6 +83,7 @@ let remainder_subset : String =
   #|remx063 remainder -1    -16     ->  -1
   #|remx064 remainder -1    -32     ->  -1
   #|remx065 remainder -1    -64     ->  -1
+  #|
   #|remx066 remainder  999999999     1  -> 0
   #|remx067 remainder  999999999.4   1  -> 0.4
   #|remx068 remainder  999999999.5   1  -> 0.5
@@ -75,6 +99,7 @@ let remainder_subset : String =
   #|remx077 remainder  999           1  -> 0
   #|remx078 remainder  99            1  -> 0
   #|remx079 remainder  9             1  -> 0
+  #|
   #|precision: 9
   #|remx080 remainder  0.            1  -> 0
   #|remx081 remainder  .0            1  -> 0.0
@@ -92,6 +117,8 @@ let remainder_subset : String =
   #|remx093 remainder  0.00E-5       1  -> 0E-7
   #|remx094 remainder  0.00E-6       1  -> 0E-8
   #|remx095 remainder  0.0000E-50    1  -> 0E-54
+  #|
+  #|-- Various flavours of remainder by 0
   #|precision: 9
   #|maxexponent: 999999999
   #|minexponent: -999999999
@@ -101,6 +128,9 @@ let remainder_subset : String =
   #|remx104 remainder -0      -0   -> NaN Division_undefined
   #|remx105 remainder  0.0E5   0   -> NaN Division_undefined
   #|remx106 remainder  0.000   0   -> NaN Division_undefined
+  #|-- [Some think this next group should be Division_by_zero exception, but
+  #|-- IEEE 854 is explicit that it is Invalid operation .. for
+  #|-- remainder-near, anyway]
   #|remx107 remainder  0.0001  0   -> NaN Invalid_operation
   #|remx108 remainder  0.01    0   -> NaN Invalid_operation
   #|remx109 remainder  0.1     0   -> NaN Invalid_operation
@@ -117,6 +147,7 @@ let remainder_subset : String =
   #|remx122 remainder 10      -0.0 -> NaN Invalid_operation
   #|remx123 remainder 1E+100  -0.0 -> NaN Invalid_operation
   #|remx124 remainder 1E+1000 -0   -> NaN Invalid_operation
+  #|-- and zeros on left
   #|remx130 remainder  0      1   ->  0
   #|remx131 remainder  0     -1   ->  0
   #|remx132 remainder  0.0    1   ->  0.0
@@ -125,6 +156,8 @@ let remainder_subset : String =
   #|remx135 remainder -0     -1   -> -0
   #|remx136 remainder -0.0    1   -> -0.0
   #|remx137 remainder -0.0   -1   -> -0.0
+  #|
+  #|-- 0.5ers
   #|remx143 remainder   0.5  2     ->  0.5
   #|remx144 remainder   0.5  2.1   ->  0.5
   #|remx145 remainder   0.5  2.01  ->  0.50
@@ -132,6 +165,8 @@ let remainder_subset : String =
   #|remx147 remainder   0.50 2     ->  0.50
   #|remx148 remainder   0.50 2.01  ->  0.50
   #|remx149 remainder   0.50 2.001 ->  0.500
+  #|
+  #|-- steadies
   #|remx150 remainder  1  1   -> 0
   #|remx151 remainder  1  2   -> 1
   #|remx152 remainder  1  3   -> 1
@@ -152,11 +187,16 @@ let remainder_subset : String =
   #|remx167 remainder  8  1   -> 0
   #|remx168 remainder  9  1   -> 0
   #|remx169 remainder  10 1   -> 0
+  #|
+  #|-- some differences from remainderNear
   #|remx171 remainder   0.4  1.020 ->  0.400
   #|remx172 remainder   0.50 1.020 ->  0.500
   #|remx173 remainder   0.51 1.020 ->  0.510
   #|remx174 remainder   0.52 1.020 ->  0.520
   #|remx175 remainder   0.6  1.020 ->  0.600
+  #|
+  #|
+  #|-- More flavours of remainder by 0
   #|maxexponent: 999999999
   #|minexponent: -999999999
   #|remx201 remainder  0      0   -> NaN Division_undefined
@@ -170,12 +210,19 @@ let remainder_subset : String =
   #|remx209 remainder 10      0.0 -> NaN Invalid_operation
   #|remx210 remainder 1E+100  0.0 -> NaN Invalid_operation
   #|remx211 remainder 1E+1000 0   -> NaN Invalid_operation
+  #|
+  #|-- some differences from remainderNear
   #|remx231 remainder  -0.4  1.020 -> -0.400
   #|remx232 remainder  -0.50 1.020 -> -0.500
   #|remx233 remainder  -0.51 1.020 -> -0.510
   #|remx234 remainder  -0.52 1.020 -> -0.520
   #|remx235 remainder  -0.6  1.020 -> -0.600
+  #|
+  #|-- high Xs
   #|remx240 remainder  1E+2  1.00  ->  0.00
+  #|
+  #|
+  #|-- test some cases that are close to exponent overflow
   #|maxexponent: 999999999
   #|minexponent: -999999999
   #|remx270 remainder 1 1e999999999    -> 1
@@ -186,15 +233,19 @@ let remainder_subset : String =
   #|remx275 remainder 9.9e999999999        1 -> NaN Division_impossible
   #|remx276 remainder 9.99e999999999       1 -> NaN Division_impossible
   #|remx277 remainder 9.99999999e999999999 1 -> NaN Division_impossible
+  #|
   #|remx280 remainder 0.1 9e-999999999       -> NaN Division_impossible
   #|remx281 remainder 0.1 99e-999999999      -> NaN Division_impossible
   #|remx282 remainder 0.1 999e-999999999     -> NaN Division_impossible
+  #|
   #|remx283 remainder 0.1 9e-999999998       -> NaN Division_impossible
   #|remx284 remainder 0.1 99e-999999998      -> NaN Division_impossible
   #|remx285 remainder 0.1 999e-999999998     -> NaN Division_impossible
   #|remx286 remainder 0.1 999e-999999997     -> NaN Division_impossible
   #|remx287 remainder 0.1 9999e-999999997    -> NaN Division_impossible
   #|remx288 remainder 0.1 99999e-999999997   -> NaN Division_impossible
+  #|
+  #|-- remx3xx are from DiagBigDecimal
   #|remx301 remainder   1    3     ->  1
   #|remx302 remainder   5    5     ->  0
   #|remx303 remainder   13   10    ->  3
@@ -234,6 +285,7 @@ let remainder_subset : String =
   #|remx337 remainder   0.50 2     ->  0.50
   #|remx338 remainder   0.50 2.01  ->  0.50
   #|remx339 remainder   0.50 2.001 ->  0.500
+  #|
   #|remx340 remainder   0.5   0.5000001    ->  0.5000000
   #|remx341 remainder   0.5   0.50000001    ->  0.50000000
   #|remx342 remainder   0.5   0.500000001    ->  0.500000000
@@ -245,6 +297,7 @@ let remainder_subset : String =
   #|remx348 remainder   0.5   0.4999999999    ->  1E-10
   #|remx349 remainder   0.5   0.49999999999    ->  1E-11
   #|remx350 remainder   0.5   0.499999999999    ->  1E-12
+  #|
   #|remx351 remainder   0.03  7  ->  0.03
   #|remx352 remainder   5   2    ->  1
   #|remx353 remainder   4.1   2    ->  0.1
@@ -254,6 +307,7 @@ let remainder_subset : String =
   #|remx357 remainder   4.00001   2    ->  0.00001
   #|remx358 remainder   4.000001   2    ->  0.000001
   #|remx359 remainder   4.0000001   2    ->  1E-7
+  #|
   #|remx360 remainder   1.2   0.7345 ->  0.4655
   #|remx361 remainder   0.8   12     ->  0.8
   #|remx362 remainder   0.8   0.2    ->  0.0
@@ -261,10 +315,14 @@ let remainder_subset : String =
   #|remx364 remainder   0.800   12   ->  0.800
   #|remx365 remainder   0.800   1.7  ->  0.800
   #|remx366 remainder   2.400   2    ->  0.400
+  #|
   #|precision: 6
   #|remx371 remainder   2.400  2        ->  0.400
   #|precision: 3
+  #|-- long operand, rounded, case
   #|remx372 remainder   12345678900000 12e+12 -> 3.46E+11 Inexact Rounded
+  #|--                  12000000000000
+  #|
   #|precision: 5
   #|remx381 remainder 12345  1         ->  0
   #|remx382 remainder 12345  1.0001    ->  0.7657
@@ -284,7 +342,9 @@ let remainder_subset : String =
   #|remx396 remainder 12345  5.001     ->  2.532
   #|remx397 remainder 12345  5.01      ->  0.36
   #|remx398 remainder 12345  5.1       ->  3.0
+  #|
   #|precision: 9
+  #|-- the nasty division-by-1 cases
   #|remx401 remainder   0.5         1   ->  0.5
   #|remx402 remainder   0.55        1   ->  0.55
   #|remx403 remainder   0.555       1   ->  0.555
@@ -294,6 +354,8 @@ let remainder_subset : String =
   #|remx407 remainder   0.5555555   1   ->  0.5555555
   #|remx408 remainder   0.55555555  1   ->  0.55555555
   #|remx409 remainder   0.555555555 1   ->  0.555555555
+  #|
+  #|-- zero signs
   #|remx650 remainder  1  1 ->  0
   #|remx651 remainder -1  1 -> -0
   #|remx652 remainder  1 -1 ->  0
@@ -304,6 +366,8 @@ let remainder_subset : String =
   #|remx657 remainder -0 -1 -> -0
   #|remx658 remainder  0.00  1  ->  0.00
   #|remx659 remainder -0.00  1  -> -0.00
+  #|
+  #|-- Specials
   #|remx680 remainder  Inf  -Inf   ->  NaN Invalid_operation
   #|remx681 remainder  Inf  -1000  ->  NaN Invalid_operation
   #|remx682 remainder  Inf  -1     ->  NaN Invalid_operation
@@ -320,6 +384,7 @@ let remainder_subset : String =
   #|remx694 remainder  1     Inf   ->  1
   #|remx695 remainder  1000  Inf   ->  1000
   #|remx696 remainder  Inf   Inf   ->  NaN Invalid_operation
+  #|
   #|remx700 remainder -Inf  -Inf   ->  NaN Invalid_operation
   #|remx701 remainder -Inf  -1000  ->  NaN Invalid_operation
   #|remx702 remainder -Inf  -1     ->  NaN Invalid_operation
@@ -336,6 +401,7 @@ let remainder_subset : String =
   #|remx713 remainder  1    -Inf   ->  1
   #|remx714 remainder  1000 -Inf   ->  1000
   #|remx715 remainder  Inf  -Inf   ->  NaN Invalid_operation
+  #|
   #|remx721 remainder  NaN -Inf    ->  NaN
   #|remx722 remainder  NaN -1000   ->  NaN
   #|remx723 remainder  NaN -1      ->  NaN
@@ -353,13 +419,39 @@ let remainder_subset : String =
   #|remx735 remainder  1   -NaN    -> -NaN
   #|remx736 remainder  1000 NaN    ->  NaN
   #|remx737 remainder  Inf  NaN    ->  NaN
+  #|
+  #|remx741 remainder  sNaN -Inf   ->  NaN  Invalid_operation
+  #|remx742 remainder  sNaN -1000  ->  NaN  Invalid_operation
+  #|remx743 remainder -sNaN -1     -> -NaN  Invalid_operation
+  #|remx744 remainder  sNaN -0     ->  NaN  Invalid_operation
+  #|remx745 remainder  sNaN  0     ->  NaN  Invalid_operation
+  #|remx746 remainder  sNaN  1     ->  NaN  Invalid_operation
+  #|remx747 remainder  sNaN  1000  ->  NaN  Invalid_operation
+  #|remx749 remainder  sNaN  NaN   ->  NaN  Invalid_operation
+  #|remx750 remainder  sNaN sNaN   ->  NaN  Invalid_operation
+  #|remx751 remainder  NaN  sNaN   ->  NaN  Invalid_operation
+  #|remx752 remainder -Inf  sNaN   ->  NaN  Invalid_operation
+  #|remx753 remainder -1000 sNaN   ->  NaN  Invalid_operation
+  #|remx754 remainder -1    sNaN   ->  NaN  Invalid_operation
+  #|remx755 remainder -0    sNaN   ->  NaN  Invalid_operation
+  #|remx756 remainder  0    sNaN   ->  NaN  Invalid_operation
+  #|remx757 remainder  1    sNaN   ->  NaN  Invalid_operation
+  #|remx758 remainder  1000 sNaN   ->  NaN  Invalid_operation
+  #|remx759 remainder  Inf -sNaN   -> -NaN  Invalid_operation
+  #|
+  #|-- propagating NaNs
   #|remx760 remainder  NaN1   NaN7   ->  NaN1
+  #|remx761 remainder sNaN2   NaN8   ->  NaN2 Invalid_operation
+  #|remx762 remainder  NaN3  sNaN9   ->  NaN9 Invalid_operation
+  #|remx763 remainder sNaN4  sNaN10  ->  NaN4 Invalid_operation
   #|remx764 remainder    15   NaN11  ->  NaN11
   #|remx765 remainder  NaN6   NaN12  ->  NaN6
   #|remx766 remainder  Inf    NaN13  ->  NaN13
   #|remx767 remainder  NaN14  -Inf   ->  NaN14
   #|remx768 remainder    0    NaN15  ->  NaN15
   #|remx769 remainder  NaN16   -0    ->  NaN16
+  #|
+  #|-- test some cases that are close to exponent overflow
   #|maxexponent: 999999999
   #|minexponent: -999999999
   #|remx770 remainder 1 1e999999999    -> 1
@@ -370,6 +462,8 @@ let remainder_subset : String =
   #|remx775 remainder 9.9e999999999        1 -> NaN Division_impossible
   #|remx776 remainder 9.99e999999999       1 -> NaN Division_impossible
   #|remx777 remainder 9.99999999e999999999 1 -> NaN Division_impossible
+  #|
+  #|-- long operand checks
   #|maxexponent: 999
   #|minexponent: -999
   #|precision: 9
@@ -385,6 +479,7 @@ let remainder_subset : String =
   #|remx810 remainder 1 12345678901   -> 1
   #|remx811 remainder 1234567896  10  -> 6
   #|remx812 remainder 1 1234567896    -> 1
+  #|
   #|precision: 15
   #|remx821 remainder 12345678000 100 -> 0
   #|remx822 remainder 1 12345678000   -> 1
@@ -398,6 +493,8 @@ let remainder_subset : String =
   #|remx830 remainder 1 12345678901   -> 1
   #|remx831 remainder 1234567896  10  -> 6
   #|remx832 remainder 1 1234567896    -> 1
+  #|
+  #|-- worries from divideint
   #|precision: 8
   #|remx840 remainder  100000000.0   1  ->  NaN Division_impossible
   #|remx841 remainder  100000000.4   1  ->  NaN Division_impossible
@@ -414,6 +511,8 @@ let remainder_subset : String =
   #|remx856 remainder  103           5  ->  3
   #|remx857 remainder  13            5  ->  3
   #|remx858 remainder  1             5  ->  1
+  #|
+  #|-- Vladimir's cases
   #|remx860 remainder 123.0e1 10000000000000000 -> 1230
   #|remx861 remainder 1230    10000000000000000 -> 1230
   #|remx862 remainder 12.3e2  10000000000000000 -> 1230
@@ -436,6 +535,7 @@ let remainder_subset : String =
   #|remx884 remainder 123e1                 100 ->   30
   #|remx885 remainder 123e1                  10 ->    0
   #|remx886 remainder 123e1                   1 ->    0
+  #|
   #|remx889 remainder 123e1   20000000000000000 -> 1230
   #|remx890 remainder 123e1    2000000000000000 -> 1230
   #|remx891 remainder 123e1     200000000000000 -> 1230
@@ -453,6 +553,7 @@ let remainder_subset : String =
   #|remx904 remainder 123e1                 200 ->   30
   #|remx905 remainder 123e1                  20 ->   10
   #|remx906 remainder 123e1                   2 ->    0
+  #|
   #|remx909 remainder 123e1   50000000000000000 -> 1230
   #|remx910 remainder 123e1    5000000000000000 -> 1230
   #|remx911 remainder 123e1     500000000000000 -> 1230
@@ -470,6 +571,7 @@ let remainder_subset : String =
   #|remx924 remainder 123e1                 500 ->  230
   #|remx925 remainder 123e1                  50 ->   30
   #|remx926 remainder 123e1                   5 ->    0
+  #|
   #|remx929 remainder 123e1   90000000000000000 -> 1230
   #|remx930 remainder 123e1    9000000000000000 -> 1230
   #|remx931 remainder 123e1     900000000000000 -> 1230
@@ -487,6 +589,7 @@ let remainder_subset : String =
   #|remx944 remainder 123e1                 900 ->  330
   #|remx945 remainder 123e1                  90 ->   60
   #|remx946 remainder 123e1                   9 ->    6
+  #|
   #|remx950 remainder 123e1   10000000000000000 -> 1230
   #|remx951 remainder 123e1   100000000000000000 -> 1230
   #|remx952 remainder 123e1   1000000000000000000 -> 1230
@@ -497,6 +600,7 @@ let remainder_subset : String =
   #|remx957 remainder 123e1   100000000000000000000000 -> 1230
   #|remx958 remainder 123e1   1000000000000000000000000 -> 1230
   #|remx959 remainder 123e1   10000000000000000000000000 -> 1230
+  #|
   #|remx960 remainder 123e1   19999999999999999 -> 1230
   #|remx961 remainder 123e1   199999999999999990 -> 1230
   #|remx962 remainder 123e1   1999999999999999999 -> 1230
@@ -507,6 +611,7 @@ let remainder_subset : String =
   #|remx967 remainder 123e1   199999999999999999999990 -> 1230
   #|remx968 remainder 123e1   1999999999999999999999999 -> 1230
   #|remx969 remainder 123e1   19999999999999999999999990 -> 1230
+  #|
   #|remx970 remainder 1e1   10000000000000000 -> 10
   #|remx971 remainder 1e1   100000000000000000 -> 10
   #|remx972 remainder 1e1   1000000000000000000 -> 10
@@ -517,7 +622,10 @@ let remainder_subset : String =
   #|remx977 remainder 1e1   100000000000000000000000 -> 10
   #|remx978 remainder 1e1   1000000000000000000000000 -> 10
   #|remx979 remainder 1e1   10000000000000000000000000 -> 10
+  #|
   #|remx980 remainder 123e1 1000E999999 -> 1.23E+3  -- 123E+1 internally
+  #|
+  #|-- overflow and underflow tests [from divide]
   #|precision: 9
   #|maxexponent: 999999999
   #|minexponent: -999999999
@@ -529,11 +637,18 @@ let remainder_subset : String =
   #|remx996 remainder 9E+999999999 -0.83456789012345E-0 -> NaN Division_impossible
   #|remx997 remainder -0.100 9E+999999999               -> -0.100
   #|remx998 remainder 9E-999999999 -9.100               -> 9E-999999999
+  #|
+  #|-- Null tests
+  #|remx1000 remainder 10  # -> NaN Invalid_operation
+  #|remx1001 remainder  # 10 -> NaN Invalid_operation
 
 ///|
 test "remainder.decTest subset round-trips through parse + remainder + toSci" {
   let cases = parse_dectest(remainder_subset)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, skipped) = run_cases_with_flags(cases)
+  if skipped > 0 {
+    println("\{skipped} cases skipped (format-encoding / reference-specific)")
+  }
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 20 { failures.length() } else { 20 }

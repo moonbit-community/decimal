@@ -1,18 +1,46 @@
 ///|
-/// First 40 cases from `power.decTest`.
+/// Full `power.decTest` corpus (IBM General Decimal Arithmetic
+/// testcases), embedded verbatim.
 let power_subset : String =
-  #|version: 2.62
+  #|------------------------------------------------------------------------
+  #|-- power.decTest -- decimal exponentiation [power(x, y)]              --
+  #|-- Copyright (c) IBM Corporation, 1981, 2008.  All rights reserved.   --
+  #|------------------------------------------------------------------------
+  #|-- Please see the document "General Decimal Arithmetic Testcases"     --
+  #|-- at http://www2.hursley.ibm.com/decimal for the description of      --
+  #|-- these testcases.                                                   --
+  #|--                                                                    --
+  #|-- These testcases are experimental ('beta' versions), and they       --
+  #|-- may contain errors.  They are offered on an as-is basis.  In       --
+  #|-- particular, achieving the same results as the tests here is not    --
+  #|-- a guarantee that an implementation complies with any Standard      --
+  #|-- or specification.  The tests are not exhaustive.                   --
+  #|--                                                                    --
+  #|-- Please send comments, suggestions, and corrections to the author:  --
+  #|--   Mike Cowlishaw, IBM Fellow                                       --
+  #|--   IBM UK, PO Box 31, Birmingham Road, Warwick CV34 5JL, UK         --
+  #|--   mfc@uk.ibm.com                                                   --
+  #|------------------------------------------------------------------------
+  #|version: 2.59
+  #|
+  #|-- In addition to the power operator testcases here, see also the file
+  #|-- powersqrt.decTest which includes all the tests from
+  #|-- squareroot.decTest implemented using power(x, 0.5)
+  #|
   #|extended:    1
   #|precision:   16
   #|rounding:    half_even
   #|maxExponent: 384
   #|minExponent: -383
+  #|
+  #|-- base checks.  Note 0**0 is an error.
   #|powx001 power    '0'  '0'         -> NaN Invalid_operation
   #|powx002 power    '0'  '1'         -> '0'
   #|powx003 power    '0'  '2'         -> '0'
   #|powx004 power    '1'  '0'         -> '1'
   #|powx005 power    '1'  '1'         -> '1'
   #|powx006 power    '1'  '2'         -> '1'
+  #|
   #|powx010 power    '2'  '0'         -> '1'
   #|powx011 power    '2'  '1'         -> '2'
   #|powx012 power    '2'  '2'         -> '4'
@@ -29,14 +57,18 @@ let power_subset : String =
   #|powx023 power    '2'  '15'        -> '32768'
   #|powx024 power    '2'  '16'        -> '65536'
   #|powx025 power    '2'  '31'        -> '2147483648'
+  #|-- NB 0 not stripped in next
   #|powx026 power    '2'  '32'        -> '4294967296'
+  #|
   #|precision: 9
   #|powx027 power    '2'  '31'        -> '2.14748365E+9' Inexact Rounded
+  #|-- NB 0 not stripped in next
   #|powx028 power    '2'  '32'        -> '4.29496730E+9' Inexact Rounded
   #|precision: 10
   #|powx029 power    '2'  '31'        -> '2147483648'
   #|powx030 power    '2'  '32'        -> '4294967296'
   #|precision: 9
+  #|
   #|powx031 power    '3'  '2'         -> 9
   #|powx032 power    '4'  '2'         -> 16
   #|powx033 power    '5'  '2'         -> 25
@@ -47,6 +79,7 @@ let power_subset : String =
   #|powx038 power    '10' '2'         -> 100
   #|powx039 power    '11' '2'         -> 121
   #|powx040 power    '12' '2'         -> 144
+  #|
   #|powx041 power    '3'  '3'         -> 27
   #|powx042 power    '4'  '3'         -> 64
   #|powx043 power    '5'  '3'         -> 125
@@ -57,6 +90,7 @@ let power_subset : String =
   #|powx049 power   '-5'  '3'         -> -125
   #|powx050 power   '-6'  '3'         -> -216
   #|powx051 power   '-7'  '3'         -> -343
+  #|
   #|powx052 power   '10'  '0'         -> 1
   #|powx053 power   '10'  '1'         -> 10
   #|powx054 power   '10'  '2'         -> 100
@@ -70,6 +104,7 @@ let power_subset : String =
   #|powx062 power   '10'  '22'        -> 1.00000000E+22 Rounded
   #|powx063 power   '10'  '77'        -> 1.00000000E+77 Rounded
   #|powx064 power   '10'  '99'        -> 1.00000000E+99 Rounded
+  #|
   #|powx070 power  '0.3'  '0'           -> '1'
   #|powx071 power  '0.3'  '1'           -> '0.3'
   #|powx072 power  '0.3'  '1.00'        -> '0.3'
@@ -79,6 +114,7 @@ let power_subset : String =
   #|powx076 power  '6.0'  '2'           -> '36.00'   -- ..
   #|powx077 power   '-3'  '2'           -> '9'       -- from NetRexx book
   #|powx078 power    '4'  '3'           -> '64'      -- .. (sort of)
+  #|
   #|powx080 power   0.1    0            -> 1
   #|powx081 power   0.1    1            -> 0.1
   #|powx082 power   0.1    2            -> 0.01
@@ -89,12 +125,15 @@ let power_subset : String =
   #|powx087 power   0.1    7            -> 1E-7
   #|powx088 power   0.1    8            -> 1E-8
   #|powx089 power   0.1    9            -> 1E-9
+  #|
   #|powx090 power   101    2            -> 10201
   #|powx091 power   101    3            -> 1030301
   #|powx092 power   101    4            -> 104060401
   #|powx093 power   101    5            -> 1.05101005E+10 Inexact Rounded
   #|powx094 power   101    6            -> 1.06152015E+12 Inexact Rounded
   #|powx095 power   101    7            -> 1.07213535E+14 Inexact Rounded
+  #|
+  #|-- negative powers
   #|powx099 power  '1'  '-1'    -> 1
   #|powx100 power  '3'  '-1'    -> 0.333333333 Inexact Rounded
   #|powx101 power  '2'  '-1'    -> 0.5
@@ -114,13 +153,17 @@ let power_subset : String =
   #|powx117 power  '10'  '-1'   -> 0.1
   #|powx121 power  '10'  '-77'  -> '1E-77'
   #|powx122 power  '10'  '-22'  -> '1E-22'
+  #|
   #|powx123 power   '2'  '-1'   -> '0.5'
   #|powx124 power   '2'  '-2'   -> '0.25'
   #|powx125 power   '2'  '-4'   -> '0.0625'
+  #|
   #|powx126 power   '0'  '-1'   -> Infinity
   #|powx127 power   '0'  '-2'   -> Infinity
   #|powx128 power   -0   '-1'   -> -Infinity
   #|powx129 power   -0   '-2'   -> Infinity
+  #|
+  #|-- "0.5" tests from original Rexx diagnostics [loop unrolled]
   #|powx200 power   0.5    0    -> 1
   #|powx201 power   0.5    1    -> 0.5
   #|powx202 power   0.5    2    -> 0.25
@@ -132,13 +175,25 @@ let power_subset : String =
   #|powx208 power   0.5    8    -> 0.00390625
   #|powx209 power   0.5    9    -> 0.001953125
   #|powx210 power   0.5   10    -> 0.0009765625
+  #|
   #|powx211 power 1  100000000  -> 1
   #|powx212 power 1  999999998  -> 1
   #|powx213 power 1  999999999  -> 1
+  #|
+  #|
+  #|-- The Vienna case.  Checks both setup and 1/acc working precision
+  #|-- Modified 1998.12.14 as RHS no longer rounded before use (must fit)
+  #|-- Modified 1990.02.04 as LHS is now rounded (instead of truncated to guard)
+  #|--    '123456789E+10'    -- lhs .. rounded to 1.23E+18
+  #|--    '-1.23000e+2'      -- rhs .. [was: -1.23455e+2, rounds to -123]
+  #|-- Modified 2002.10.06 -- finally, no input rounding
+  #|-- With input rounding, result would be 8.74E-2226
   #|precision: 3
   #|maxexponent: 5000
   #|minexponent: -5000
   #|powx219 power '123456789E+10' '-1.23000e+2' -> '5.54E-2226' Inexact Rounded
+  #|
+  #|-- zeros
   #|maxexponent: +96
   #|minexponent: -95
   #|precision: 7
@@ -174,6 +229,8 @@ let power_subset : String =
   #|powx252 power    -3    0E+1     ->  1
   #|powx253 power    -3    0E+10    ->  1
   #|powx254 power    -3    0E+30    ->  1
+  #|
+  #|-- a few lhs negatives
   #|precision: 9
   #|maxExponent: 999
   #|minexponent: -999
@@ -190,6 +247,8 @@ let power_subset : String =
   #|powx270 power   -10   '22'        -> 1.00000000E+22 Rounded
   #|powx271 power   -10   '77'        -> -1.00000000E+77 Rounded
   #|powx272 power   -10   '99'        -> -1.00000000E+99 Rounded
+  #|
+  #|-- some more edge cases
   #|precision:   15
   #|maxExponent: 999
   #|minexponent: -999
@@ -200,9 +259,22 @@ let power_subset : String =
   #|powx395 power  0.096 999 -> 0E-1013 Underflow Subnormal Inexact Rounded Clamped
   #|powx396 power  0.01  999 -> 0E-1013 Underflow Subnormal Inexact Rounded Clamped
   #|powx397 power  0.02 100000000 -> 0E-1013 Underflow Subnormal Inexact Rounded Clamped
+  #|
+  #|-- multiply tests are here to aid checking and test for consistent handling
+  #|-- of underflow
   #|precision: 5
   #|maxexponent: 999
   #|minexponent: -999
+  #|
+  #|-- squares
+  #|mulx400 multiply  1E-502     1e-502 -> 0E-1003    Subnormal Inexact Underflow Rounded Clamped
+  #|mulx401 multiply  1E-501     1e-501 -> 1E-1002    Subnormal
+  #|mulx402 multiply  2E-501     2e-501 -> 4E-1002    Subnormal
+  #|mulx403 multiply  4E-501     4e-501 -> 1.6E-1001  Subnormal
+  #|mulx404 multiply 10E-501    10e-501 -> 1.00E-1000 Subnormal
+  #|mulx405 multiply 30E-501    30e-501 -> 9.00E-1000 Subnormal
+  #|mulx406 multiply 40E-501    40e-501 -> 1.600E-999
+  #|
   #|powx400 power     1E-502     2      -> 0E-1003    Underflow Subnormal Inexact Rounded Clamped
   #|powx401 power     1E-501     2      -> 1E-1002    Subnormal
   #|powx402 power     2E-501     2      -> 4E-1002    Subnormal
@@ -210,6 +282,16 @@ let power_subset : String =
   #|powx404 power    10E-501     2      -> 1.00E-1000 Subnormal
   #|powx405 power    30E-501     2      -> 9.00E-1000 Subnormal
   #|powx406 power    40E-501     2      -> 1.600E-999
+  #|
+  #|-- cubes
+  #|mulx410 multiply  1E-670     1e-335 -> 0E-1003    Underflow Subnormal Inexact Rounded Clamped
+  #|mulx411 multiply  1E-668     1e-334 -> 1E-1002    Subnormal
+  #|mulx412 multiply  4E-668     2e-334 -> 8E-1002    Subnormal
+  #|mulx413 multiply  9E-668     3e-334 -> 2.7E-1001  Subnormal
+  #|mulx414 multiply 16E-668     4e-334 -> 6.4E-1001  Subnormal
+  #|mulx415 multiply 25E-668     5e-334 -> 1.25E-1000 Subnormal
+  #|mulx416 multiply 10E-668   100e-334 -> 1.000E-999
+  #|
   #|powx410 power     1E-335     3      -> 0E-1003    Underflow Subnormal Inexact Rounded Clamped
   #|powx411 power     1E-334     3      -> 1E-1002    Subnormal
   #|powx412 power     2E-334     3      -> 8E-1002    Subnormal
@@ -217,26 +299,32 @@ let power_subset : String =
   #|powx414 power     4E-334     3      -> 6.4E-1001  Subnormal
   #|powx415 power     5E-334     3      -> 1.25E-1000 Subnormal
   #|powx416 power    10E-334     3      -> 1.000E-999
+  #|
+  #|-- negative powers, testing subnormals
   #|precision:   5
   #|maxExponent: 999
   #|minexponent: -999
   #|powx421 power  2.5E-501     -2         ->  Infinity Overflow Inexact Rounded
   #|powx422 power  2.5E-500     -2         ->  1.6E+999
+  #|
   #|powx423 power  2.5E+499     -2         ->  1.6E-999
   #|powx424 power  2.5E+500     -2         ->  1.6E-1001 Subnormal
   #|powx425 power  2.5E+501     -2         ->    2E-1003 Underflow Subnormal Inexact Rounded
   #|powx426 power  2.5E+502     -2         ->    0E-1003 Underflow Subnormal Inexact Rounded Clamped
+  #|
   #|powx427 power 0.25E+499     -2         ->  1.6E-997
   #|powx428 power 0.25E+500     -2         ->  1.6E-999
   #|powx429 power 0.25E+501     -2         ->  1.6E-1001 Subnormal
   #|powx430 power 0.25E+502     -2         ->    2E-1003 Underflow Subnormal Inexact Rounded
   #|powx431 power 0.25E+503     -2         ->    0E-1003 Underflow Subnormal Inexact Rounded Clamped
+  #|
   #|powx432 power 0.04E+499     -2         ->  6.25E-996
   #|powx433 power 0.04E+500     -2         ->  6.25E-998
   #|powx434 power 0.04E+501     -2         ->  6.25E-1000 Subnormal
   #|powx435 power 0.04E+502     -2         ->   6.2E-1002 Underflow Subnormal Inexact Rounded
   #|powx436 power 0.04E+503     -2         ->     1E-1003 Underflow Subnormal Inexact Rounded
   #|powx437 power 0.04E+504     -2         ->     0E-1003 Underflow Subnormal Inexact Rounded Clamped
+  #|
   #|powx441 power 0.04E+334     -3         ->  1.5625E-998
   #|powx442 power 0.04E+335     -3         ->    1.56E-1001 Underflow Subnormal Inexact Rounded
   #|powx443 power 0.04E+336     -3         ->       0E-1003 Underflow Subnormal Inexact Rounded Clamped
@@ -244,6 +332,7 @@ let power_subset : String =
   #|powx445 power 0.25E+334     -3         ->     6.4E-1001 Subnormal
   #|powx446 power 0.25E+335     -3         ->       1E-1003 Underflow Subnormal Inexact Rounded
   #|powx447 power 0.25E+336     -3         ->       0E-1003 Underflow Subnormal Inexact Rounded Clamped
+  #|-- check sign for cubes  and a few squares
   #|powx448 power -0.04E+334    -3         -> -1.5625E-998
   #|powx449 power -0.04E+335    -3         ->   -1.56E-1001 Underflow Subnormal Inexact Rounded
   #|powx450 power -0.04E+336    -3         ->      -0E-1003 Underflow Subnormal Inexact Rounded Clamped
@@ -255,6 +344,8 @@ let power_subset : String =
   #|powx456 power -0.04E+500    -2         ->    6.25E-998
   #|powx457 power -0.04E+501    -2         ->    6.25E-1000 Subnormal
   #|powx458 power -0.04E+502    -2         ->     6.2E-1002 Underflow Subnormal Inexact Rounded
+  #|
+  #|-- test -0s
   #|precision: 9
   #|powx560 power  0  0        ->  NaN Invalid_operation
   #|powx561 power  0 -0        ->  NaN Invalid_operation
@@ -276,6 +367,8 @@ let power_subset : String =
   #|powx577 power  0 -3        ->  Infinity
   #|powx578 power -0  3        -> -0
   #|powx579 power -0 -3        -> -Infinity
+  #|
+  #|-- Specials
   #|powx580 power  Inf  -Inf   ->  0
   #|powx581 power  Inf  -1000  ->  0
   #|powx582 power  Inf  -1     ->  0
@@ -296,6 +389,7 @@ let power_subset : String =
   #|powx597 power  1     Inf   ->  1.00000000 Inexact Rounded
   #|powx598 power  1000  Inf   ->  Infinity
   #|powx599 power  Inf   Inf   ->  Infinity
+  #|
   #|powx600 power -Inf  -Inf   ->  NaN  Invalid_operation
   #|powx601 power -Inf  -1000  ->  0
   #|powx602 power -Inf  -1     -> -0
@@ -316,6 +410,7 @@ let power_subset : String =
   #|powx617 power  1    -Inf   ->  1.00000000 Inexact Rounded
   #|powx618 power  1000 -Inf   ->  0
   #|powx619 power  Inf  -Inf   ->  0
+  #|
   #|powx621 power  NaN -Inf    ->  NaN
   #|powx622 power  NaN -1000   ->  NaN
   #|powx623 power  NaN -1      ->  NaN
@@ -335,6 +430,38 @@ let power_subset : String =
   #|powx637 power  1    NaN    ->  NaN
   #|powx638 power  1000 NaN    ->  NaN
   #|powx639 power  Inf  NaN    ->  NaN
+  #|
+  #|powx641 power  sNaN -Inf   ->  NaN  Invalid_operation
+  #|powx642 power  sNaN -1000  ->  NaN  Invalid_operation
+  #|powx643 power  sNaN -1     ->  NaN  Invalid_operation
+  #|powx644 power  sNaN -0.5   ->  NaN  Invalid_operation
+  #|powx645 power  sNaN -0     ->  NaN  Invalid_operation
+  #|powx646 power  sNaN  0     ->  NaN  Invalid_operation
+  #|powx647 power  sNaN  0.5   ->  NaN  Invalid_operation
+  #|powx648 power  sNaN  1     ->  NaN  Invalid_operation
+  #|powx649 power  sNaN  1000  ->  NaN  Invalid_operation
+  #|powx650 power  sNaN  NaN   ->  NaN  Invalid_operation
+  #|powx651 power  sNaN sNaN   ->  NaN  Invalid_operation
+  #|powx652 power  NaN  sNaN   ->  NaN  Invalid_operation
+  #|powx653 power -Inf  sNaN   ->  NaN  Invalid_operation
+  #|powx654 power -1000 sNaN   ->  NaN  Invalid_operation
+  #|powx655 power -1    sNaN   ->  NaN  Invalid_operation
+  #|powx656 power -0.5  sNaN   ->  NaN  Invalid_operation
+  #|powx657 power -0    sNaN   ->  NaN  Invalid_operation
+  #|powx658 power  0    sNaN   ->  NaN  Invalid_operation
+  #|powx659 power  0.5  sNaN   ->  NaN  Invalid_operation
+  #|powx660 power  1    sNaN   ->  NaN  Invalid_operation
+  #|powx661 power  1000 sNaN   ->  NaN  Invalid_operation
+  #|powx662 power  Inf  sNaN   ->  NaN  Invalid_operation
+  #|powx663 power  NaN  sNaN   ->  NaN  Invalid_operation
+  #|
+  #|-- NaN propagation
+  #|powx670 power  NaN3  sNaN7  ->  NaN7  Invalid_operation
+  #|powx671 power  sNaN8  NaN6  ->  NaN8  Invalid_operation
+  #|powx672 power  1     sNaN7  ->  NaN7  Invalid_operation
+  #|powx673 power  sNaN8  1     ->  NaN8  Invalid_operation
+  #|powx674 power  Inf   sNaN7  ->  NaN7  Invalid_operation
+  #|powx675 power  sNaN8  Inf   ->  NaN8  Invalid_operation
   #|powx676 power  Inf    NaN9  ->  NaN9
   #|powx677 power  NaN6   Inf   ->  NaN6
   #|powx678 power  1      NaN5  ->  NaN5
@@ -342,9 +469,13 @@ let power_subset : String =
   #|powx680 power  NaN2   Nan4  ->  NaN2
   #|powx681 power  NaN    Nan4  ->  NaN
   #|powx682 power  NaN345 Nan   ->  NaN345
+  #|powx683 power  Inf    -sNaN7 -> -NaN7  Invalid_operation
+  #|powx684 power  -sNaN8  Inf   -> -NaN8  Invalid_operation
   #|powx685 power  Inf    -NaN9  -> -NaN9
   #|powx686 power  -NaN6   Inf   -> -NaN6
   #|powx687 power  -NaN2  -Nan4  -> -NaN2
+  #|
+  #|-- long operand and RHS range checks
   #|maxexponent: 999
   #|minexponent: -999
   #|precision: 9
@@ -354,16 +485,21 @@ let power_subset : String =
   #|powx704 power 1234567891  1 -> 1.23456789E+9 Inexact Rounded
   #|powx705 power 12345678901 1 -> 1.23456789E+10 Inexact Rounded
   #|powx706 power 1234567896  1 -> 1.23456790E+9 Inexact Rounded
+  #|
   #|precision: 15
+  #|-- still checking
   #|powx741 power 12345678000 1 -> 12345678000
   #|powx742 power 1234567800  1 -> 1234567800
   #|powx743 power 1234567890  1 -> 1234567890
   #|powx744 power 1234567891  1 -> 1234567891
   #|powx745 power 12345678901 1 -> 12345678901
   #|powx746 power 1234567896  1 -> 1234567896
+  #|
   #|maxexponent: 999999
   #|minexponent: -999999
   #|precision: 9
+  #|
+  #|-- near out-of-range edge cases
   #|powx163 power   '10'  '999999' -> '1.00000000E+999999' Rounded
   #|powx164 power   '10'  '999998' -> '1.00000000E+999998' Rounded
   #|powx165 power   '10'  '999997' -> '1.00000000E+999997' Rounded
@@ -379,7 +515,10 @@ let power_subset : String =
   #|powx182 power   '7'   '999999'   -> 1.56644884E+845097 Inexact Rounded
   #|powx189 power   '7'   '-999999'  -> 6.38386631E-845098 Inexact Rounded
   #|powx190 power   '7'   '-999998'  -> 4.46870641E-845097 Inexact Rounded
+  #|
+  #|-- overflow and underflow tests
   #|precision: 9
+  #|
   #|powx277 power  9             999999 -> 3.59084629E+954241 Inexact Rounded
   #|powx278 power  9.99999999    999999 -> 9.99000501E+999998 Inexact Rounded
   #|powx279 power 10             999999 -> 1.00000000E+999999         Rounded
@@ -392,6 +531,7 @@ let power_subset : String =
   #|powx287 power 999            999999 -> Infinity Overflow Inexact Rounded
   #|powx288 power 999999999      999999 -> Infinity Overflow Inexact Rounded
   #|powx289 power 9.9E999999999  999999 -> Infinity Overflow Inexact Rounded
+  #|
   #|powx290 power 0.5            999999 -> 2.02006812E-301030 Inexact Rounded
   #|powx291 power 0.1            999999 -> 1E-999999  -- unrounded
   #|powx292 power 0.09           999999 -> 0E-1000007 Underflow Subnormal Inexact Rounded Clamped
@@ -401,6 +541,7 @@ let power_subset : String =
   #|powx297 power 0.0000001      999999 -> 0E-1000007 Underflow Subnormal Inexact Rounded Clamped
   #|powx298 power 0.0000000001   999999 -> 0E-1000007 Underflow Subnormal Inexact Rounded Clamped
   #|powx299 power 1E-999999999   999999 -> 0E-1000007 Underflow Subnormal Inexact Rounded Clamped
+  #|
   #|powx310 power -9             999999 -> -3.59084629E+954241 Inexact Rounded
   #|powx311 power -10            999999 -> -1.00000000E+999999 Rounded
   #|powx312 power -10.0001       999999 -> -Infinity Overflow Inexact Rounded
@@ -411,6 +552,7 @@ let power_subset : String =
   #|powx317 power -999999        999999 -> -Infinity Overflow Inexact Rounded
   #|powx318 power -999999999     999999 -> -Infinity Overflow Inexact Rounded
   #|powx319 power -9.9E999999999 999999 -> -Infinity Overflow Inexact Rounded
+  #|
   #|powx320 power -0.5           999999 -> -2.02006812E-301030 Inexact Rounded
   #|powx321 power -0.1           999999 -> -1E-999999
   #|powx322 power -0.09          999999 -> -0E-1000007 Underflow Subnormal Inexact Rounded Clamped
@@ -420,6 +562,8 @@ let power_subset : String =
   #|powx327 power -0.0000001     999999 -> -0E-1000007 Underflow Subnormal Inexact Rounded Clamped
   #|powx328 power -0.0000000001  999999 -> -0E-1000007 Underflow Subnormal Inexact Rounded Clamped
   #|powx329 power -1E-999999999  999999 -> -0E-1000007 Underflow Subnormal Inexact Rounded Clamped
+  #|
+  #|-- note no trim of next result
   #|powx330 power -9             999998 ->  3.98982921E+954240 Inexact Rounded
   #|powx331 power -10            999998 ->  1.00000000E+999998 Rounded
   #|powx332 power -10.0001       999998 ->  Infinity Overflow Inexact Rounded
@@ -430,6 +574,7 @@ let power_subset : String =
   #|powx337 power -999999        999998 ->  Infinity Overflow Inexact Rounded
   #|powx338 power -999999999     999998 ->  Infinity Overflow Inexact Rounded
   #|powx339 power -9.9E999999999 999998 ->  Infinity Overflow Inexact Rounded
+  #|
   #|powx340 power -0.5           999998 ->  4.04013624E-301030 Inexact Rounded
   #|powx341 power -0.1           999998 ->  1E-999998  -- NB exact unrounded
   #|powx342 power -0.09          999998 ->  0E-1000007 Underflow Subnormal Inexact Rounded Clamped
@@ -439,7 +584,10 @@ let power_subset : String =
   #|powx347 power -0.0000001     999998 ->  0E-1000007 Underflow Subnormal Inexact Rounded Clamped
   #|powx348 power -0.0000000001  999998 ->  0E-1000007 Underflow Subnormal Inexact Rounded Clamped
   #|powx349 power -1E-999999999  999998 ->  0E-1000007 Underflow Subnormal Inexact Rounded Clamped
+  #|
+  #|-- some subnormals
   #|precision: 9
+  #|-- [precision is 9, so smallest exponent is -1000000007
   #|powx350 power  1e-1          500000 ->  1E-500000
   #|powx351 power  1e-2          999999 ->  0E-1000007 Underflow Subnormal Inexact Rounded Clamped
   #|powx352 power  1e-2          500000 ->  1E-1000000 Subnormal
@@ -447,6 +595,7 @@ let power_subset : String =
   #|powx354 power  1e-2          500002 ->  1E-1000004 Subnormal
   #|powx355 power  1e-2          500003 ->  1E-1000006 Subnormal
   #|powx356 power  1e-2          500004 ->  0E-1000007 Underflow Subnormal Inexact Rounded Clamped
+  #|
   #|powx360 power  0.010001      500000 ->  5.17176082E-999979 Inexact Rounded
   #|powx361 power  0.010000001   500000 ->  1.0512711E-1000000 Underflow Subnormal Inexact Rounded
   #|powx362 power  0.010000001   500001 ->  1.05127E-1000002 Underflow Subnormal Inexact Rounded
@@ -458,6 +607,8 @@ let power_subset : String =
   #|powx368 power  0.0099999997  500000 ->  9.851119E-1000001 Underflow Subnormal Inexact Rounded
   #|powx369 power  0.0099999996  500000 ->  9.801987E-1000001 Underflow Subnormal Inexact Rounded
   #|powx370 power  0.009         500000 ->  0E-1000007 Underflow Subnormal Inexact Rounded Clamped
+  #|
+  #|-- 1/subnormal -> overflow
   #|powx371 power  1e-1         -500000 ->  1E+500000
   #|powx372 power  1e-2         -999999 ->  Infinity Overflow Inexact Rounded
   #|powx373 power  1e-2         -500000 ->  Infinity Overflow Inexact Rounded
@@ -465,6 +616,7 @@ let power_subset : String =
   #|powx375 power  1e-2         -500002 ->  Infinity Overflow Inexact Rounded
   #|powx376 power  1e-2         -500003 ->  Infinity Overflow Inexact Rounded
   #|powx377 power  1e-2         -500004 ->  Infinity Overflow Inexact Rounded
+  #|
   #|powx381 power  0.010001     -500000 ->  1.93357743E+999978 Inexact Rounded
   #|powx382 power  0.010000001  -500000 ->  9.51229427E+999999 Inexact Rounded
   #|powx383 power  0.010000001  -500001 ->  Infinity Overflow  Inexact Rounded
@@ -472,7 +624,12 @@ let power_subset : String =
   #|powx385 power  0.0100000001 -500000 ->  9.95012479E+999999 Inexact Rounded
   #|powx386 power  0.01         -500000 ->  Infinity Overflow Inexact Rounded
   #|powx387 power  0.009999     -500000 ->  Infinity Overflow Inexact Rounded
+  #|
+  #|-- negative power giving subnormal
   #|powx388 power  100.000001   -500000 ->  9.950125E-1000001 Underflow Subnormal Inexact Rounded
+  #|
+  #|
+  #|-- test some 'false integer' boundaries
   #|precision:   16
   #|rounding:    half_even
   #|maxExponent: 384
@@ -511,10 +668,23 @@ let power_subset : String =
   #|powx532 power  100  1E+50  ->  Infinity Overflow Inexact Rounded
   #|powx533 power  100  1E+100 ->  Infinity Overflow Inexact Rounded
   #|powx534 power  100  1E+383 ->  Infinity Overflow Inexact Rounded
+  #|
+  #|-- a check for double-rounded subnormals
   #|precision:   5
   #|maxexponent: 79
   #|minexponent: -79
   #|powx750 power     1.2347E-40  2      ->  1.524E-80 Inexact Rounded Subnormal Underflow
+  #|
+  #|-- Null tests
+  #|powx900 power  1 # -> NaN Invalid_operation
+  #|powx901 power  # 1 -> NaN Invalid_operation
+  #|
+  #|----------------------------------------------------------------------
+  #|-- Below here are tests with a precision or context outside of the  --
+  #|-- decNumber 'mathematical functions' restricted range.  These      --
+  #|-- remain supported in decNumber to minimize breakage, but may be   --
+  #|-- outside the range of other implementations.                      --
+  #|----------------------------------------------------------------------
   #|maxexponent: 999999999
   #|minexponent: -999999999
   #|precision: 9
@@ -522,10 +692,13 @@ let power_subset : String =
   #|powx1064 power   '10'  '999999998' -> '1.00000000E+999999998' Rounded
   #|powx1065 power   '10'  '999999997' -> '1.00000000E+999999997' Rounded
   #|powx1066 power   '10'  '333333333' -> '1.00000000E+333333333' Rounded
+  #|-- next two are integer-out-of range
   #|powx1183 power   '7'   '1000000000'  -> NaN Invalid_context
   #|powx1184 power   '7'   '1000000001'  -> NaN Invalid_context
   #|powx1186 power   '7'   '-1000000001' -> 1.38243630E-845098041 Inexact Rounded
   #|powx1187 power   '7'   '-1000000000' -> 9.67705411E-845098041 Inexact Rounded
+  #|
+  #|-- out-of-range edge cases
   #|powx1118 power  '10'  '-333333333'   -> 1E-333333333
   #|powx1119 power  '10'  '-999999998'   -> 1E-999999998
   #|powx1120 power  '10'  '-999999999'   -> 1E-999999999
@@ -533,10 +706,14 @@ let power_subset : String =
   #|powx1182 power   '7'   '999999999'   -> 1.47624619E+845098039 Inexact Rounded
   #|powx1189 power   '7'   '-999999999'  -> 6.77393787E-845098040 Inexact Rounded
   #|powx1190 power   '7'   '-999999998'  -> 4.74175651E-845098039 Inexact Rounded
+  #|
+  #|-- A (rare) case where the last digit is not within 0.5 ULP with classic precision
   #|precision: 9
   #|powx1215 power "-21971575.0E+31454441" "-7" -> "-4.04549502E-220181139" Inexact Rounded
   #|precision: 20
   #|powx1216 power "-21971575.0E+31454441" "-7" -> "-4.0454950249324891788E-220181139" Inexact Rounded
+  #|
+  #|-- overflow and underflow tests
   #|precision: 9
   #|powx1280 power  9            999999999 -> 3.05550054E+954242508 Inexact Rounded
   #|powx1281 power 10            999999999 -> 1.00000000E+999999999 Rounded
@@ -548,6 +725,7 @@ let power_subset : String =
   #|powx1287 power 999999        999999999 -> Infinity Overflow Inexact Rounded
   #|powx1288 power 999999999     999999999 -> Infinity Overflow Inexact Rounded
   #|powx1289 power 9.9E999999999 999999999 -> Infinity Overflow Inexact Rounded
+  #|
   #|powx1290 power 0.5           999999999 -> 4.33559594E-301029996 Inexact Rounded
   #|powx1291 power 0.1           999999999 -> 1E-999999999  -- unrounded
   #|powx1292 power 0.09          999999999 -> 0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
@@ -557,6 +735,7 @@ let power_subset : String =
   #|powx1297 power 0.0000001     999999999 -> 0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
   #|powx1298 power 0.0000000001  999999999 -> 0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
   #|powx1299 power 1E-999999999  999999999 -> 0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
+  #|
   #|powx1310 power -9             999999999 -> -3.05550054E+954242508 Inexact Rounded
   #|powx1311 power -10            999999999 -> -1.00000000E+999999999 Rounded
   #|powx1312 power -10.0001       999999999 -> -Infinity Overflow Inexact Rounded
@@ -567,6 +746,7 @@ let power_subset : String =
   #|powx1317 power -999999        999999999 -> -Infinity Overflow Inexact Rounded
   #|powx1318 power -999999999     999999999 -> -Infinity Overflow Inexact Rounded
   #|powx1319 power -9.9E999999999 999999999 -> -Infinity Overflow Inexact Rounded
+  #|
   #|powx1320 power -0.5           999999999 -> -4.33559594E-301029996 Inexact Rounded
   #|powx1321 power -0.1           999999999 -> -1E-999999999
   #|powx1322 power -0.09          999999999 -> -0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
@@ -576,6 +756,8 @@ let power_subset : String =
   #|powx1327 power -0.0000001     999999999 -> -0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
   #|powx1328 power -0.0000000001  999999999 -> -0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
   #|powx1329 power -1E-999999999  999999999 -> -0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
+  #|
+  #|-- note no trim of next result
   #|powx1330 power -9             999999998 ->  3.39500060E+954242507 Inexact Rounded
   #|powx1331 power -10            999999998 ->  1.00000000E+999999998 Rounded
   #|powx1332 power -10.0001       999999998 ->  Infinity Overflow Inexact Rounded
@@ -586,6 +768,7 @@ let power_subset : String =
   #|powx1337 power -999999        999999998 ->  Infinity Overflow Inexact Rounded
   #|powx1338 power -999999999     999999998 ->  Infinity Overflow Inexact Rounded
   #|powx1339 power -9.9E999999999 999999998 ->  Infinity Overflow Inexact Rounded
+  #|
   #|powx1340 power -0.5           999999998 ->  8.67119187E-301029996 Inexact Rounded
   #|powx1341 power -0.1           999999998 ->  1E-999999998  -- NB exact unrounded
   #|powx1342 power -0.09          999999998 ->  0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
@@ -595,7 +778,10 @@ let power_subset : String =
   #|powx1347 power -0.0000001     999999998 ->  0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
   #|powx1348 power -0.0000000001  999999998 ->  0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
   #|powx1349 power -1E-999999999  999999998 ->  0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
+  #|
+  #|-- some subnormals
   #|precision: 9
+  #|-- [precision is 9, so smallest exponent is -1000000007
   #|powx1350 power  1e-1          500000000 ->  1E-500000000
   #|powx1351 power  1e-2          999999999 ->  0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
   #|powx1352 power  1e-2          500000000 ->  1E-1000000000 Subnormal
@@ -603,6 +789,7 @@ let power_subset : String =
   #|powx1354 power  1e-2          500000002 ->  1E-1000000004 Subnormal
   #|powx1355 power  1e-2          500000003 ->  1E-1000000006 Subnormal
   #|powx1356 power  1e-2          500000004 ->  0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
+  #|
   #|powx1360 power  0.010001      500000000 ->  4.34941988E-999978287 Inexact Rounded
   #|powx1361 power  0.010000001   500000000 ->  5.18469257E-999999979 Inexact Rounded
   #|powx1362 power  0.010000001   500000001 ->  5.18469309E-999999981 Inexact Rounded
@@ -614,6 +801,8 @@ let power_subset : String =
   #|powx1368 power  0.0099999997  500000000 ->  3E-1000000007 Underflow Subnormal Inexact Rounded
   #|powx1369 power  0.0099999996  500000000 ->  0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
   #|powx1370 power  0.009         500000000 ->  0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
+  #|
+  #|-- 1/subnormal -> overflow
   #|powx1371 power  1e-1         -500000000 ->  1E+500000000
   #|powx1372 power  1e-2         -999999999 ->  Infinity Overflow Inexact Rounded
   #|powx1373 power  1e-2         -500000000 ->  Infinity Overflow Inexact Rounded
@@ -621,6 +810,7 @@ let power_subset : String =
   #|powx1375 power  1e-2         -500000002 ->  Infinity Overflow Inexact Rounded
   #|powx1376 power  1e-2         -500000003 ->  Infinity Overflow Inexact Rounded
   #|powx1377 power  1e-2         -500000004 ->  Infinity Overflow Inexact Rounded
+  #|
   #|powx1381 power  0.010001     -500000000 ->  2.29915719E+999978286 Inexact Rounded
   #|powx1382 power  0.010000001  -500000000 ->  1.92875467E+999999978 Inexact Rounded
   #|powx1383 power  0.010000001  -500000001 ->  1.92875448E+999999980 Inexact Rounded
@@ -628,11 +818,21 @@ let power_subset : String =
   #|powx1385 power  0.0100000001 -500000000 ->  6.73794717E+999999997 Inexact Rounded
   #|powx1386 power  0.01         -500000000 ->  Infinity Overflow Inexact Rounded
   #|powx1387 power  0.009999     -500000000 ->  Infinity Overflow Inexact Rounded
+  #|
+  #|-- negative power giving subnormal
   #|powx1388 power  100.000001   -500000000 ->  6.7379E-1000000003 Underflow Subnormal Inexact Rounded
+  #|
+  #|----------------------------------------------------------------------
+  #|-- Below here are the tests with a non-integer rhs, including the   --
+  #|-- tests that previously caused Invalid operation.  An integer-only --
+  #|-- (on rhs) implementation should handle all the tests above as     --
+  #|-- shown, and would flag most of the following tests as Invalid.    --
+  #|----------------------------------------------------------------------
   #|precision:   16
   #|rounding:    half_even
   #|maxExponent: 384
   #|minExponent: -383
+  #|
   #|powx2000 power 7 '10000000000'        -> Infinity Overflow Inexact Rounded
   #|powx2001 power 2 '2.000001'           -> 4.000002772589683 Inexact Rounded
   #|powx2002 power 2 '2.00000000'         -> 4
@@ -644,6 +844,8 @@ let power_subset : String =
   #|powx2008 power 2 '2.00000000000001'   -> 4.000000000000028 Inexact Rounded
   #|powx2009 power 2 '2.000000000000001'  -> 4.000000000000003 Inexact Rounded
   #|powx2010 power 2 '2.0000000000000001' -> 4.000000000000000 Inexact Rounded
+  #|--                1 234567890123456
+  #|
   #|powx2011 power 1 1234 -> 1
   #|precision: 4
   #|powx2012 power 1 1234 -> 1
@@ -666,11 +868,14 @@ let power_subset : String =
   #|powx2036 power 1 1.0000000001     -> 1.0000 Inexact Rounded
   #|powx2037 power 1 1.0000000000001  -> 1.0000 Inexact Rounded
   #|powx2038 power 1 1.0000000000001  -> 1.0000 Inexact Rounded
+  #|
   #|rounding: ceiling
   #|precision: 3
   #|powx2039 power 1 1.01     -> 1.00 Inexact Rounded
   #|powx2040 power 1 12.3     -> 1.00 Inexact Rounded
   #|rounding: half_even
+  #|
+  #|-- 1 ** any integer, including big ones, should be exact
   #|powx2041 power 1 1000000000   -> 1
   #|powx2042 power 1 9999999999   -> 1
   #|powx2043 power 1 12345678000  -> 1
@@ -687,6 +892,7 @@ let power_subset : String =
   #|powx2055 power 1 1000000000   -> 1
   #|powx2056 power 1 4300000000   -> 1
   #|powx2057 power 1 -1000000000  -> 1
+  #|-- negatives ... but not out of range for decNumber
   #|powx2061 power -1 100000   -> 1
   #|powx2062 power -1 999999   -> -1
   #|powx2063 power -1 1278000  -> 1
@@ -702,7 +908,12 @@ let power_subset : String =
   #|powx2074 power -1 -167896  -> 1
   #|powx2075 power -1 100000   -> 1
   #|powx2076 power -1 -100009  -> -1
+  #|
+  #|-- The above were derived from the earlier version of power.decTest;
+  #|-- now start new tests for power(x,y) for non-integer y
   #|precision: 9
+  #|
+  #|-- tests from specification
   #|powx2081 power 2           3    ->  '8'
   #|powx2082 power -2          3    ->  '-8'
   #|powx2083 power 2          -3    ->  '0.125'
@@ -716,68 +927,91 @@ let power_subset : String =
   #|powx2091 power -Infinity  '1'   ->  '-Infinity'
   #|powx2092 power -Infinity  '2'   ->  'Infinity'
   #|powx2093 power 0  0             ->  'NaN' Invalid_operation
+  #|
   #|precision:   16
   #|rounding:    half_even
   #|maxExponent: 384
   #|minExponent: -383
+  #|
+  #|-- basics
   #|powx2100 power 1E-7     1E-7   -> 0.9999983881917339      Inexact Rounded
   #|powx2101 power 0.003    1E-7   -> 0.9999994190858697      Inexact Rounded
   #|powx2102 power 0.7      1E-7   -> 0.9999999643325062      Inexact Rounded
   #|powx2103 power 1.2      1E-7   -> 1.000000018232156       Inexact Rounded
   #|powx2104 power 71       1E-7   -> 1.000000426268079       Inexact Rounded
   #|powx2105 power 9E+9     1E-7   -> 1.000002292051668       Inexact Rounded
+  #|
   #|powx2110 power 1E-7     0.003  -> 0.9527961640236519      Inexact Rounded
   #|powx2111 power 0.003    0.003  -> 0.9827235503366797      Inexact Rounded
   #|powx2112 power 0.7      0.003  -> 0.9989305474406207      Inexact Rounded
   #|powx2113 power 1.2      0.003  -> 1.000547114282834       Inexact Rounded
   #|powx2114 power 71       0.003  -> 1.012870156273545       Inexact Rounded
   #|powx2115 power 9E+9     0.003  -> 1.071180671278787       Inexact Rounded
+  #|
   #|powx2120 power 1E-7     0.7    -> 0.00001258925411794167  Inexact Rounded
   #|powx2121 power 0.003    0.7    -> 0.01713897630281030     Inexact Rounded
   #|powx2122 power 0.7      0.7    -> 0.7790559126704491      Inexact Rounded
   #|powx2123 power 1.2      0.7    -> 1.136126977198889       Inexact Rounded
   #|powx2124 power 71       0.7    -> 19.76427300093870       Inexact Rounded
   #|powx2125 power 9E+9     0.7    -> 9289016.976853710       Inexact Rounded
+  #|
   #|powx2130 power 1E-7     1.2    -> 3.981071705534973E-9    Inexact Rounded
   #|powx2131 power 0.003    1.2    -> 0.0009387403933595694   Inexact Rounded
   #|powx2132 power 0.7      1.2    -> 0.6518049405663864      Inexact Rounded
   #|powx2133 power 1.2      1.2    -> 1.244564747203978       Inexact Rounded
   #|powx2134 power 71       1.2    -> 166.5367244638552       Inexact Rounded
   #|powx2135 power 9E+9     1.2    -> 881233526124.8791       Inexact Rounded
+  #|
   #|powx2140 power 1E-7     71     -> 0E-398                  Inexact Rounded Underflow Subnormal Clamped
   #|powx2141 power 0.003    71     -> 7.509466514979725E-180  Inexact Rounded
   #|powx2142 power 0.7      71     -> 1.004525211269079E-11   Inexact Rounded
   #|powx2143 power 1.2      71     -> 418666.7483186515       Inexact Rounded
   #|powx2144 power 71       71     -> 2.750063734834616E+131  Inexact Rounded
   #|powx2145 power 9E+9     71     -> Infinity                Inexact Rounded Overflow
+  #|
   #|powx2150 power 1E-7     9E+9   -> 0E-398                  Inexact Rounded Underflow Subnormal Clamped
   #|powx2151 power 0.003    9E+9   -> 0E-398                  Inexact Rounded Underflow Subnormal Clamped
   #|powx2152 power 0.7      9E+9   -> 0E-398                  Inexact Rounded Underflow Subnormal Clamped
   #|powx2153 power 1.2      9E+9   -> Infinity                Inexact Rounded Overflow
   #|powx2154 power 71       9E+9   -> Infinity                Inexact Rounded Overflow
   #|powx2155 power 9E+9     9E+9   -> Infinity                Inexact Rounded Overflow
+  #|
+  #|-- number line milestones with lhs<1 and lhs>1
+  #|
+  #|-- Overflow boundary (Nmax)
   #|powx2202 power 71     207.966651583983200 -> Infinity Inexact Rounded Overflow
   #|powx2201 power 71     207.966651583983199 -> 9.999999999999994E+384 Inexact Rounded
   #|powx2204 power 0.003 -152.603449817093577 -> Infinity Inexact Rounded Overflow
   #|powx2203 power 0.003 -152.603449817093576 -> 9.999999999999994E+384 Inexact Rounded
+  #|
+  #|-- Nmin boundary
   #|powx2211 power 71    -206.886305341988480 -> 1.000000000000005E-383 Inexact Rounded
   #|powx2212 power 71    -206.886305341988481 -> 1.000000000000001E-383 Inexact Rounded
   #|powx2213 power 71    -206.886305341988482 -> 9.99999999999997E-384  Inexact Rounded Underflow Subnormal
   #|powx2214 power 71    -206.886305341988483 -> 9.99999999999992E-384  Inexact Rounded Underflow Subnormal
+  #|--                                           9.999999999999924565357019820
+  #|
   #|powx2215 power 0.003  151.810704623238543 -> 1.000000000000009E-383 Inexact Rounded
   #|powx2216 power 0.003  151.810704623238544 -> 1.000000000000003E-383 Inexact Rounded
   #|powx2217 power 0.003  151.810704623238545 -> 9.99999999999997E-384  Inexact Rounded Underflow Subnormal
   #|powx2218 power 0.003  151.810704623238546 -> 9.99999999999991E-384  Inexact Rounded Underflow Subnormal
+  #|
+  #|-- Ntiny boundary, these edge cases determined using half_up rounding
   #|rounding: half_up
   #|powx2221 power 71    -215.151510469220498 -> 1E-398    Inexact Rounded Underflow Subnormal
   #|powx2222 power 71    -215.151510469220499 -> 1E-398    Inexact Rounded Underflow Subnormal
   #|powx2223 power 71    -215.151510469220500 -> 0E-398    Inexact Rounded Underflow Subnormal Clamped
   #|powx2224 power 71    -215.151510469220501 -> 0E-398    Inexact Rounded Underflow Subnormal Clamped
+  #|
   #|powx2225 power 0.003  157.875613618285691 -> 1E-398    Inexact Rounded Underflow Subnormal
   #|powx2226 power 0.003  157.875613618285692 -> 1E-398    Inexact Rounded Underflow Subnormal
   #|powx2227 power 0.003  157.875613618285693 -> 0E-398    Inexact Rounded Underflow Subnormal Clamped
   #|powx2228 power 0.003  220                 -> 0E-398    Inexact Rounded Underflow Subnormal Clamped
   #|rounding: half_even
+  #|
+  #|-- power(10, y) are important ...
+  #|
+  #|-- Integer powers are exact, unless over/underflow
   #|powx2301 power 10     385     -> Infinity Overflow Inexact Rounded
   #|powx2302 power 10     384     -> 1.000000000000000E+384 Rounded
   #|powx2303 power 10      17     -> 1.000000000000000E+17 Rounded
@@ -801,6 +1035,8 @@ let power_subset : String =
   #|powx2321 power 10    -398     -> 1E-398 Subnormal
   #|powx2322 power 10    -399     -> 0E-398 Subnormal Underflow Inexact Rounded Clamped
   #|powx2323 power 10    -400     -> 0E-398 Subnormal Underflow Inexact Rounded Clamped
+  #|
+  #|-- Independent sanity check: 1961 Godfrey & Siddons four-figure logs
   #|powx2351 power 10   0.0000    -> 1
   #|powx2352 power 10   0.3010    -> 1.999861869632744 Inexact Rounded
   #|powx2353 power 10   0.4771    -> 2.999853181190793 Inexact Rounded
@@ -824,6 +1060,8 @@ let power_subset : String =
   #|powx2379 power 10   0.9542    -> 8.999 Inexact Rounded
   #|powx2380 power 10   0.9956    -> 9.899 Inexact Rounded
   #|powx2381 power 10   0.9996    -> 9.991 Inexact Rounded
+  #|
+  #|-- 10**x ~=2 (inverse of the test in log10.decTest)
   #|precision: 50
   #|powx2401 power 10 0.30102999566398119521373889472449302676818988146211 -> 2.0000000000000000000000000000000000000000000000000 Inexact Rounded
   #|precision: 49
@@ -924,17 +1162,24 @@ let power_subset : String =
   #|powx2449 power 10 0.30 -> 2.0 Inexact Rounded
   #|precision:  1
   #|powx2450 power 10 0.3 -> 2 Inexact Rounded
+  #|
   #|maxExponent: 384
   #|minExponent: -383
   #|precision:   16
   #|rounding:    half_even
+  #|
+  #|-- Close-to-e tests
   #|precision:   34
   #|powx2500 power 10 0.4342944819032518276511289189166048     -> 2.718281828459045235360287471352661  Inexact Rounded
   #|powx2501 power 10 0.4342944819032518276511289189166049     -> 2.718281828459045235360287471352661  Inexact Rounded
   #|powx2502 power 10 0.4342944819032518276511289189166050     -> 2.718281828459045235360287471352662  Inexact Rounded
   #|powx2503 power 10 0.4342944819032518276511289189166051     -> 2.718281828459045235360287471352663  Inexact Rounded
   #|powx2504 power 10 0.4342944819032518276511289189166052     -> 2.718281828459045235360287471352663  Inexact Rounded
+  #|
+  #|-- e**e, 16->34
   #|powx2505 power 2.718281828459045 2.718281828459045 -> '15.15426224147925705633739513098219' Inexact Rounded
+  #|
+  #|-- Sequence around an integer
   #|powx2512 power 10 2.9999999999999999999999999999999997     -> 999.9999999999999999999999999999993  Inexact Rounded
   #|powx2513 power 10 2.9999999999999999999999999999999998     -> 999.9999999999999999999999999999995  Inexact Rounded
   #|powx2514 power 10 2.9999999999999999999999999999999999     -> 999.9999999999999999999999999999998  Inexact Rounded
@@ -942,8 +1187,12 @@ let power_subset : String =
   #|powx2516 power 10 3.0000000000000000000000000000000001     -> 1000.000000000000000000000000000000  Inexact Rounded
   #|powx2517 power 10 3.0000000000000000000000000000000002     -> 1000.000000000000000000000000000000  Inexact Rounded
   #|powx2518 power 10 3.0000000000000000000000000000000003     -> 1000.000000000000000000000000000001  Inexact Rounded
+  #|
+  #|-- randomly generated tests
   #|maxExponent: 384
   #|minExponent: -383
+  #|
+  #|-- P=34, within 0-999 -- positive arg2
   #|Precision: 34
   #|powx3201 power 5.301557744131969249145904611290735  369.3175647984435534243813466380579 -> 3.427165676345688240023113326603960E+267 Inexact Rounded
   #|powx3202 power 0.0000000000506875655819165973738225 21.93514102704466434121826965196878 -> 1.498169860033487321566659495340789E-226 Inexact Rounded
@@ -985,6 +1234,8 @@ let power_subset : String =
   #|powx3238 power 0.0000000035321610295065299384889224 7.583861778824284092434085265265582 -> 7.970899823817369764381976286536230E-65  Inexact Rounded
   #|powx3239 power 657.5028301569352677543770758346683  90.55778453811965116200206020172758 -> 1.522530898581564200655160665723268E+255 Inexact Rounded
   #|powx3240 power 8.484756398325748879450577520251447  389.7468292476262478578280531222417 -> 8.595142803587368093392510310811218E+361 Inexact Rounded
+  #|
+  #|-- P=16, within 0-99 -- positive arg2
   #|Precision: 16
   #|powx3101 power 0.0000215524639223 48.37532522355252 -> 1.804663257287277E-226 Inexact Rounded
   #|powx3102 power 00.80705856227999  2706.777535121391 -> 1.029625065876157E-252 Inexact Rounded
@@ -1026,6 +1277,8 @@ let power_subset : String =
   #|powx3138 power 56.90062738303850  54.90468294683645 -> 2.312839177902428E+96  Inexact Rounded
   #|powx3139 power 5.710905139750871  73.44608752962156 -> 3.775876053709929E+55  Inexact Rounded
   #|powx3140 power 0.0000017446761203 1.223981492228899 -> 8.952936595465635E-8   Inexact Rounded
+  #|
+  #|-- P=7, within 0-9 -- positive arg2
   #|Precision: 7
   #|powx3001 power 8.738689  55.96523 -> 4.878180E+52  Inexact Rounded
   #|powx3002 power 0.0404763 147.4965 -> 3.689722E-206 Inexact Rounded
@@ -1067,6 +1320,8 @@ let power_subset : String =
   #|powx3038 power 0.0820626 268.8718 -> 1.107350E-292 Inexact Rounded
   #|powx3039 power 6.176486  360.7779 -> 1.914449E+285 Inexact Rounded
   #|powx3040 power 4.206363  16.17288 -> 1.231314E+10  Inexact Rounded
+  #|
+  #|-- P=34, within 0-999 -- negative arg2
   #|Precision: 34
   #|powx3701 power 376.0915270000109486633402827007902  -35.69822349904102131649243701958463 -> 1.165722831225506457828653413200143E-92  Inexact Rounded
   #|powx3702 power 0.0000000503747440074613191665845314 -9.520308341497979093021813571450575 -> 3.000432478861883953977971226770410E+69  Inexact Rounded
@@ -1108,6 +1363,8 @@ let power_subset : String =
   #|powx3738 power 0.0000000000186657798201636342150903 -20.18296240350678245567049161730909 -> 3.483954007114900406906338526575672E+216 Inexact Rounded
   #|powx3739 power 0.0006522464792960191985996959126792 -80.03762491483514679886504099194414 -> 9.266548513614215557228467517053035E+254 Inexact Rounded
   #|powx3740 power 0.0000000032851343694200568966168055 -21.53462116926375512242403160008026 -> 4.873201679668455240861376213601189E+182 Inexact Rounded
+  #|
+  #|-- P=16, within 0-99 -- negative arg2
   #|Precision: 16
   #|powx3601 power 0.0000151338748474 -40.84655618364688 -> 7.628470824137755E+196 Inexact Rounded
   #|powx3602 power 0.1542771848654862 -435.8830009466800 -> 6.389817177800744E+353 Inexact Rounded
@@ -1149,6 +1406,8 @@ let power_subset : String =
   #|powx3638 power 0.0000298310819799 -1.844740377759355 -> 222874718.7238888      Inexact Rounded
   #|powx3639 power 0.0000006412929384 -28.24850078229290 -> 8.737164230666529E+174 Inexact Rounded
   #|powx3640 power 0.0000010202965998 -47.17573701956498 -> 4.392845306049341E+282 Inexact Rounded
+  #|
+  #|-- P=7, within 0-9 -- negative arg2
   #|Precision: 7
   #|powx3501 power 0.326324  -71.96509  -> 1.000673E+35  Inexact Rounded
   #|powx3502 power 0.0017635 -0.7186967 -> 95.28419      Inexact Rounded
@@ -1190,10 +1449,15 @@ let power_subset : String =
   #|powx3538 power 0.082615  -164.5842  -> 1.717882E+178 Inexact Rounded
   #|powx3539 power 7.636003  -363.6763  -> 8.366174E-322 Inexact Rounded
   #|powx3540 power 0.0021481 -138.0065  -> 1.562505E+368 Inexact Rounded
+  #|
+  #|
+  #|-- Invalid operations due to restrictions
+  #|-- [next two probably skipped by most test harnesses]
   #|precision: 100000000
   #|powx4001  power 1 1.1 ->  NaN         Invalid_context
   #|precision:  99999999
   #|powx4002  power 1 1.1 ->  NaN         Invalid_context
+  #|
   #|precision: 9
   #|maxExponent:   1000000
   #|minExponent:   -999999
@@ -1207,6 +1471,8 @@ let power_subset : String =
   #|maxExponent:    999999
   #|minExponent:   -999998
   #|powx4006  power 1 1.1  ->  1.00000000 Inexact Rounded
+  #|
+  #|-- operand range violations
   #|powx4007  power 1             1.1E+999999  ->  1
   #|powx4008  power 1             1.1E+1000000 ->  NaN Invalid_operation
   #|powx4009  power 1.1E+999999   1.1          ->  Infinity Overflow Inexact Rounded
@@ -1215,9 +1481,19 @@ let power_subset : String =
   #|powx4012  power 1             1.1E-1999998 ->  NaN Invalid_operation
   #|powx4013  power 1.1E-1999997  1.1          ->  0E-1000006 Underflow Inexact Rounded Clamped Subnormal
   #|powx4014  power 1.1E-1999998  1.1          ->  NaN Invalid_operation
+  #|
+  #|-- rounding modes -- power is sensitive
   #|precision:   7
   #|maxExponent: 99
   #|minExponent: -99
+  #|
+  #|--   0.7  ** 3.3 =>   0.30819354053418943822
+  #|--   0.7  ** 3.4 =>   0.29739477638272533854
+  #|--  -1.2  ** 17  => -22.18611106740436992
+  #|--  -1.3  ** 17  => -86.50415919381337933
+  #|--   0.5  ** 11  =>   0.00048828125
+  #|--   3.15 ** 3   =>  31.255875
+  #|
   #|rounding: up
   #|powx4100  power      0.7  3.3 ->  0.3081936 Inexact Rounded
   #|powx4101  power      0.7  3.4 ->  0.2973948 Inexact Rounded
@@ -1225,6 +1501,7 @@ let power_subset : String =
   #|powx4103  power     -1.3  17  -> -86.50416  Inexact Rounded
   #|powx4104  power  17 81.27115  -> 9.999974E+99 Inexact Rounded
   #|powx4105  power  17 81.27116  -> Infinity     Overflow Inexact Rounded
+  #|
   #|rounding: down
   #|powx4120  power      0.7  3.3 ->  0.3081935 Inexact Rounded
   #|powx4121  power      0.7  3.4 ->  0.2973947 Inexact Rounded
@@ -1232,6 +1509,7 @@ let power_subset : String =
   #|powx4123  power     -1.3  17  -> -86.50415  Inexact Rounded
   #|powx4124  power  17 81.27115  -> 9.999973E+99 Inexact Rounded
   #|powx4125  power  17 81.27116  -> 9.999999E+99 Overflow Inexact Rounded
+  #|
   #|rounding: floor
   #|powx4140  power      0.7  3.3 ->  0.3081935 Inexact Rounded
   #|powx4141  power      0.7  3.4 ->  0.2973947 Inexact Rounded
@@ -1239,6 +1517,7 @@ let power_subset : String =
   #|powx4143  power     -1.3  17  -> -86.50416  Inexact Rounded
   #|powx4144  power  17 81.27115  -> 9.999973E+99 Inexact Rounded
   #|powx4145  power  17 81.27116  -> 9.999999E+99 Overflow Inexact Rounded
+  #|
   #|rounding: ceiling
   #|powx4160  power      0.7  3.3 ->  0.3081936 Inexact Rounded
   #|powx4161  power      0.7  3.4 ->  0.2973948 Inexact Rounded
@@ -1246,6 +1525,7 @@ let power_subset : String =
   #|powx4163  power     -1.3  17  -> -86.50415  Inexact Rounded
   #|powx4164  power  17 81.27115  -> 9.999974E+99 Inexact Rounded
   #|powx4165  power  17 81.27116  -> Infinity     Overflow Inexact Rounded
+  #|
   #|rounding: half_up
   #|powx4180  power      0.7  3.3 ->  0.3081935 Inexact Rounded
   #|powx4181  power      0.7  3.4 ->  0.2973948 Inexact Rounded
@@ -1255,6 +1535,7 @@ let power_subset : String =
   #|powx4185  power      3.15  3  ->  31.25588  Inexact Rounded
   #|powx4186  power  17 81.27115  -> 9.999974E+99 Inexact Rounded
   #|powx4187  power  17 81.27116  -> Infinity     Overflow Inexact Rounded
+  #|
   #|rounding: half_even
   #|powx4200  power      0.7  3.3 ->  0.3081935 Inexact Rounded
   #|powx4201  power      0.7  3.4 ->  0.2973948 Inexact Rounded
@@ -1264,6 +1545,7 @@ let power_subset : String =
   #|powx4205  power      3.15  3  ->  31.25588  Inexact Rounded
   #|powx4206  power  17 81.27115  -> 9.999974E+99 Inexact Rounded
   #|powx4207  power  17 81.27116  -> Infinity     Overflow Inexact Rounded
+  #|
   #|rounding: half_down
   #|powx4220  power      0.7  3.3 ->  0.3081935 Inexact Rounded
   #|powx4221  power      0.7  3.4 ->  0.2973948 Inexact Rounded
@@ -1274,12 +1556,22 @@ let power_subset : String =
   #|powx4226  power     -3.15  3  -> -31.25587  Inexact Rounded
   #|powx4227  power  17 81.27115  -> 9.999974E+99 Inexact Rounded
   #|powx4228  power  17 81.27116  -> Infinity     Overflow Inexact Rounded
+  #|
+  #|
+  #|-- more rounding tests as per Ilan Nehama's suggestions & analysis
+  #|-- these are likely to show > 0.5 ulp error for very small powers
   #|precision:   7
   #|maxExponent: 96
   #|minExponent: -95
+  #|
+  #|-- For x=nextfp(1)=1.00..001 (where the number of 0s is precision-2)
+  #|--   power(x,y)=x when the rounding is up (e.g., toward_pos_inf or
+  #|--   ceil) for any y in (0,1].
   #|rounding: ceiling
   #|powx4301  power  1.000001 0          -> 1
+  #|-- The next test should be skipped for decNumber
   #|powx4302  power  1.000001 1e-101     -> 1.000001   Inexact Rounded
+  #|-- The next test should be skipped for decNumber
   #|powx4303  power  1.000001 1e-95      -> 1.000001   Inexact Rounded
   #|powx4304  power  1.000001 1e-10      -> 1.000001   Inexact Rounded
   #|powx4305  power  1.000001 0.1        -> 1.000001   Inexact Rounded
@@ -1287,6 +1579,8 @@ let power_subset : String =
   #|powx4307  power  1.000001 0.7        -> 1.000001   Inexact Rounded
   #|powx4308  power  1.000001 0.9999999  -> 1.000001   Inexact Rounded
   #|powx4309  power  1.000001 1.000000   -> 1.000001
+  #|--   power(x,y)=1 when the rounding is down (e.g. toward_zero or
+  #|--   floor) for any y in [0,1).
   #|rounding: floor
   #|powx4321  power  1.000001 0          -> 1
   #|powx4322  power  1.000001 1e-101     -> 1.000000   Inexact Rounded
@@ -1297,9 +1591,14 @@ let power_subset : String =
   #|powx4327  power  1.000001 0.7        -> 1.000000   Inexact Rounded
   #|powx4328  power  1.000001 0.9999999  -> 1.000000   Inexact Rounded
   #|powx4329  power  1.000001 1.000000   -> 1.000001
+  #|
+  #|-- For x=prevfp(1)=0.99..99 (where the number of 9s is precision)
+  #|--   power(x,y)=x when the rounding is down for any y in (0,1].
   #|rounding: floor
   #|powx4341  power  0.9999999 0          -> 1
+  #|-- The next test should be skipped for decNumber
   #|powx4342  power  0.9999999 1e-101     -> 0.9999999   Inexact Rounded
+  #|-- The next test should be skipped for decNumber
   #|powx4343  power  0.9999999 1e-95      -> 0.9999999   Inexact Rounded
   #|powx4344  power  0.9999999 1e-10      -> 0.9999999   Inexact Rounded
   #|powx4345  power  0.9999999 0.1        -> 0.9999999   Inexact Rounded
@@ -1307,6 +1606,7 @@ let power_subset : String =
   #|powx4347  power  0.9999999 0.7        -> 0.9999999   Inexact Rounded
   #|powx4348  power  0.9999999 0.9999999  -> 0.9999999   Inexact Rounded
   #|powx4349  power  0.9999999 1.000000   -> 0.9999999
+  #|--   power(x,y)=1 when the rounding is up for any y in (0,1].
   #|rounding: ceiling
   #|powx4361  power  0.9999999 0          -> 1
   #|powx4362  power  0.9999999 1e-101     -> 1.000000    Inexact Rounded
@@ -1317,6 +1617,9 @@ let power_subset : String =
   #|powx4367  power  0.9999999 0.7        -> 1.000000    Inexact Rounded
   #|powx4368  power  0.9999999 0.9999999  -> 1.000000    Inexact Rounded
   #|powx4369  power  0.9999999 1.000000   -> 0.9999999
+  #|
+  #|-- For x=nextfp(0)
+  #|--   power(x,y)=0 when the rounding is down for any y larger than 1.
   #|rounding: floor
   #|powx4382  power  1e-101    0          -> 1
   #|powx4383  power  1e-101    0.9999999  -> 1E-101 Underflow Subnormal Inexact Rounded
@@ -1335,7 +1638,10 @@ let power_subset : String =
 ///|
 test "power.decTest subset" {
   let cases = parse_dectest(power_subset)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, skipped) = run_cases_with_flags(cases)
+  if skipped > 0 {
+    println("\{skipped} cases skipped (format-encoding / reference-specific)")
+  }
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 30 { failures.length() } else { 30 }

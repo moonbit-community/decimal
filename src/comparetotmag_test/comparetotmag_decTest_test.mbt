@@ -1,8 +1,41 @@
 ///|
-/// `comparetotmag` cases from `comparetotmag.decTest`, restricted to half_up
-/// rounding mode and precision >= 9 sections. Bit-level ops, so no
-/// rounding-related skips are needed.
+/// Full `comparetotmag.decTest` corpus (IBM General Decimal
+/// Arithmetic testcases), embedded verbatim.
 let comparetotmag_subset : String =
+  #|------------------------------------------------------------------------
+  #|-- comparetotmag.decTest -- decimal comparison, abs. total ordering   --
+  #|-- Copyright (c) IBM Corporation, 1981, 2008.  All rights reserved.   --
+  #|------------------------------------------------------------------------
+  #|-- Please see the document "General Decimal Arithmetic Testcases"     --
+  #|-- at http://www2.hursley.ibm.com/decimal for the description of      --
+  #|-- these testcases.                                                   --
+  #|--                                                                    --
+  #|-- These testcases are experimental ('beta' versions), and they       --
+  #|-- may contain errors.  They are offered on an as-is basis.  In       --
+  #|-- particular, achieving the same results as the tests here is not    --
+  #|-- a guarantee that an implementation complies with any Standard      --
+  #|-- or specification.  The tests are not exhaustive.                   --
+  #|--                                                                    --
+  #|-- Please send comments, suggestions, and corrections to the author:  --
+  #|--   Mike Cowlishaw, IBM Fellow                                       --
+  #|--   IBM UK, PO Box 31, Birmingham Road, Warwick CV34 5JL, UK         --
+  #|--   mfc@uk.ibm.com                                                   --
+  #|------------------------------------------------------------------------
+  #|version: 2.59
+  #|
+  #|-- Note that it cannot be assumed that add/subtract tests cover paths
+  #|-- for this operation adequately, here, because the code might be
+  #|-- quite different (comparison cannot overflow or underflow, so
+  #|-- actual subtractions are not necessary). Similarly, comparetotal
+  #|-- will have some radically different paths than compare.
+  #|
+  #|extended:    1
+  #|precision:   16
+  #|rounding:    half_up
+  #|maxExponent: 384
+  #|minExponent: -383
+  #|
+  #|-- sanity checks
   #|ctmx001 comparetotmag  -2  -2   ->   0
   #|ctmx002 comparetotmag  -2  -1   ->   1
   #|ctmx003 comparetotmag  -2   0   ->   1
@@ -28,6 +61,7 @@ let comparetotmag_subset : String =
   #|ctmx023 comparetotmag   2   0   ->   1
   #|ctmx025 comparetotmag   2   1   ->   1
   #|ctmx026 comparetotmag   2   2   ->   0
+  #|
   #|ctmx031 comparetotmag  -20  -20   ->   0
   #|ctmx032 comparetotmag  -20  -10   ->   1
   #|ctmx033 comparetotmag  -20   00   ->   1
@@ -53,6 +87,7 @@ let comparetotmag_subset : String =
   #|ctmx053 comparetotmag   20   00   ->   1
   #|ctmx055 comparetotmag   20   10   ->   1
   #|ctmx056 comparetotmag   20   20   ->   0
+  #|
   #|ctmx061 comparetotmag  -2.0  -2.0   ->   0
   #|ctmx062 comparetotmag  -2.0  -1.0   ->   1
   #|ctmx063 comparetotmag  -2.0   0.0   ->   1
@@ -78,10 +113,17 @@ let comparetotmag_subset : String =
   #|ctmx083 comparetotmag   2.0   0.0   ->   1
   #|ctmx085 comparetotmag   2.0   1.0   ->   1
   #|ctmx086 comparetotmag   2.0   2.0   ->   0
+  #|
+  #|-- now some cases which might overflow if subtract were used
+  #|maxexponent: 999999999
+  #|minexponent: -999999999
   #|ctmx090 comparetotmag  9.99999999E+999999999 9.99999999E+999999999   ->   0
   #|ctmx091 comparetotmag -9.99999999E+999999999 9.99999999E+999999999   ->   0
   #|ctmx092 comparetotmag  9.99999999E+999999999 -9.99999999E+999999999  ->   0
   #|ctmx093 comparetotmag -9.99999999E+999999999 -9.99999999E+999999999  ->   0
+  #|
+  #|-- some differing length/exponent cases
+  #|-- in this first group, compare would compare all equal
   #|ctmx100 comparetotmag   7.0    7.0     ->   0
   #|ctmx101 comparetotmag   7.0    7       ->  -1
   #|ctmx102 comparetotmag   7      7.0     ->   1
@@ -93,6 +135,7 @@ let comparetotmag_subset : String =
   #|ctmx108 comparetotmag   7.0    70E-1   ->   0
   #|ctmx109 comparetotmag   7      0.7E+1  ->   0
   #|ctmx110 comparetotmag   7      70E-1   ->   1
+  #|
   #|ctmx120 comparetotmag   8.0    7.0     ->   1
   #|ctmx121 comparetotmag   8.0    7       ->   1
   #|ctmx122 comparetotmag   8      7.0     ->   1
@@ -104,6 +147,7 @@ let comparetotmag_subset : String =
   #|ctmx128 comparetotmag   8.0    70E-1   ->   1
   #|ctmx129 comparetotmag   8      0.7E+1   ->   1
   #|ctmx130 comparetotmag   8      70E-1   ->   1
+  #|
   #|ctmx140 comparetotmag   8.0    9.0     ->  -1
   #|ctmx141 comparetotmag   8.0    9       ->  -1
   #|ctmx142 comparetotmag   8      9.0     ->  -1
@@ -115,6 +159,8 @@ let comparetotmag_subset : String =
   #|ctmx148 comparetotmag   8.0    90E-1   ->  -1
   #|ctmx149 comparetotmag   8      0.9E+1  ->  -1
   #|ctmx150 comparetotmag   8      90E-1   ->  -1
+  #|
+  #|-- and again, with sign changes -+ ..
   #|ctmx200 comparetotmag  -7.0    7.0     ->   0
   #|ctmx201 comparetotmag  -7.0    7       ->  -1
   #|ctmx202 comparetotmag  -7      7.0     ->   1
@@ -126,6 +172,7 @@ let comparetotmag_subset : String =
   #|ctmx208 comparetotmag  -7.0    70E-1   ->   0
   #|ctmx209 comparetotmag  -7      0.7E+1  ->   0
   #|ctmx210 comparetotmag  -7      70E-1   ->   1
+  #|
   #|ctmx220 comparetotmag  -8.0    7.0     ->   1
   #|ctmx221 comparetotmag  -8.0    7       ->   1
   #|ctmx222 comparetotmag  -8      7.0     ->   1
@@ -137,6 +184,7 @@ let comparetotmag_subset : String =
   #|ctmx228 comparetotmag  -8.0    70E-1   ->   1
   #|ctmx229 comparetotmag  -8      0.7E+1  ->   1
   #|ctmx230 comparetotmag  -8      70E-1   ->   1
+  #|
   #|ctmx240 comparetotmag  -8.0    9.0     ->  -1
   #|ctmx241 comparetotmag  -8.0    9       ->  -1
   #|ctmx242 comparetotmag  -8      9.0     ->  -1
@@ -148,6 +196,8 @@ let comparetotmag_subset : String =
   #|ctmx248 comparetotmag  -8.0    90E-1   ->  -1
   #|ctmx249 comparetotmag  -8      0.9E+1  ->  -1
   #|ctmx250 comparetotmag  -8      90E-1   ->  -1
+  #|
+  #|-- and again, with sign changes +- ..
   #|ctmx300 comparetotmag   7.0    -7.0     ->   0
   #|ctmx301 comparetotmag   7.0    -7       ->  -1
   #|ctmx302 comparetotmag   7      -7.0     ->   1
@@ -159,6 +209,7 @@ let comparetotmag_subset : String =
   #|ctmx308 comparetotmag   7.0    -70E-1   ->   0
   #|ctmx309 comparetotmag   7      -.7E+1   ->   0
   #|ctmx310 comparetotmag   7      -70E-1   ->   1
+  #|
   #|ctmx320 comparetotmag   8.0    -7.0     ->   1
   #|ctmx321 comparetotmag   8.0    -7       ->   1
   #|ctmx322 comparetotmag   8      -7.0     ->   1
@@ -170,6 +221,7 @@ let comparetotmag_subset : String =
   #|ctmx328 comparetotmag   8.0    -70E-1   ->   1
   #|ctmx329 comparetotmag   8      -.7E+1   ->   1
   #|ctmx330 comparetotmag   8      -70E-1   ->   1
+  #|
   #|ctmx340 comparetotmag   8.0    -9.0     ->  -1
   #|ctmx341 comparetotmag   8.0    -9       ->  -1
   #|ctmx342 comparetotmag   8      -9.0     ->  -1
@@ -181,6 +233,8 @@ let comparetotmag_subset : String =
   #|ctmx348 comparetotmag   8.0    -90E-1   ->  -1
   #|ctmx349 comparetotmag   8      -.9E+1   ->  -1
   #|ctmx350 comparetotmag   8      -90E-1   ->  -1
+  #|
+  #|-- and again, with sign changes -- ..
   #|ctmx400 comparetotmag   -7.0    -7.0     ->   0
   #|ctmx401 comparetotmag   -7.0    -7       ->  -1
   #|ctmx402 comparetotmag   -7      -7.0     ->   1
@@ -192,6 +246,7 @@ let comparetotmag_subset : String =
   #|ctmx408 comparetotmag   -7.0    -70E-1   ->   0
   #|ctmx409 comparetotmag   -7      -.7E+1   ->   0
   #|ctmx410 comparetotmag   -7      -70E-1   ->   1
+  #|
   #|ctmx420 comparetotmag   -8.0    -7.0     ->   1
   #|ctmx421 comparetotmag   -8.0    -7       ->   1
   #|ctmx422 comparetotmag   -8      -7.0     ->   1
@@ -203,6 +258,7 @@ let comparetotmag_subset : String =
   #|ctmx428 comparetotmag   -8.0    -70E-1   ->   1
   #|ctmx429 comparetotmag   -8      -.7E+1   ->   1
   #|ctmx430 comparetotmag   -8      -70E-1   ->   1
+  #|
   #|ctmx440 comparetotmag   -8.0    -9.0     ->  -1
   #|ctmx441 comparetotmag   -8.0    -9       ->  -1
   #|ctmx442 comparetotmag   -8      -9.0     ->  -1
@@ -214,6 +270,10 @@ let comparetotmag_subset : String =
   #|ctmx448 comparetotmag   -8.0    -90E-1   ->  -1
   #|ctmx449 comparetotmag   -8      -.9E+1   ->  -1
   #|ctmx450 comparetotmag   -8      -90E-1   ->  -1
+  #|
+  #|
+  #|-- testcases that subtract to lots of zeros at boundaries [pgr]
+  #|precision: 40
   #|ctmx470 comparetotmag 123.4560000000000000E789 123.456E789  ->  -1
   #|ctmx471 comparetotmag 123.456000000000000E-89 123.456E-89  ->  -1
   #|ctmx472 comparetotmag 123.45600000000000E789 123.456E789  ->  -1
@@ -242,6 +302,9 @@ let comparetotmag_subset : String =
   #|ctmx495 comparetotmag 123.456E789 123.45600E789  ->   1
   #|ctmx496 comparetotmag 123.456E-89 123.4560E-89  ->   1
   #|ctmx497 comparetotmag 123.456E789 123.456E789  ->   0
+  #|
+  #|-- wide-ranging, around precision; signs equal
+  #|precision: 9
   #|ctmx500 comparetotmag    1     1E-15     ->   1
   #|ctmx501 comparetotmag    1     1E-14     ->   1
   #|ctmx502 comparetotmag    1     1E-13     ->   1
@@ -273,6 +336,7 @@ let comparetotmag_subset : String =
   #|ctmx529 comparetotmag    1     1E+13     ->  -1
   #|ctmx530 comparetotmag    1     1E+14     ->  -1
   #|ctmx531 comparetotmag    1     1E+15     ->  -1
+  #|-- LR swap
   #|ctmx540 comparetotmag    1E-15  1        ->  -1
   #|ctmx541 comparetotmag    1E-14  1        ->  -1
   #|ctmx542 comparetotmag    1E-13  1        ->  -1
@@ -304,6 +368,7 @@ let comparetotmag_subset : String =
   #|ctmx569 comparetotmag    1E+13  1        ->   1
   #|ctmx570 comparetotmag    1E+14  1        ->   1
   #|ctmx571 comparetotmag    1E+15  1        ->   1
+  #|-- similar with an useful coefficient, one side only
   #|ctmx580 comparetotmag  0.000000987654321     1E-15     ->   1
   #|ctmx581 comparetotmag  0.000000987654321     1E-14     ->   1
   #|ctmx582 comparetotmag  0.000000987654321     1E-13     ->   1
@@ -324,6 +389,9 @@ let comparetotmag_subset : String =
   #|ctmx597 comparetotmag  0.000000987654321     1E+2      ->  -1
   #|ctmx598 comparetotmag  0.000000987654321     1E+3      ->  -1
   #|ctmx599 comparetotmag  0.000000987654321     1E+4      ->  -1
+  #|
+  #|-- check some unit-y traps
+  #|precision: 20
   #|ctmx600 comparetotmag   12            12.2345  ->  -1
   #|ctmx601 comparetotmag   12.0          12.2345  ->  -1
   #|ctmx602 comparetotmag   12.00         12.2345  ->  -1
@@ -364,6 +432,9 @@ let comparetotmag_subset : String =
   #|ctmx637 comparetotmag  -12.1234 -12.0000000    ->   1
   #|ctmx638 comparetotmag  -12.1234 -12.00000000   ->   1
   #|ctmx639 comparetotmag  -12.1234 -12.000000000  ->   1
+  #|precision: 9
+  #|
+  #|-- extended zeros
   #|ctmx640 comparetotmag   0     0    ->   0
   #|ctmx641 comparetotmag   0    -0    ->   0
   #|ctmx642 comparetotmag   0    -0.0  ->   1
@@ -380,6 +451,7 @@ let comparetotmag_subset : String =
   #|ctmx653 comparetotmag  -0.0  -0    ->  -1
   #|ctmx654 comparetotmag  -0.0  -0.0  ->   0
   #|ctmx655 comparetotmag  -0.0   0.0  ->   0
+  #|
   #|ctmx656 comparetotmag  -0E1   0.0  ->   1
   #|ctmx657 comparetotmag  -0E2   0.0  ->   1
   #|ctmx658 comparetotmag   0E1   0.0  ->   1
@@ -404,6 +476,9 @@ let comparetotmag_subset : String =
   #|ctmx677 comparetotmag  -0E2   0E2  ->   0
   #|ctmx678 comparetotmag   0E1   0E2  ->  -1
   #|ctmx679 comparetotmag   0E2   0E2  ->   0
+  #|
+  #|-- trailing zeros; unit-y
+  #|precision: 20
   #|ctmx680 comparetotmag   12    12            ->   0
   #|ctmx681 comparetotmag   12    12.0          ->   1
   #|ctmx682 comparetotmag   12    12.00         ->   1
@@ -424,6 +499,11 @@ let comparetotmag_subset : String =
   #|ctmx697 comparetotmag   12.0000000      12  ->  -1
   #|ctmx698 comparetotmag   12.00000000     12  ->  -1
   #|ctmx699 comparetotmag   12.000000000    12  ->  -1
+  #|
+  #|-- long operand checks
+  #|maxexponent: 999
+  #|minexponent: -999
+  #|precision: 9
   #|ctmx701 comparetotmag 12345678000  1  ->   1
   #|ctmx702 comparetotmag 1 12345678000   ->  -1
   #|ctmx703 comparetotmag 1234567800   1  ->   1
@@ -442,6 +522,9 @@ let comparetotmag_subset : String =
   #|ctmx716 comparetotmag 1 -12345678901  ->  -1
   #|ctmx717 comparetotmag -1234567896  1  ->   1
   #|ctmx718 comparetotmag 1 -1234567896   ->  -1
+  #|
+  #|precision: 15
+  #|-- same with plenty of precision
   #|ctmx721 comparetotmag 12345678000 1  ->   1
   #|ctmx722 comparetotmag 1 12345678000  ->  -1
   #|ctmx723 comparetotmag 1234567800  1  ->   1
@@ -454,9 +537,55 @@ let comparetotmag_subset : String =
   #|ctmx730 comparetotmag 1 12345678901  ->  -1
   #|ctmx731 comparetotmag 1234567896  1  ->   1
   #|ctmx732 comparetotmag 1 1234567896   ->  -1
+  #|
+  #|-- residue cases
+  #|precision: 5
+  #|ctmx740 comparetotmag  1  0.9999999   ->   1
+  #|ctmx741 comparetotmag  1  0.999999    ->   1
+  #|ctmx742 comparetotmag  1  0.99999     ->   1
+  #|ctmx743 comparetotmag  1  1.0000      ->   1
+  #|ctmx744 comparetotmag  1  1.00001     ->  -1
+  #|ctmx745 comparetotmag  1  1.000001    ->  -1
+  #|ctmx746 comparetotmag  1  1.0000001   ->  -1
+  #|ctmx750 comparetotmag  0.9999999  1   ->  -1
+  #|ctmx751 comparetotmag  0.999999   1   ->  -1
+  #|ctmx752 comparetotmag  0.99999    1   ->  -1
+  #|ctmx753 comparetotmag  1.0000     1   ->  -1
+  #|ctmx754 comparetotmag  1.00001    1   ->   1
+  #|ctmx755 comparetotmag  1.000001   1   ->   1
+  #|ctmx756 comparetotmag  1.0000001  1   ->   1
+  #|
+  #|-- a selection of longies
+  #|ctmx760 comparetotmag -36852134.84194296250843579428931 -5830629.8347085025808756560357940  ->   1
+  #|ctmx761 comparetotmag -36852134.84194296250843579428931 -36852134.84194296250843579428931   ->   0
+  #|ctmx762 comparetotmag -36852134.94194296250843579428931 -36852134.84194296250843579428931   ->   1
+  #|ctmx763 comparetotmag -36852134.84194296250843579428931 -36852134.94194296250843579428931   ->  -1
+  #|-- precisions above or below the difference should have no effect
+  #|precision:   11
   #|ctmx764 comparetotmag -36852134.84194296250843579428931 -36852134.94194296250843579428931   ->  -1
+  #|precision:   10
   #|ctmx765 comparetotmag -36852134.84194296250843579428931 -36852134.94194296250843579428931   ->  -1
+  #|precision:    9
   #|ctmx766 comparetotmag -36852134.84194296250843579428931 -36852134.94194296250843579428931   ->  -1
+  #|precision:    8
+  #|ctmx767 comparetotmag -36852134.84194296250843579428931 -36852134.94194296250843579428931   ->  -1
+  #|precision:    7
+  #|ctmx768 comparetotmag -36852134.84194296250843579428931 -36852134.94194296250843579428931   ->  -1
+  #|precision:    6
+  #|ctmx769 comparetotmag -36852134.84194296250843579428931 -36852134.94194296250843579428931   ->  -1
+  #|precision:    5
+  #|ctmx770 comparetotmag -36852134.84194296250843579428931 -36852134.94194296250843579428931   ->  -1
+  #|precision:    4
+  #|ctmx771 comparetotmag -36852134.84194296250843579428931 -36852134.94194296250843579428931   ->  -1
+  #|precision:    3
+  #|ctmx772 comparetotmag -36852134.84194296250843579428931 -36852134.94194296250843579428931   ->  -1
+  #|precision:    2
+  #|ctmx773 comparetotmag -36852134.84194296250843579428931 -36852134.94194296250843579428931   ->  -1
+  #|precision:    1
+  #|ctmx774 comparetotmag -36852134.84194296250843579428931 -36852134.94194296250843579428931   ->  -1
+  #|
+  #|-- Specials
+  #|precision:   9
   #|ctmx780 comparetotmag  Inf  -Inf   ->  0
   #|ctmx781 comparetotmag  Inf  -1000  ->  1
   #|ctmx782 comparetotmag  Inf  -1     ->  1
@@ -473,6 +602,7 @@ let comparetotmag_subset : String =
   #|ctmx793 comparetotmag  1     Inf   -> -1
   #|ctmx794 comparetotmag  1000  Inf   -> -1
   #|ctmx795 comparetotmag  Inf   Inf   ->  0
+  #|
   #|ctmx800 comparetotmag -Inf  -Inf   ->  0
   #|ctmx801 comparetotmag -Inf  -1000  ->  1
   #|ctmx802 comparetotmag -Inf  -1     ->  1
@@ -489,6 +619,7 @@ let comparetotmag_subset : String =
   #|ctmx813 comparetotmag  1    -Inf   -> -1
   #|ctmx814 comparetotmag  1000 -Inf   -> -1
   #|ctmx815 comparetotmag  Inf  -Inf   ->  0
+  #|
   #|ctmx821 comparetotmag  NaN -Inf    ->  1
   #|ctmx822 comparetotmag  NaN -1000   ->  1
   #|ctmx823 comparetotmag  NaN -1      ->  1
@@ -509,6 +640,7 @@ let comparetotmag_subset : String =
   #|ctmx838 comparetotmag -NaN -NaN    ->  0
   #|ctmx839 comparetotmag +NaN -NaN    ->  0
   #|ctmx840 comparetotmag -NaN +NaN    ->  0
+  #|
   #|ctmx841 comparetotmag  sNaN -sNaN  ->  0
   #|ctmx842 comparetotmag  sNaN -NaN   ->  -1
   #|ctmx843 comparetotmag  sNaN -Inf   ->  1
@@ -520,6 +652,7 @@ let comparetotmag_subset : String =
   #|ctmx849 comparetotmag  sNaN  1000  ->  1
   #|ctmx850 comparetotmag  sNaN  NaN   ->  -1
   #|ctmx851 comparetotmag  sNaN sNaN   ->  0
+  #|
   #|ctmx852 comparetotmag -sNaN sNaN   ->  0
   #|ctmx853 comparetotmag -NaN  sNaN   ->  1
   #|ctmx854 comparetotmag -Inf  sNaN   ->  -1
@@ -532,6 +665,7 @@ let comparetotmag_subset : String =
   #|ctmx861 comparetotmag  Inf  sNaN   ->  -1
   #|ctmx862 comparetotmag  NaN  sNaN   ->  1
   #|ctmx863 comparetotmag  sNaN sNaN   ->  0
+  #|
   #|ctmx871 comparetotmag  -sNaN -sNaN  ->  0
   #|ctmx872 comparetotmag  -sNaN -NaN   ->  -1
   #|ctmx873 comparetotmag  -sNaN -Inf   ->  1
@@ -543,6 +677,7 @@ let comparetotmag_subset : String =
   #|ctmx879 comparetotmag  -sNaN  1000  ->  1
   #|ctmx880 comparetotmag  -sNaN  NaN   ->  -1
   #|ctmx881 comparetotmag  -sNaN sNaN   ->  0
+  #|
   #|ctmx882 comparetotmag -sNaN -sNaN   ->  0
   #|ctmx883 comparetotmag -NaN  -sNaN   ->  1
   #|ctmx884 comparetotmag -Inf  -sNaN   ->  -1
@@ -555,6 +690,8 @@ let comparetotmag_subset : String =
   #|ctmx891 comparetotmag  Inf  -sNaN   ->  -1
   #|ctmx892 comparetotmag  NaN  -sNaN   ->  1
   #|ctmx893 comparetotmag  sNaN -sNaN   ->  0
+  #|
+  #|-- NaNs with payload
   #|ctmx960 comparetotmag  NaN9 -Inf   ->  1
   #|ctmx961 comparetotmag  NaN8  999   ->  1
   #|ctmx962 comparetotmag  NaN77 Inf   ->  1
@@ -562,6 +699,7 @@ let comparetotmag_subset : String =
   #|ctmx964 comparetotmag -Inf  -NaN4  ->  -1
   #|ctmx965 comparetotmag -999  -NaN33 ->  -1
   #|ctmx966 comparetotmag  Inf   NaN2  ->  -1
+  #|
   #|ctmx970 comparetotmag -NaN41 -NaN42 -> -1
   #|ctmx971 comparetotmag +NaN41 -NaN42 -> -1
   #|ctmx972 comparetotmag -NaN41 +NaN42 -> -1
@@ -570,6 +708,7 @@ let comparetotmag_subset : String =
   #|ctmx975 comparetotmag +NaN42 -NaN01 ->  1
   #|ctmx976 comparetotmag -NaN42 +NaN01 ->  1
   #|ctmx977 comparetotmag +NaN42 +NaN01 ->  1
+  #|
   #|ctmx980 comparetotmag -sNaN771 -sNaN772 -> -1
   #|ctmx981 comparetotmag +sNaN771 -sNaN772 -> -1
   #|ctmx982 comparetotmag -sNaN771 +sNaN772 -> -1
@@ -578,6 +717,7 @@ let comparetotmag_subset : String =
   #|ctmx985 comparetotmag +sNaN772 -sNaN771 ->  1
   #|ctmx986 comparetotmag -sNaN772 +sNaN771 ->  1
   #|ctmx987 comparetotmag +sNaN772 +sNaN771 ->  1
+  #|
   #|ctmx991 comparetotmag -sNaN99 -Inf    ->  1
   #|ctmx992 comparetotmag  sNaN98 -11     ->  1
   #|ctmx993 comparetotmag  sNaN97  NaN    -> -1
@@ -587,6 +727,10 @@ let comparetotmag_subset : String =
   #|ctmx997 comparetotmag  088    sNaN81  -> -1
   #|ctmx998 comparetotmag  Inf    sNaN90  -> -1
   #|ctmx999 comparetotmag  NaN   -sNaN89  ->  1
+  #|
+  #|-- overflow and underflow tests .. subnormal results now allowed
+  #|maxExponent: 999999999
+  #|minexponent: -999999999
   #|ctmx1080 comparetotmag +1.23456789012345E-0 9E+999999999  ->  -1
   #|ctmx1081 comparetotmag 9E+999999999 +1.23456789012345E-0  ->   1
   #|ctmx1082 comparetotmag +0.100 9E-999999999                ->   1
@@ -595,6 +739,7 @@ let comparetotmag_subset : String =
   #|ctmx1086 comparetotmag 9E+999999999 -1.23456789012345E-0  ->   1
   #|ctmx1087 comparetotmag -0.100 9E-999999999                ->   1
   #|ctmx1088 comparetotmag 9E-999999999 -0.100                ->  -1
+  #|
   #|ctmx1089 comparetotmag 1e-599999999 1e-400000001    ->  -1
   #|ctmx1090 comparetotmag 1e-599999999 1e-400000000    ->  -1
   #|ctmx1091 comparetotmag 1e-600000000 1e-400000000    ->  -1
@@ -607,6 +752,7 @@ let comparetotmag_subset : String =
   #|ctmx1098 comparetotmag 9e999999998 100              ->   1
   #|ctmx1099 comparetotmag 9e999999998 10               ->   1
   #|ctmx1100 comparetotmag 100  9e999999998             ->  -1
+  #|-- signs
   #|ctmx1101 comparetotmag  1e+777777777  1e+411111111  ->   1
   #|ctmx1102 comparetotmag  1e+777777777 -1e+411111111  ->   1
   #|ctmx1103 comparetotmag -1e+777777777  1e+411111111  ->   1
@@ -615,6 +761,8 @@ let comparetotmag_subset : String =
   #|ctmx1106 comparetotmag  1e-777777777 -1e-411111111  ->  -1
   #|ctmx1107 comparetotmag -1e-777777777  1e-411111111  ->  -1
   #|ctmx1108 comparetotmag -1e-777777777 -1e-411111111  ->  -1
+  #|
+  #|-- spread zeros
   #|ctmx1110 comparetotmag   0E-383  0        ->  -1
   #|ctmx1111 comparetotmag   0E-383 -0        ->  -1
   #|ctmx1112 comparetotmag  -0E-383  0        ->  -1
@@ -627,6 +775,7 @@ let comparetotmag_subset : String =
   #|ctmx1119 comparetotmag   0      -0E+384   ->  -1
   #|ctmx1120 comparetotmag  -0       0E+384   ->  -1
   #|ctmx1121 comparetotmag  -0      -0E+384   ->  -1
+  #|
   #|ctmx1130 comparetotmag   0E+384  0        ->   1
   #|ctmx1131 comparetotmag   0E+384 -0        ->   1
   #|ctmx1132 comparetotmag  -0E+384  0        ->   1
@@ -639,12 +788,18 @@ let comparetotmag_subset : String =
   #|ctmx1139 comparetotmag   0      -0E-383   ->   1
   #|ctmx1140 comparetotmag  -0       0E-383   ->   1
   #|ctmx1141 comparetotmag  -0      -0E-383   ->   1
+  #|
+  #|-- Null tests
+  #|ctmx9990 comparetotmag 10  # -> NaN Invalid_operation
+  #|ctmx9991 comparetotmag  # 10 -> NaN Invalid_operation
 
 ///|
 test "comparetotmag.decTest subset round-trips through parse + comparetotmag + toSci" {
   let cases = parse_dectest(comparetotmag_subset)
-  assert_eq(cases.length(), 636)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, skipped) = run_cases_with_flags(cases)
+  if skipped > 0 {
+    println("\{skipped} cases skipped (format-encoding / reference-specific)")
+  }
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 20 { failures.length() } else { 20 }

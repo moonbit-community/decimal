@@ -1,16 +1,34 @@
 ///|
-/// `divideint` cases from `divideint.decTest`, restricted to precision >= 9
-/// sections. `precision:` and `rounding:` directive lines are kept
-/// alongside the test lines so the runner can build the matching
-/// Context for each test. Skipped: Subnormal / Underflow / Overflow /
-/// Clamped (need e_min/e_max enforcement), Conversion_syntax (parse
-/// errors surface as ParseError), Division_impossible (precision-
-/// bounded quotient check not yet implemented).
+/// Full `divideint.decTest` corpus (IBM General Decimal
+/// Arithmetic testcases), embedded verbatim.
 let divideint_subset : String =
+  #|------------------------------------------------------------------------
+  #|-- divideint.decTest -- decimal integer division                      --
+  #|-- Copyright (c) IBM Corporation, 1981, 2008.  All rights reserved.   --
+  #|------------------------------------------------------------------------
+  #|-- Please see the document "General Decimal Arithmetic Testcases"     --
+  #|-- at http://www2.hursley.ibm.com/decimal for the description of      --
+  #|-- these testcases.                                                   --
+  #|--                                                                    --
+  #|-- These testcases are experimental ('beta' versions), and they       --
+  #|-- may contain errors.  They are offered on an as-is basis.  In       --
+  #|-- particular, achieving the same results as the tests here is not    --
+  #|-- a guarantee that an implementation complies with any Standard      --
+  #|-- or specification.  The tests are not exhaustive.                   --
+  #|--                                                                    --
+  #|-- Please send comments, suggestions, and corrections to the author:  --
+  #|--   Mike Cowlishaw, IBM Fellow                                       --
+  #|--   IBM UK, PO Box 31, Birmingham Road, Warwick CV34 5JL, UK         --
+  #|--   mfc@uk.ibm.com                                                   --
+  #|------------------------------------------------------------------------
+  #|version: 2.59
+  #|
+  #|extended:    1
   #|precision:   9
   #|rounding:    half_up
   #|maxExponent: 384
   #|minexponent: -383
+  #|
   #|dvix001 divideint  1     1    ->  1
   #|dvix002 divideint  2     1    ->  2
   #|dvix003 divideint  1     2    ->  0
@@ -20,6 +38,7 @@ let divideint_subset : String =
   #|dvix007 divideint  1     3    ->  0
   #|dvix008 divideint  2     3    ->  0
   #|dvix009 divideint  3     3    ->  1
+  #|
   #|dvix010 divideint  2.4   1    ->  2
   #|dvix011 divideint  2.4   -1   ->  -2
   #|dvix012 divideint  -2.4  1    ->  -2
@@ -30,12 +49,14 @@ let divideint_subset : String =
   #|dvix017 divideint  2.400 2    ->  1
   #|dvix018 divideint  2.    2    ->  1
   #|dvix019 divideint  20    20   ->  1
+  #|
   #|dvix020 divideint  187   187  ->  1
   #|dvix021 divideint  5     2    ->  2
   #|dvix022 divideint  5     2.0    ->  2
   #|dvix023 divideint  5     2.000  ->  2
   #|dvix024 divideint  5     0.200  ->  25
   #|dvix025 divideint  5     0.200  ->  25
+  #|
   #|dvix030 divideint  1     2      ->  0
   #|dvix031 divideint  1     4      ->  0
   #|dvix032 divideint  1     8      ->  0
@@ -60,6 +81,8 @@ let divideint_subset : String =
   #|dvix063 divideint -1    -16     ->  0
   #|dvix064 divideint -1    -32     ->  0
   #|dvix065 divideint -1    -64     ->  0
+  #|
+  #|-- similar with powers of ten
   #|dvix160 divideint  1     1         ->  1
   #|dvix161 divideint  1     10        ->  0
   #|dvix162 divideint  1     100       ->  0
@@ -96,6 +119,8 @@ let divideint_subset : String =
   #|dvix196 divideint -1    -1000000   ->  0
   #|dvix197 divideint -1    -10000000  ->  0
   #|dvix198 divideint -1    -100000000 ->  0
+  #|
+  #|-- some long operand cases here
   #|dvix070 divideint  999999999     1  ->  999999999
   #|dvix071 divideint  999999999.4   1  ->  999999999
   #|dvix072 divideint  999999999.5   1  ->  999999999
@@ -111,12 +136,14 @@ let divideint_subset : String =
   #|dvix086 divideint  999           1  ->  999
   #|dvix087 divideint  99            1  ->  99
   #|dvix088 divideint  9             1  ->  9
+  #|
   #|precision: 9
   #|dvix090 divideint  0.            1    ->  0
   #|dvix091 divideint  .0            1    ->  0
   #|dvix092 divideint  0.00          1    ->  0
   #|dvix093 divideint  0.00E+9       1    ->  0
   #|dvix094 divideint  0.0000E-50    1    ->  0
+  #|
   #|dvix100 divideint  1  1   -> 1
   #|dvix101 divideint  1  2   -> 0
   #|dvix102 divideint  1  3   -> 0
@@ -137,6 +164,8 @@ let divideint_subset : String =
   #|dvix117 divideint  8  1   -> 8
   #|dvix118 divideint  9  1   -> 9
   #|dvix119 divideint  10 1   -> 10
+  #|
+  #|-- from DiagBigDecimal
   #|dvix131 divideint  101.3   1     ->  101
   #|dvix132 divideint  101.0   1     ->  101
   #|dvix133 divideint  101.3   3     ->  33
@@ -152,6 +181,8 @@ let divideint_subset : String =
   #|dvix143 divideint  5       2     ->  2
   #|dvix144 divideint  0       2     ->  0
   #|dvix145 divideint  0.00    2     ->  0
+  #|
+  #|-- Others
   #|dvix150 divideint  12345  4.999  ->  2469
   #|dvix151 divideint  12345  4.99   ->  2473
   #|dvix152 divideint  12345  4.9    ->  2519
@@ -160,6 +191,8 @@ let divideint_subset : String =
   #|dvix155 divideint  12345  5.01   ->  2464
   #|dvix156 divideint  12345  5.001  ->  2468
   #|dvix157 divideint    101  7.6    ->  13
+  #|
+  #|-- Various flavours of divideint by 0
   #|maxexponent: 999999999
   #|minexponent: -999999999
   #|dvix201 divideint  0      0   -> NaN Division_undefined
@@ -181,6 +214,8 @@ let divideint_subset : String =
   #|dvix219 divideint -10      0.0 -> -Infinity Division_by_zero
   #|dvix220 divideint -1E+100  0.0 -> -Infinity Division_by_zero
   #|dvix221 divideint -1E+1000 0   -> -Infinity Division_by_zero
+  #|
+  #|-- test some cases that are close to exponent overflow
   #|maxexponent: 999999999
   #|minexponent: -999999999
   #|dvix270 divideint 1 1e999999999    -> 0
@@ -191,15 +226,19 @@ let divideint_subset : String =
   #|dvix275 divideint 9.9e999999999  1       -> NaN Division_impossible
   #|dvix276 divideint 9.99e999999999 1       -> NaN Division_impossible
   #|dvix277 divideint 9.99999999e999999999 1 -> NaN Division_impossible
+  #|
   #|dvix280 divideint 0.1 9e-999999999       -> NaN Division_impossible
   #|dvix281 divideint 0.1 99e-999999999      -> NaN Division_impossible
   #|dvix282 divideint 0.1 999e-999999999     -> NaN Division_impossible
+  #|
   #|dvix283 divideint 0.1 9e-999999998       -> NaN Division_impossible
   #|dvix284 divideint 0.1 99e-999999998      -> NaN Division_impossible
   #|dvix285 divideint 0.1 999e-999999998     -> NaN Division_impossible
   #|dvix286 divideint 0.1 999e-999999997     -> NaN Division_impossible
   #|dvix287 divideint 0.1 9999e-999999997    -> NaN Division_impossible
   #|dvix288 divideint 0.1 99999e-999999997   -> NaN Division_impossible
+  #|
+  #|-- GD edge cases: lhs smaller than rhs but more digits
   #|dvix301  divideint  0.9      2      ->  0
   #|dvix302  divideint  0.9      2.0    ->  0
   #|dvix303  divideint  0.9      2.1    ->  0
@@ -215,6 +254,8 @@ let divideint_subset : String =
   #|dvix313  divideint  0.12     2.1    ->  0
   #|dvix314  divideint  0.12     2.00   ->  0
   #|dvix315  divideint  0.12     2.01   ->  0
+  #|
+  #|-- overflow and underflow tests [from divide]
   #|maxexponent: 999999999
   #|minexponent: -999999999
   #|dvix330 divideint +1.23456789012345E-0 9E+999999999    -> 0
@@ -225,6 +266,8 @@ let divideint_subset : String =
   #|dvix336 divideint 9E+999999999 -0.83456789012345E-0 -> NaN Division_impossible
   #|dvix337 divideint -0.100 9E+999999999    -> -0
   #|dvix338 divideint 9E-999999999 -9.100    -> -0
+  #|
+  #|-- long operand checks
   #|maxexponent: 999
   #|minexponent: -999
   #|precision: 9
@@ -245,6 +288,7 @@ let divideint_subset : String =
   #|dvix415 divideint 12345678950 100 -> 123456789
   #|dvix416 divideint 12345678951 100 -> 123456789
   #|dvix417 divideint 12345678999 100 -> 123456789
+  #|
   #|precision: 15
   #|dvix441 divideint 12345678000 1 -> 12345678000
   #|dvix442 divideint 1 12345678000 -> 0
@@ -258,16 +302,20 @@ let divideint_subset : String =
   #|dvix450 divideint 1 12345678901 -> 0
   #|dvix451 divideint 1234567896  1 -> 1234567896
   #|dvix452 divideint 1 1234567896  -> 0
+  #|
   #|precision:   9
   #|rounding:    half_up
   #|maxExponent: 999
   #|minexponent: -999
+  #|
+  #|-- more zeros, etc.
   #|dvix531 divideint 5.00 1E-3    -> 5000
   #|dvix532 divideint 00.00 0.000  -> NaN Division_undefined
   #|dvix533 divideint 00.00 0E-3   -> NaN Division_undefined
   #|dvix534 divideint  0    -0     -> NaN Division_undefined
   #|dvix535 divideint -0     0     -> NaN Division_undefined
   #|dvix536 divideint -0    -0     -> NaN Division_undefined
+  #|
   #|dvix541 divideint  0    -1     -> -0
   #|dvix542 divideint -0    -1     ->  0
   #|dvix543 divideint  0     1     ->  0
@@ -276,6 +324,7 @@ let divideint_subset : String =
   #|dvix546 divideint -1    -0     ->  Infinity Division_by_zero
   #|dvix547 divideint  1     0     ->  Infinity Division_by_zero
   #|dvix548 divideint  1    -0     -> -Infinity Division_by_zero
+  #|
   #|dvix551 divideint  0.0  -1     -> -0
   #|dvix552 divideint -0.0  -1     ->  0
   #|dvix553 divideint  0.0   1     ->  0
@@ -284,6 +333,7 @@ let divideint_subset : String =
   #|dvix556 divideint -1.0  -0     ->  Infinity Division_by_zero
   #|dvix557 divideint  1.0   0     ->  Infinity Division_by_zero
   #|dvix558 divideint  1.0  -0     -> -Infinity Division_by_zero
+  #|
   #|dvix561 divideint  0    -1.0   -> -0
   #|dvix562 divideint -0    -1.0   ->  0
   #|dvix563 divideint  0     1.0   ->  0
@@ -292,6 +342,7 @@ let divideint_subset : String =
   #|dvix566 divideint -1    -0.0   ->  Infinity Division_by_zero
   #|dvix567 divideint  1     0.0   ->  Infinity Division_by_zero
   #|dvix568 divideint  1    -0.0   -> -Infinity Division_by_zero
+  #|
   #|dvix571 divideint  0.0  -1.0   -> -0
   #|dvix572 divideint -0.0  -1.0   ->  0
   #|dvix573 divideint  0.0   1.0   ->  0
@@ -300,6 +351,8 @@ let divideint_subset : String =
   #|dvix576 divideint -1.0  -0.0   ->  Infinity Division_by_zero
   #|dvix577 divideint  1.0   0.0   ->  Infinity Division_by_zero
   #|dvix578 divideint  1.0  -0.0   -> -Infinity Division_by_zero
+  #|
+  #|-- Specials
   #|dvix580 divideint  Inf  -Inf   ->  NaN Invalid_operation
   #|dvix581 divideint  Inf  -1000  -> -Infinity
   #|dvix582 divideint  Inf  -1     -> -Infinity
@@ -316,6 +369,7 @@ let divideint_subset : String =
   #|dvix593 divideint  1     Inf   ->  0
   #|dvix594 divideint  1000  Inf   ->  0
   #|dvix595 divideint  Inf   Inf   ->  NaN Invalid_operation
+  #|
   #|dvix600 divideint -Inf  -Inf   ->  NaN Invalid_operation
   #|dvix601 divideint -Inf  -1000  ->  Infinity
   #|dvix602 divideint -Inf  -1     ->  Infinity
@@ -332,6 +386,7 @@ let divideint_subset : String =
   #|dvix613 divideint  1    -Inf   -> -0
   #|dvix614 divideint  1000 -Inf   -> -0
   #|dvix615 divideint  Inf  -Inf   ->  NaN Invalid_operation
+  #|
   #|dvix621 divideint  NaN -Inf    ->  NaN
   #|dvix622 divideint  NaN -1000   ->  NaN
   #|dvix623 divideint  NaN -1      ->  NaN
@@ -349,6 +404,28 @@ let divideint_subset : String =
   #|dvix635 divideint  1    NaN    ->  NaN
   #|dvix636 divideint  1000 NaN    ->  NaN
   #|dvix637 divideint  Inf  NaN    ->  NaN
+  #|
+  #|dvix641 divideint  sNaN -Inf   ->  NaN  Invalid_operation
+  #|dvix642 divideint  sNaN -1000  ->  NaN  Invalid_operation
+  #|dvix643 divideint  sNaN -1     ->  NaN  Invalid_operation
+  #|dvix644 divideint  sNaN -0     ->  NaN  Invalid_operation
+  #|dvix645 divideint  sNaN  0     ->  NaN  Invalid_operation
+  #|dvix646 divideint  sNaN  1     ->  NaN  Invalid_operation
+  #|dvix647 divideint  sNaN  1000  ->  NaN  Invalid_operation
+  #|dvix648 divideint  sNaN  NaN   ->  NaN  Invalid_operation
+  #|dvix649 divideint  sNaN sNaN   ->  NaN  Invalid_operation
+  #|dvix650 divideint  NaN  sNaN   ->  NaN  Invalid_operation
+  #|dvix651 divideint -Inf  sNaN   ->  NaN  Invalid_operation
+  #|dvix652 divideint -1000 sNaN   ->  NaN  Invalid_operation
+  #|dvix653 divideint -1    sNaN   ->  NaN  Invalid_operation
+  #|dvix654 divideint -0    sNaN   ->  NaN  Invalid_operation
+  #|dvix655 divideint  0    sNaN   ->  NaN  Invalid_operation
+  #|dvix656 divideint  1    sNaN   ->  NaN  Invalid_operation
+  #|dvix657 divideint  1000 sNaN   ->  NaN  Invalid_operation
+  #|dvix658 divideint  Inf  sNaN   ->  NaN  Invalid_operation
+  #|dvix659 divideint  NaN  sNaN   ->  NaN  Invalid_operation
+  #|
+  #|-- propagating NaNs
   #|dvix661 divideint  NaN9 -Inf   ->  NaN9
   #|dvix662 divideint  NaN8  1000  ->  NaN8
   #|dvix663 divideint  NaN7  Inf   ->  NaN7
@@ -356,6 +433,18 @@ let divideint_subset : String =
   #|dvix665 divideint -Inf   NaN4  ->  NaN4
   #|dvix666 divideint -1000  NaN3  ->  NaN3
   #|dvix667 divideint  Inf  -NaN2  -> -NaN2
+  #|
+  #|dvix671 divideint -sNaN99 -Inf    -> -NaN99 Invalid_operation
+  #|dvix672 divideint  sNaN98 -1      ->  NaN98 Invalid_operation
+  #|dvix673 divideint  sNaN97  NaN    ->  NaN97 Invalid_operation
+  #|dvix674 divideint  sNaN96 sNaN94  ->  NaN96 Invalid_operation
+  #|dvix675 divideint  NaN95  sNaN93  ->  NaN93 Invalid_operation
+  #|dvix676 divideint -Inf    sNaN92  ->  NaN92 Invalid_operation
+  #|dvix677 divideint  0      sNaN91  ->  NaN91 Invalid_operation
+  #|dvix678 divideint  Inf   -sNaN90  -> -NaN90 Invalid_operation
+  #|dvix679 divideint  NaN    sNaN89  ->  NaN89 Invalid_operation
+  #|
+  #|-- some long operand cases again
   #|precision: 8
   #|dvix710 divideint  100000001     1  ->  NaN Division_impossible
   #|dvix711 divideint  100000000.4   1  ->  NaN Division_impossible
@@ -373,6 +462,7 @@ let divideint_subset : String =
   #|dvix727 divideint  10            1  ->  10
   #|dvix728 divideint  1             1  ->  1
   #|dvix729 divideint  1            10  ->  0
+  #|
   #|precision: 9
   #|maxexponent: 999999999
   #|minexponent: -999999999
@@ -382,20 +472,30 @@ let divideint_subset : String =
   #|dvix735 divideint 9.9e999999999  1       -> NaN Division_impossible
   #|dvix736 divideint 9.99e999999999 1       -> NaN Division_impossible
   #|dvix737 divideint 9.99999999e999999999 1 -> NaN Division_impossible
+  #|
   #|dvix740 divideint 0.1 9e-999999999       -> NaN Division_impossible
   #|dvix741 divideint 0.1 99e-999999999      -> NaN Division_impossible
   #|dvix742 divideint 0.1 999e-999999999     -> NaN Division_impossible
+  #|
   #|dvix743 divideint 0.1 9e-999999998       -> NaN Division_impossible
   #|dvix744 divideint 0.1 99e-999999998      -> NaN Division_impossible
   #|dvix745 divideint 0.1 999e-999999998     -> NaN Division_impossible
   #|dvix746 divideint 0.1 999e-999999997     -> NaN Division_impossible
   #|dvix747 divideint 0.1 9999e-999999997    -> NaN Division_impossible
   #|dvix748 divideint 0.1 99999e-999999997   -> NaN Division_impossible
+  #|
+  #|
+  #|-- Null tests
+  #|dvix900 divideint  10  # -> NaN Invalid_operation
+  #|dvix901 divideint   # 10 -> NaN Invalid_operation
 
 ///|
 test "divideint.decTest subset round-trips through parse + divideint + toSci" {
   let cases = parse_dectest(divideint_subset)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, skipped) = run_cases_with_flags(cases)
+  if skipped > 0 {
+    println("\{skipped} cases skipped (format-encoding / reference-specific)")
+  }
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 20 { failures.length() } else { 20 }

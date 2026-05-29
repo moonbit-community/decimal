@@ -1,14 +1,37 @@
 ///|
-/// First 80 cases from `class.decTest`. The op returns a category label
-/// string (+Normal / +Subnormal / +Zero / -Zero / -Subnormal / -Normal /
-/// +Infinity / -Infinity / NaN / sNaN) rather than a Decimal value.
+/// Full `class.decTest` corpus (IBM General Decimal Arithmetic
+/// testcases), embedded verbatim.
 let class_subset : String =
+  #|------------------------------------------------------------------------
+  #|-- class.decTest -- Class operations                                  --
+  #|-- Copyright (c) IBM Corporation, 1981, 2008.  All rights reserved.   --
+  #|------------------------------------------------------------------------
+  #|-- Please see the document "General Decimal Arithmetic Testcases"     --
+  #|-- at http://www2.hursley.ibm.com/decimal for the description of      --
+  #|-- these testcases.                                                   --
+  #|--                                                                    --
+  #|-- These testcases are experimental ('beta' versions), and they       --
+  #|-- may contain errors.  They are offered on an as-is basis.  In       --
+  #|-- particular, achieving the same results as the tests here is not    --
+  #|-- a guarantee that an implementation complies with any Standard      --
+  #|-- or specification.  The tests are not exhaustive.                   --
+  #|--                                                                    --
+  #|-- Please send comments, suggestions, and corrections to the author:  --
+  #|--   Mike Cowlishaw, IBM Fellow                                       --
+  #|--   IBM UK, PO Box 31, Birmingham Road, Warwick CV34 5JL, UK         --
+  #|--   mfc@uk.ibm.com                                                   --
+  #|------------------------------------------------------------------------
+  #|version: 2.59
+  #|
+  #|-- [New 2006.11.27]
+  #|
   #|precision:   9
   #|maxExponent: 999
   #|minExponent: -999
   #|extended:    1
   #|clamp:       1
   #|rounding:    half_even
+  #|
   #|clasx001  class    0                        -> +Zero
   #|clasx002  class    0.00                     -> +Zero
   #|clasx003  class    0E+5                     -> +Zero
@@ -27,6 +50,7 @@ let class_subset : String =
   #|clasx017  class   1E+999                    -> +Normal
   #|clasx018  class   9.99999999E+999           -> +Normal
   #|clasx019  class   Inf                       -> +Infinity
+  #|
   #|clasx021  class   -0                        -> -Zero
   #|clasx022  class   -0.00                     -> -Zero
   #|clasx023  class   -0E+5                     -> -Zero
@@ -45,17 +69,23 @@ let class_subset : String =
   #|clasx037  class  -1E+999                    -> -Normal
   #|clasx038  class  -9.99999999E+999           -> -Normal
   #|clasx039  class  -Inf                       -> -Infinity
+  #|
   #|clasx041  class   NaN                       -> NaN
   #|clasx042  class  -NaN                       -> NaN
   #|clasx043  class  +NaN12345                  -> NaN
   #|clasx044  class   sNaN                      -> sNaN
   #|clasx045  class  -sNaN                      -> sNaN
   #|clasx046  class  +sNaN12345                 -> sNaN
+  #|
+  #|
+  #|-- decimal64 bounds
+  #|
   #|precision:   16
   #|maxExponent: 384
   #|minExponent: -383
   #|clamp:       1
   #|rounding:    half_even
+  #|
   #|clasx201  class    0                        -> +Zero
   #|clasx202  class    0.00                     -> +Zero
   #|clasx203  class    0E+5                     -> +Zero
@@ -74,6 +104,7 @@ let class_subset : String =
   #|clasx217  class   1E+384                    -> +Normal
   #|clasx218  class   9.999999999999999E+384    -> +Normal
   #|clasx219  class   Inf                       -> +Infinity
+  #|
   #|clasx221  class   -0                        -> -Zero
   #|clasx222  class   -0.00                     -> -Zero
   #|clasx223  class   -0E+5                     -> -Zero
@@ -92,14 +123,21 @@ let class_subset : String =
   #|clasx237  class  -1E+384                    -> -Normal
   #|clasx238  class  -9.999999999999999E+384    -> -Normal
   #|clasx239  class  -Inf                       -> -Infinity
+  #|
   #|clasx241  class   NaN                       -> NaN
   #|clasx242  class  -NaN                       -> NaN
+  #|clasx243  class  +NaN12345                  -> NaN
+  #|clasx244  class   sNaN                      -> sNaN
+  #|clasx245  class  -sNaN                      -> sNaN
+  #|clasx246  class  +sNaN12345                 -> sNaN
 
 ///|
 test "class.decTest subset" {
   let cases = parse_dectest(class_subset)
-  assert_eq(cases.length(), 80)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, skipped) = run_cases_with_flags(cases)
+  if skipped > 0 {
+    println("\{skipped} cases skipped (format-encoding / reference-specific)")
+  }
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 30 { failures.length() } else { 30 }

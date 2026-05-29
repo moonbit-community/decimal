@@ -1,14 +1,40 @@
 ///|
-/// First 80 cases from `compare.decTest` (the sanity / Inf / sign group).
-/// Skips NaN-returning cases tagged `Invalid_operation` and sNaN cases —
-/// those need flag-validation support in the runner.
+/// Full `compare.decTest` corpus (IBM General Decimal Arithmetic
+/// testcases), embedded verbatim.
 let compare_subset : String =
-  #|version: 2.62
+  #|------------------------------------------------------------------------
+  #|-- compare.decTest -- decimal comparison that allows quiet NaNs       --
+  #|-- Copyright (c) IBM Corporation, 1981, 2008.  All rights reserved.   --
+  #|------------------------------------------------------------------------
+  #|-- Please see the document "General Decimal Arithmetic Testcases"     --
+  #|-- at http://www2.hursley.ibm.com/decimal for the description of      --
+  #|-- these testcases.                                                   --
+  #|--                                                                    --
+  #|-- These testcases are experimental ('beta' versions), and they       --
+  #|-- may contain errors.  They are offered on an as-is basis.  In       --
+  #|-- particular, achieving the same results as the tests here is not    --
+  #|-- a guarantee that an implementation complies with any Standard      --
+  #|-- or specification.  The tests are not exhaustive.                   --
+  #|--                                                                    --
+  #|-- Please send comments, suggestions, and corrections to the author:  --
+  #|--   Mike Cowlishaw, IBM Fellow                                       --
+  #|--   IBM UK, PO Box 31, Birmingham Road, Warwick CV34 5JL, UK         --
+  #|--   mfc@uk.ibm.com                                                   --
+  #|------------------------------------------------------------------------
+  #|version: 2.59
+  #|
+  #|-- Note that we cannot assume add/subtract tests cover paths adequately,
+  #|-- here, because the code might be quite different (comparison cannot
+  #|-- overflow or underflow, so actual subtractions are not necessary).
+  #|
   #|extended: 1
+  #|
   #|precision:   9
   #|rounding:    half_up
   #|maxExponent: 999
   #|minexponent: -999
+  #|
+  #|-- sanity checks
   #|comx001 compare  -2  -2  -> 0
   #|comx002 compare  -2  -1  -> -1
   #|comx003 compare  -2   0  -> -1
@@ -34,6 +60,7 @@ let compare_subset : String =
   #|comx023 compare   2   0  -> 1
   #|comx025 compare   2   1  -> 1
   #|comx026 compare   2   2  -> 0
+  #|
   #|comx031 compare  -20  -20  -> 0
   #|comx032 compare  -20  -10  -> -1
   #|comx033 compare  -20   00  -> -1
@@ -59,6 +86,7 @@ let compare_subset : String =
   #|comx053 compare   20   00  -> 1
   #|comx055 compare   20   10  -> 1
   #|comx056 compare   20   20  -> 0
+  #|
   #|comx061 compare  -2.0  -2.0  -> 0
   #|comx062 compare  -2.0  -1.0  -> -1
   #|comx063 compare  -2.0   0.0  -> -1
@@ -84,12 +112,16 @@ let compare_subset : String =
   #|comx083 compare   2.0   0.0  -> 1
   #|comx085 compare   2.0   1.0  -> 1
   #|comx086 compare   2.0   2.0  -> 0
+  #|
+  #|-- now some cases which might overflow if subtract were used
   #|maxexponent: 999999999
   #|minexponent: -999999999
   #|comx095 compare  9.99999999E+999999999 9.99999999E+999999999  -> 0
   #|comx096 compare -9.99999999E+999999999 9.99999999E+999999999  -> -1
   #|comx097 compare  9.99999999E+999999999 -9.99999999E+999999999 -> 1
   #|comx098 compare -9.99999999E+999999999 -9.99999999E+999999999 -> 0
+  #|
+  #|-- some differing length/exponent cases
   #|comx100 compare   7.0    7.0    -> 0
   #|comx101 compare   7.0    7      -> 0
   #|comx102 compare   7      7.0    -> 0
@@ -101,6 +133,7 @@ let compare_subset : String =
   #|comx108 compare   7.0    70E-1  -> 0
   #|comx109 compare   7      0.7E+1 -> 0
   #|comx110 compare   7      70E-1  -> 0
+  #|
   #|comx120 compare   8.0    7.0    -> 1
   #|comx121 compare   8.0    7      -> 1
   #|comx122 compare   8      7.0    -> 1
@@ -112,6 +145,7 @@ let compare_subset : String =
   #|comx128 compare   8.0    70E-1  -> 1
   #|comx129 compare   8      0.7E+1  -> 1
   #|comx130 compare   8      70E-1  -> 1
+  #|
   #|comx140 compare   8.0    9.0    -> -1
   #|comx141 compare   8.0    9      -> -1
   #|comx142 compare   8      9.0    -> -1
@@ -123,6 +157,8 @@ let compare_subset : String =
   #|comx148 compare   8.0    90E-1  -> -1
   #|comx149 compare   8      0.9E+1 -> -1
   #|comx150 compare   8      90E-1  -> -1
+  #|
+  #|-- and again, with sign changes -+ ..
   #|comx200 compare  -7.0    7.0    -> -1
   #|comx201 compare  -7.0    7      -> -1
   #|comx202 compare  -7      7.0    -> -1
@@ -134,6 +170,7 @@ let compare_subset : String =
   #|comx208 compare  -7.0    70E-1  -> -1
   #|comx209 compare  -7      0.7E+1 -> -1
   #|comx210 compare  -7      70E-1  -> -1
+  #|
   #|comx220 compare  -8.0    7.0    -> -1
   #|comx221 compare  -8.0    7      -> -1
   #|comx222 compare  -8      7.0    -> -1
@@ -145,6 +182,7 @@ let compare_subset : String =
   #|comx228 compare  -8.0    70E-1  -> -1
   #|comx229 compare  -8      0.7E+1 -> -1
   #|comx230 compare  -8      70E-1  -> -1
+  #|
   #|comx240 compare  -8.0    9.0    -> -1
   #|comx241 compare  -8.0    9      -> -1
   #|comx242 compare  -8      9.0    -> -1
@@ -156,6 +194,8 @@ let compare_subset : String =
   #|comx248 compare  -8.0    90E-1  -> -1
   #|comx249 compare  -8      0.9E+1 -> -1
   #|comx250 compare  -8      90E-1  -> -1
+  #|
+  #|-- and again, with sign changes +- ..
   #|comx300 compare   7.0    -7.0    -> 1
   #|comx301 compare   7.0    -7      -> 1
   #|comx302 compare   7      -7.0    -> 1
@@ -167,6 +207,7 @@ let compare_subset : String =
   #|comx308 compare   7.0    -70E-1  -> 1
   #|comx309 compare   7      -.7E+1  -> 1
   #|comx310 compare   7      -70E-1  -> 1
+  #|
   #|comx320 compare   8.0    -7.0    -> 1
   #|comx321 compare   8.0    -7      -> 1
   #|comx322 compare   8      -7.0    -> 1
@@ -178,6 +219,7 @@ let compare_subset : String =
   #|comx328 compare   8.0    -70E-1  -> 1
   #|comx329 compare   8      -.7E+1  -> 1
   #|comx330 compare   8      -70E-1  -> 1
+  #|
   #|comx340 compare   8.0    -9.0    -> 1
   #|comx341 compare   8.0    -9      -> 1
   #|comx342 compare   8      -9.0    -> 1
@@ -189,6 +231,8 @@ let compare_subset : String =
   #|comx348 compare   8.0    -90E-1  -> 1
   #|comx349 compare   8      -.9E+1  -> 1
   #|comx350 compare   8      -90E-1  -> 1
+  #|
+  #|-- and again, with sign changes -- ..
   #|comx400 compare   -7.0    -7.0    -> 0
   #|comx401 compare   -7.0    -7      -> 0
   #|comx402 compare   -7      -7.0    -> 0
@@ -200,6 +244,7 @@ let compare_subset : String =
   #|comx408 compare   -7.0    -70E-1  -> 0
   #|comx409 compare   -7      -.7E+1  -> 0
   #|comx410 compare   -7      -70E-1  -> 0
+  #|
   #|comx420 compare   -8.0    -7.0    -> -1
   #|comx421 compare   -8.0    -7      -> -1
   #|comx422 compare   -8      -7.0    -> -1
@@ -211,6 +256,7 @@ let compare_subset : String =
   #|comx428 compare   -8.0    -70E-1  -> -1
   #|comx429 compare   -8      -.7E+1  -> -1
   #|comx430 compare   -8      -70E-1  -> -1
+  #|
   #|comx440 compare   -8.0    -9.0    -> 1
   #|comx441 compare   -8.0    -9      -> 1
   #|comx442 compare   -8      -9.0    -> 1
@@ -222,6 +268,8 @@ let compare_subset : String =
   #|comx448 compare   -8.0    -90E-1  -> 1
   #|comx449 compare   -8      -.9E+1  -> 1
   #|comx450 compare   -8      -90E-1  -> 1
+  #|
+  #|-- misalignment traps for little-endian
   #|comx451 compare      1.0       0.1  -> 1
   #|comx452 compare      0.1       1.0  -> -1
   #|comx453 compare     10.0       0.1  -> 1
@@ -236,6 +284,8 @@ let compare_subset : String =
   #|comx462 compare   1000.0    100000  -> -1
   #|comx463 compare  1000000   10000.0  -> 1
   #|comx464 compare  10000.0   1000000  -> -1
+  #|
+  #|-- testcases that subtract to lots of zeros at boundaries [pgr]
   #|precision: 40
   #|comx470 compare 123.4560000000000000E789 123.456E789 -> 0
   #|comx471 compare 123.456000000000000E-89 123.456E-89 -> 0
@@ -265,6 +315,8 @@ let compare_subset : String =
   #|comx495 compare 123.456E789 123.45600E789 -> 0
   #|comx496 compare 123.456E-89 123.4560E-89 -> 0
   #|comx497 compare 123.456E789 123.456E789 -> 0
+  #|
+  #|-- wide-ranging, around precision; signs equal
   #|precision: 9
   #|comx500 compare    1     1E-15    -> 1
   #|comx501 compare    1     1E-14    -> 1
@@ -297,6 +349,7 @@ let compare_subset : String =
   #|comx529 compare    1     1E+13    -> -1
   #|comx530 compare    1     1E+14    -> -1
   #|comx531 compare    1     1E+15    -> -1
+  #|-- LR swap
   #|comx540 compare    1E-15  1       -> -1
   #|comx541 compare    1E-14  1       -> -1
   #|comx542 compare    1E-13  1       -> -1
@@ -328,6 +381,7 @@ let compare_subset : String =
   #|comx569 compare    1E+13  1       ->  1
   #|comx570 compare    1E+14  1       ->  1
   #|comx571 compare    1E+15  1       ->  1
+  #|-- similar with a useful coefficient, one side only
   #|comx580 compare  0.000000987654321     1E-15    -> 1
   #|comx581 compare  0.000000987654321     1E-14    -> 1
   #|comx582 compare  0.000000987654321     1E-13    -> 1
@@ -348,6 +402,8 @@ let compare_subset : String =
   #|comx597 compare  0.000000987654321     1E+2     -> -1
   #|comx598 compare  0.000000987654321     1E+3     -> -1
   #|comx599 compare  0.000000987654321     1E+4     -> -1
+  #|
+  #|-- check some unit-y traps
   #|precision: 20
   #|comx600 compare   12            12.2345 -> -1
   #|comx601 compare   12.0          12.2345 -> -1
@@ -390,6 +446,8 @@ let compare_subset : String =
   #|comx638 compare  -12.1234 -12.00000000  -> -1
   #|comx639 compare  -12.1234 -12.000000000 -> -1
   #|precision: 9
+  #|
+  #|-- extended zeros
   #|comx640 compare   0     0   -> 0
   #|comx641 compare   0    -0   -> 0
   #|comx642 compare   0    -0.0 -> 0
@@ -406,6 +464,7 @@ let compare_subset : String =
   #|comx653 compare  -0.0  -0   -> 0
   #|comx654 compare  -0.0  -0.0 -> 0
   #|comx655 compare  -0.0   0.0 -> 0
+  #|
   #|comx656 compare  -0E1   0.0 -> 0
   #|comx657 compare  -0E2   0.0 -> 0
   #|comx658 compare   0E1   0.0 -> 0
@@ -430,6 +489,8 @@ let compare_subset : String =
   #|comx677 compare  -0E2   0E2 -> 0
   #|comx678 compare   0E1   0E2 -> 0
   #|comx679 compare   0E2   0E2 -> 0
+  #|
+  #|-- trailing zeros; unit-y
   #|precision: 20
   #|comx680 compare   12    12           -> 0
   #|comx681 compare   12    12.0         -> 0
@@ -451,6 +512,8 @@ let compare_subset : String =
   #|comx697 compare   12.0000000      12 -> 0
   #|comx698 compare   12.00000000     12 -> 0
   #|comx699 compare   12.000000000    12 -> 0
+  #|
+  #|-- long operand checks
   #|maxexponent: 999
   #|minexponent: -999
   #|precision: 9
@@ -472,7 +535,9 @@ let compare_subset : String =
   #|comx716 compare 1 -12345678901 ->  1
   #|comx717 compare -1234567896  1 -> -1
   #|comx718 compare 1 -1234567896  ->  1
+  #|
   #|precision: 15
+  #|-- same with plenty of precision
   #|comx721 compare 12345678000 1 -> 1
   #|comx722 compare 1 12345678000 -> -1
   #|comx723 compare 1234567800  1 -> 1
@@ -485,6 +550,8 @@ let compare_subset : String =
   #|comx730 compare 1 12345678901 -> -1
   #|comx731 compare 1234567896  1 -> 1
   #|comx732 compare 1 1234567896  -> -1
+  #|
+  #|-- residue cases
   #|precision: 5
   #|comx740 compare  1  0.9999999  -> 1
   #|comx741 compare  1  0.999999   -> 1
@@ -500,10 +567,13 @@ let compare_subset : String =
   #|comx754 compare  1.00001    1  -> 1
   #|comx755 compare  1.000001   1  -> 1
   #|comx756 compare  1.0000001  1  -> 1
+  #|
+  #|-- a selection of longies
   #|comx760 compare -36852134.84194296250843579428931 -5830629.8347085025808756560357940 -> -1
   #|comx761 compare -36852134.84194296250843579428931 -36852134.84194296250843579428931  -> 0
   #|comx762 compare -36852134.94194296250843579428931 -36852134.84194296250843579428931  -> -1
   #|comx763 compare -36852134.84194296250843579428931 -36852134.94194296250843579428931  -> 1
+  #|-- precisions above or below the difference should have no effect
   #|precision:   11
   #|comx764 compare -36852134.84194296250843579428931 -36852134.94194296250843579428931  -> 1
   #|precision:   10
@@ -526,6 +596,8 @@ let compare_subset : String =
   #|comx773 compare -36852134.84194296250843579428931 -36852134.94194296250843579428931  -> 1
   #|precision:    1
   #|comx774 compare -36852134.84194296250843579428931 -36852134.94194296250843579428931  -> 1
+  #|
+  #|-- Specials
   #|precision:   9
   #|comx780 compare  Inf  -Inf   ->  1
   #|comx781 compare  Inf  -1000  ->  1
@@ -543,6 +615,7 @@ let compare_subset : String =
   #|comx793 compare  1     Inf   -> -1
   #|comx794 compare  1000  Inf   -> -1
   #|comx795 compare  Inf   Inf   ->  0
+  #|
   #|comx800 compare -Inf  -Inf   ->  0
   #|comx801 compare -Inf  -1000  -> -1
   #|comx802 compare -Inf  -1     -> -1
@@ -559,6 +632,7 @@ let compare_subset : String =
   #|comx813 compare  1    -Inf   ->  1
   #|comx814 compare  1000 -Inf   ->  1
   #|comx815 compare  Inf  -Inf   ->  1
+  #|
   #|comx821 compare  NaN -Inf    ->  NaN
   #|comx822 compare  NaN -1000   ->  NaN
   #|comx823 compare  NaN -1      ->  NaN
@@ -579,6 +653,28 @@ let compare_subset : String =
   #|comx838 compare -NaN -NaN    -> -NaN
   #|comx839 compare +NaN -NaN    ->  NaN
   #|comx840 compare -NaN +NaN    -> -NaN
+  #|
+  #|comx841 compare  sNaN -Inf   ->  NaN  Invalid_operation
+  #|comx842 compare  sNaN -1000  ->  NaN  Invalid_operation
+  #|comx843 compare  sNaN -1     ->  NaN  Invalid_operation
+  #|comx844 compare  sNaN -0     ->  NaN  Invalid_operation
+  #|comx845 compare  sNaN  0     ->  NaN  Invalid_operation
+  #|comx846 compare  sNaN  1     ->  NaN  Invalid_operation
+  #|comx847 compare  sNaN  1000  ->  NaN  Invalid_operation
+  #|comx848 compare  sNaN  NaN   ->  NaN  Invalid_operation
+  #|comx849 compare  sNaN sNaN   ->  NaN  Invalid_operation
+  #|comx850 compare  NaN  sNaN   ->  NaN  Invalid_operation
+  #|comx851 compare -Inf  sNaN   ->  NaN  Invalid_operation
+  #|comx852 compare -1000 sNaN   ->  NaN  Invalid_operation
+  #|comx853 compare -1    sNaN   ->  NaN  Invalid_operation
+  #|comx854 compare -0    sNaN   ->  NaN  Invalid_operation
+  #|comx855 compare  0    sNaN   ->  NaN  Invalid_operation
+  #|comx856 compare  1    sNaN   ->  NaN  Invalid_operation
+  #|comx857 compare  1000 sNaN   ->  NaN  Invalid_operation
+  #|comx858 compare  Inf  sNaN   ->  NaN  Invalid_operation
+  #|comx859 compare  NaN  sNaN   ->  NaN  Invalid_operation
+  #|
+  #|-- propagating NaNs
   #|comx860 compare  NaN9 -Inf   ->  NaN9
   #|comx861 compare  NaN8  999   ->  NaN8
   #|comx862 compare  NaN77 Inf   ->  NaN77
@@ -590,6 +686,18 @@ let compare_subset : String =
   #|comx868 compare +NaN41 -NaN42 ->  NaN41
   #|comx869 compare -NaN41 +NaN42 -> -NaN41
   #|comx870 compare +NaN41 +NaN42 ->  NaN41
+  #|
+  #|comx871 compare -sNaN99 -Inf    -> -NaN99 Invalid_operation
+  #|comx872 compare  sNaN98 -11     ->  NaN98 Invalid_operation
+  #|comx873 compare  sNaN97  NaN    ->  NaN97 Invalid_operation
+  #|comx874 compare  sNaN16 sNaN94  ->  NaN16 Invalid_operation
+  #|comx875 compare  NaN85  sNaN83  ->  NaN83 Invalid_operation
+  #|comx876 compare -Inf    sNaN92  ->  NaN92 Invalid_operation
+  #|comx877 compare  088    sNaN81  ->  NaN81 Invalid_operation
+  #|comx878 compare  Inf    sNaN90  ->  NaN90 Invalid_operation
+  #|comx879 compare  NaN   -sNaN89  -> -NaN89 Invalid_operation
+  #|
+  #|-- overflow and underflow tests .. subnormal results now allowed
   #|maxExponent: 999999999
   #|minexponent: -999999999
   #|comx880 compare +1.23456789012345E-0 9E+999999999 -> -1
@@ -600,6 +708,7 @@ let compare_subset : String =
   #|comx886 compare 9E+999999999 -1.23456789012345E-0 ->  1
   #|comx887 compare -0.100 9E-999999999               -> -1
   #|comx888 compare 9E-999999999 -0.100               ->  1
+  #|
   #|comx889 compare 1e-599999999 1e-400000001   -> -1
   #|comx890 compare 1e-599999999 1e-400000000   -> -1
   #|comx891 compare 1e-600000000 1e-400000000   -> -1
@@ -612,6 +721,7 @@ let compare_subset : String =
   #|comx898 compare 9e999999998 100             ->  1
   #|comx899 compare 9e999999998 10              ->  1
   #|comx900 compare 100  9e999999998            -> -1
+  #|-- signs
   #|comx901 compare  1e+777777777  1e+411111111 ->  1
   #|comx902 compare  1e+777777777 -1e+411111111 ->  1
   #|comx903 compare -1e+777777777  1e+411111111 -> -1
@@ -620,6 +730,8 @@ let compare_subset : String =
   #|comx906 compare  1e-777777777 -1e-411111111 ->  1
   #|comx907 compare -1e-777777777  1e-411111111 -> -1
   #|comx908 compare -1e-777777777 -1e-411111111 ->  1
+  #|
+  #|-- spread zeros
   #|comx910 compare   0E-383  0       ->  0
   #|comx911 compare   0E-383 -0       ->  0
   #|comx912 compare  -0E-383  0       ->  0
@@ -644,11 +756,18 @@ let compare_subset : String =
   #|comx939 compare   0      -0E-383  ->  0
   #|comx940 compare  -0       0E-383  ->  0
   #|comx941 compare  -0      -0E-383  ->  0
+  #|
+  #|-- Null tests
+  #|comx990 compare 10  # -> NaN Invalid_operation
+  #|comx991 compare  # 10 -> NaN Invalid_operation
 
 ///|
 test "compare.decTest subset round-trips through parse + compare + toSci" {
   let cases = parse_dectest(compare_subset)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, skipped) = run_cases_with_flags(cases)
+  if skipped > 0 {
+    println("\{skipped} cases skipped (format-encoding / reference-specific)")
+  }
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 30 { failures.length() } else { 30 }

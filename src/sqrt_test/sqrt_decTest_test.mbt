@@ -1,13 +1,35 @@
 ///|
-/// First 80 cases from `squareroot.decTest`. Skips Subnormal / Underflow /
-/// Overflow / sNaN cases pending runner-side flag validation.
+/// Full `squareroot.decTest` corpus (IBM General Decimal Arithmetic
+/// testcases), embedded verbatim.
 let sqrt_subset : String =
-  #|version: 2.62
+  #|------------------------------------------------------------------------
+  #|-- squareroot.decTest -- decimal square root                          --
+  #|-- Copyright (c) IBM Corporation, 2003, 2008.  All rights reserved.   --
+  #|------------------------------------------------------------------------
+  #|-- Please see the document "General Decimal Arithmetic Testcases"     --
+  #|-- at http://www2.hursley.ibm.com/decimal for the description of      --
+  #|-- these testcases.                                                   --
+  #|--                                                                    --
+  #|-- These testcases are experimental ('beta' versions), and they       --
+  #|-- may contain errors.  They are offered on an as-is basis.  In       --
+  #|-- particular, achieving the same results as the tests here is not    --
+  #|-- a guarantee that an implementation complies with any Standard      --
+  #|-- or specification.  The tests are not exhaustive.                   --
+  #|--                                                                    --
+  #|-- Please send comments, suggestions, and corrections to the author:  --
+  #|--   Mike Cowlishaw, IBM Fellow                                       --
+  #|--   IBM UK, PO Box 31, Birmingham Road, Warwick CV34 5JL, UK         --
+  #|--   mfc@uk.ibm.com                                                   --
+  #|------------------------------------------------------------------------
+  #|version: 2.59
+  #|
   #|extended:    1
   #|precision:   9
   #|rounding:    half_up
   #|maxExponent: 384
   #|minexponent: -383
+  #|
+  #|-- basics
   #|sqtx001 squareroot 1       -> 1
   #|sqtx002 squareroot -1      -> NaN Invalid_operation
   #|sqtx003 squareroot 1.00    -> 1.0
@@ -19,6 +41,7 @@ let sqrt_subset : String =
   #|sqtx009 squareroot 00.000  -> 0.00
   #|sqtx010 squareroot 00.0000 -> 0.00
   #|sqtx011 squareroot 00      -> 0
+  #|
   #|sqtx012 squareroot -2      -> NaN Invalid_operation
   #|sqtx013 squareroot 2       -> 1.41421356 Inexact Rounded
   #|sqtx014 squareroot -2.00   -> NaN Invalid_operation
@@ -36,6 +59,7 @@ let sqrt_subset : String =
   #|sqtx026 squareroot 0E+5    -> 0E+2
   #|sqtx027 squareroot 4.0     -> 2.0
   #|sqtx028 squareroot 4.00    -> 2.0
+  #|
   #|sqtx030 squareroot +0.1            -> 0.316227766 Inexact Rounded
   #|sqtx031 squareroot -0.1            -> NaN Invalid_operation
   #|sqtx032 squareroot +0.01           -> 0.1
@@ -46,6 +70,7 @@ let sqrt_subset : String =
   #|sqtx037 squareroot -0.000001       -> NaN Invalid_operation
   #|sqtx038 squareroot +0.000000000001 -> 0.000001
   #|sqtx039 squareroot -0.000000000001 -> NaN Invalid_operation
+  #|
   #|sqtx041 squareroot 1.1        -> 1.04880885 Inexact Rounded
   #|sqtx042 squareroot 1.10       -> 1.04880885 Inexact Rounded
   #|sqtx043 squareroot 1.100      -> 1.04880885 Inexact Rounded
@@ -62,6 +87,7 @@ let sqrt_subset : String =
   #|sqtx054 squareroot -9.90      -> NaN Invalid_operation
   #|sqtx055 squareroot -9.900     -> NaN Invalid_operation
   #|sqtx056 squareroot -9.990     -> NaN Invalid_operation
+  #|
   #|sqtx060 squareroot  1           -> 1
   #|sqtx061 squareroot  1.0         -> 1.0
   #|sqtx062 squareroot  1.00        -> 1.0
@@ -82,6 +108,8 @@ let sqrt_subset : String =
   #|sqtx077 squareroot -1.10000E+3  -> NaN Invalid_operation
   #|sqtx078 squareroot  1.000       -> 1.00
   #|sqtx079 squareroot  1.0000      -> 1.00
+  #|
+  #|-- famous squares
   #|sqtx080 squareroot     1  -> 1
   #|sqtx081 squareroot     4  -> 2
   #|sqtx082 squareroot     9  -> 3
@@ -114,6 +142,8 @@ let sqrt_subset : String =
   #|sqtx113 squareroot   2.56 -> 1.6
   #|sqtx114 squareroot  10.24 -> 3.2
   #|sqtx115 squareroot  40.96 -> 6.4
+  #|
+  #|-- Precision 1 squareroot tests [exhaustive, plus exponent adjusts]
   #|rounding:    half_even
   #|maxExponent: 999
   #|minexponent: -999
@@ -190,6 +220,8 @@ let sqrt_subset : String =
   #|sqtx1270 squareroot 9E+1 -> 9  Inexact Rounded
   #|sqtx1271 squareroot 9E+2 -> 3E+1
   #|sqtx1272 squareroot 9E+3 -> 9E+1  Inexact Rounded
+  #|
+  #|-- Precision 2 squareroot tests [exhaustive, plus exponent adjusts]
   #|rounding:    half_even
   #|maxExponent: 999
   #|minexponent: -999
@@ -986,6 +1018,8 @@ let sqrt_subset : String =
   #|sqtx2990 squareroot 99E+1 -> 31  Inexact Rounded
   #|sqtx2991 squareroot 99E+2 -> 99  Inexact Rounded
   #|sqtx2992 squareroot 99E+3 -> 3.1E+2  Inexact Rounded
+  #|
+  #|-- Precision 3 squareroot tests [exhaustive, f and f/10]
   #|rounding:    half_even
   #|maxExponent: 999
   #|minexponent: -999
@@ -2790,6 +2824,9 @@ let sqrt_subset : String =
   #|sqtx4798 squareroot 0.0998 -> 0.316  Inexact Rounded
   #|sqtx4799 squareroot 0.999 -> 0.999  Inexact Rounded
   #|sqtx4800 squareroot 0.0999 -> 0.316  Inexact Rounded
+  #|
+  #|-- A group of precision 4 tests where Hull & Abrham adjustments are
+  #|-- needed in some cases (both up and down) [see Hull1985b]
   #|rounding:    half_even
   #|maxExponent: 999
   #|minexponent: -999
@@ -2811,6 +2848,8 @@ let sqrt_subset : String =
   #|sqtx5015 squareroot 0.9346  -> 0.9667  Inexact Rounded
   #|sqtx5016 squareroot 0.09346 -> 0.3057  Inexact Rounded
   #|sqtx5017 squareroot 0.9347  -> 0.9668  Inexact Rounded
+  #|
+  #|-- examples from decArith
   #|precision: 9
   #|sqtx700 squareroot  0       -> '0'
   #|sqtx701 squareroot  -0      -> '-0'
@@ -2819,6 +2858,8 @@ let sqrt_subset : String =
   #|sqtx704 squareroot  1.00    -> '1.0'
   #|sqtx705 squareroot  7       -> '2.64575131'   Inexact Rounded
   #|sqtx706 squareroot  10      -> 3.16227766     Inexact Rounded
+  #|
+  #|-- some one-offs
   #|precision: 9
   #|sqtx711 squareroot  0.1     -> 0.316227766    Inexact Rounded
   #|sqtx712 squareroot  0.2     -> 0.447213595    Inexact Rounded
@@ -2839,6 +2880,8 @@ let sqrt_subset : String =
   #|sqtx723 squareroot  0.39    -> 0.624499800    Inexact Rounded
   #|precision: 15
   #|sqtx724 squareroot  0.39    -> 0.624499799839840 Inexact Rounded
+  #|
+  #|-- discussion cases
   #|precision: 7
   #|sqtx731 squareroot     9   ->   3
   #|sqtx732 squareroot   100   ->  10
@@ -2846,6 +2889,8 @@ let sqrt_subset : String =
   #|sqtx734 squareroot   144   ->  12
   #|sqtx735 squareroot   156   ->  12.49000  Inexact Rounded
   #|sqtx736 squareroot 10000   -> 100
+  #|
+  #|-- values close to overflow (if there were input rounding)
   #|maxexponent: 99
   #|minexponent: -99
   #|precision: 5
@@ -2872,6 +2917,10 @@ let sqrt_subset : String =
   #|sqtx784 squareroot  9.99994E+99  -> '9.9999699999549998650E+49' Inexact Rounded
   #|sqtx785 squareroot  9.99995E+99  -> '9.9999749999687499219E+49' Inexact Rounded
   #|sqtx786 squareroot  9.99999E+99  -> '9.9999949999987499994E+49' Inexact Rounded
+  #|
+  #|-- subnormals and underflows [these can only result when eMax is < digits+1]
+  #|-- Etiny = -(Emax + (precision-1))
+  #|-- start with subnormal operands and normal results
   #|maxexponent: 9
   #|minexponent: -9
   #|precision: 9                -- Etiny=-17
@@ -2880,12 +2929,14 @@ let sqrt_subset : String =
   #|precision: 10               -- Etiny=-18
   #|sqtx802 squareroot 10E-18   -> 3.162277660E-9 Inexact Rounded
   #|sqtx803 squareroot  1E-18   -> 1E-9
+  #|
   #|precision: 11               -- Etiny=-19
   #|sqtx804 squareroot  1E-19   -> 3.162277660E-10 Underflow Subnormal Inexact Rounded
   #|sqtx805 squareroot 10E-19   -> 1.0E-9            -- exact
   #|precision: 12               -- Etiny=-20
   #|sqtx806 squareroot 10E-20   -> 3.1622776602E-10 Underflow Subnormal Inexact Rounded
   #|sqtx807 squareroot  1E-20   -> 1E-10 Subnormal   -- exact Subnormal case
+  #|
   #|precision: 13               -- Etiny=-21
   #|sqtx808 squareroot  1E-21   -> 3.1622776602E-11 Underflow Subnormal Inexact Rounded
   #|sqtx809 squareroot 10E-21   -> 1.0E-10 Subnormal -- exact Subnormal case
@@ -2893,22 +2944,50 @@ let sqrt_subset : String =
   #|sqtx810 squareroot  1E-21   -> 3.16227766017E-11 Underflow Subnormal Inexact Rounded
   #|sqtx811 squareroot 10E-22   -> 3.16227766017E-11 Underflow Subnormal Inexact Rounded
   #|sqtx812 squareroot  1E-22   -> 1E-11 Subnormal   -- exact Subnormal case
+  #|
+  #|-- Not enough digits?
   #|precision:   16
   #|maxExponent: 384
   #|minExponent: -383
   #|rounding:    half_even
   #|sqtx815 squareroot 1.0000000001000000E-78  -> 1.000000000050000E-39 Inexact Rounded
+  #|--                                            1 234567890123456
+  #|
+  #|-- special values
   #|maxexponent: 999
   #|minexponent: -999
   #|sqtx820 squareroot   Inf    -> Infinity
   #|sqtx821 squareroot  -Inf    -> NaN Invalid_operation
   #|sqtx822 squareroot   NaN    -> NaN
+  #|sqtx823 squareroot  sNaN    -> NaN Invalid_operation
+  #|-- propagating NaNs
+  #|sqtx824 squareroot  sNaN123 ->  NaN123 Invalid_operation
+  #|sqtx825 squareroot -sNaN321 -> -NaN321 Invalid_operation
   #|sqtx826 squareroot   NaN456 ->  NaN456
   #|sqtx827 squareroot  -NaN654 -> -NaN654
   #|sqtx828 squareroot   NaN1   ->  NaN1
+  #|
+  #|-- payload decapitate
   #|precision: 5
+  #|sqtx840 squareroot -sNaN1234567890 -> -NaN67890  Invalid_operation
+  #|
+  #|------------------------------------------------------------------------
+  #|--
+  #|-- Special thanks to Mark Dickinson for tests in the range 8000-8999.
+  #|--
+  #|-- Extra tests for the square root function, dealing with a variety of
+  #|-- corner cases.  In particular, these tests concentrate on
+  #|--   (1) cases where the input precision exceeds the context precision, and
+  #|--   (2) cases where the input exponent is outside the current context,
+  #|--       and in particular when the result is subnormal
+  #|--
+  #|-- maxexponent and minexponent are set to 9 and -9 for most of these
+  #|-- cases; only the precision changes.  The rounding also does not
+  #|-- change, because it is ignored for this operation.
   #|maxexponent: 9
   #|minexponent: -9
+  #|
+  #|-- exact results, input precision > context precision
   #|precision: 1
   #|sqtx8000 squareroot 0 -> 0
   #|sqtx8001 squareroot 1 -> 1
@@ -2922,6 +3001,7 @@ let sqrt_subset : String =
   #|sqtx8009 squareroot 81 -> 9
   #|sqtx8010 squareroot 100 -> 1E+1 Rounded
   #|sqtx8011 squareroot 121 -> 1E+1 Inexact Rounded
+  #|
   #|precision: 2
   #|sqtx8012 squareroot 0 -> 0
   #|sqtx8013 squareroot 1 -> 1
@@ -3025,6 +3105,7 @@ let sqrt_subset : String =
   #|sqtx8111 squareroot 9801 -> 99
   #|sqtx8112 squareroot 10000 -> 1.0E+2 Rounded
   #|sqtx8113 squareroot 10201 -> 1.0E+2 Inexact Rounded
+  #|
   #|precision: 3
   #|sqtx8114 squareroot 841 -> 29
   #|sqtx8115 squareroot 1600 -> 40
@@ -3046,6 +3127,8 @@ let sqrt_subset : String =
   #|sqtx8131 squareroot 516961 -> 719
   #|sqtx8132 squareroot 692224 -> 832
   #|sqtx8133 squareroot 829921 -> 911
+  #|
+  #|-- selection of random exact results
   #|precision: 6
   #|sqtx8134 squareroot 2.25E-12 -> 0.0000015
   #|sqtx8135 squareroot 8.41E-14 -> 2.9E-7
@@ -3137,6 +3220,8 @@ let sqrt_subset : String =
   #|sqtx8221 squareroot 4.0266040896E-18 -> 2.00664E-9
   #|sqtx8222 squareroot 9.27669480336E-7 -> 0.000963156
   #|sqtx8223 squareroot 0.00225497717956 -> 0.0474866
+  #|
+  #|-- test use of round-half-even for ties
   #|precision: 1
   #|sqtx8224 squareroot 225 -> 2E+1 Inexact Rounded
   #|sqtx8225 squareroot 625 -> 2E+1 Inexact Rounded
@@ -3147,6 +3232,7 @@ let sqrt_subset : String =
   #|sqtx8230 squareroot 5625 -> 8E+1 Inexact Rounded
   #|sqtx8231 squareroot 7225 -> 8E+1 Inexact Rounded
   #|sqtx8232 squareroot 9025 -> 1E+2 Inexact Rounded
+  #|
   #|precision: 2
   #|sqtx8233 squareroot 11025 -> 1.0E+2 Inexact Rounded
   #|sqtx8234 squareroot 13225 -> 1.2E+2 Inexact Rounded
@@ -3238,6 +3324,7 @@ let sqrt_subset : String =
   #|sqtx8320 squareroot 950625 -> 9.8E+2 Inexact Rounded
   #|sqtx8321 squareroot 970225 -> 9.8E+2 Inexact Rounded
   #|sqtx8322 squareroot 990025 -> 1.0E+3 Inexact Rounded
+  #|
   #|precision: 6
   #|sqtx8323 squareroot 88975734963025 -> 9.43270E+6 Inexact Rounded
   #|sqtx8324 squareroot 71085555000625 -> 8.43122E+6 Inexact Rounded
@@ -3259,6 +3346,10 @@ let sqrt_subset : String =
   #|sqtx8340 squareroot 8.706069866025E-14 -> 2.95060E-7 Inexact Rounded
   #|sqtx8341 squareroot 23838.58800625 -> 154.398 Inexact Rounded
   #|sqtx8342 squareroot 0.0013426911275625 -> 0.0366428 Inexact Rounded
+  #|
+  #|-- test use of round-half-even in underflow situations
+  #|
+  #|-- precisions 2; all cases where result is both subnormal and a tie
   #|precision: 2
   #|sqtx8343 squareroot 2.5E-21 -> 0E-10 Underflow Subnormal Inexact Rounded Clamped
   #|sqtx8344 squareroot 2.25E-20 -> 2E-10 Underflow Subnormal Inexact Rounded
@@ -3270,6 +3361,8 @@ let sqrt_subset : String =
   #|sqtx8350 squareroot 5.625E-19 -> 8E-10 Underflow Subnormal Inexact Rounded
   #|sqtx8351 squareroot 7.225E-19 -> 8E-10 Underflow Subnormal Inexact Rounded
   #|sqtx8352 squareroot 9.025E-19 -> 1.0E-9 Underflow Subnormal Inexact Rounded
+  #|
+  #|-- precision 3, input precision <= 5
   #|precision: 3
   #|sqtx8353 squareroot 2.5E-23 -> 0E-11 Underflow Subnormal Inexact Rounded Clamped
   #|sqtx8354 squareroot 2.25E-22 -> 2E-11 Underflow Subnormal Inexact Rounded
@@ -3303,6 +3396,8 @@ let sqrt_subset : String =
   #|sqtx8382 squareroot 8.7025E-20 -> 3.0E-10 Underflow Subnormal Inexact Rounded
   #|sqtx8383 squareroot 9.3025E-20 -> 3.0E-10 Underflow Subnormal Inexact Rounded
   #|sqtx8384 squareroot 9.9225E-20 -> 3.2E-10 Underflow Subnormal Inexact Rounded
+  #|
+  #|--precision 4, input precision <= 4
   #|precision: 4
   #|sqtx8385 squareroot 2.5E-25 -> 0E-12 Underflow Subnormal Inexact Rounded Clamped
   #|sqtx8386 squareroot 2.25E-24 -> 2E-12 Underflow Subnormal Inexact Rounded
@@ -3314,6 +3409,8 @@ let sqrt_subset : String =
   #|sqtx8392 squareroot 5.625E-23 -> 8E-12 Underflow Subnormal Inexact Rounded
   #|sqtx8393 squareroot 7.225E-23 -> 8E-12 Underflow Subnormal Inexact Rounded
   #|sqtx8394 squareroot 9.025E-23 -> 1.0E-11 Underflow Subnormal Inexact Rounded
+  #|
+  #|--precision 5, input precision <= 5
   #|precision: 5
   #|sqtx8395 squareroot 2.5E-27 -> 0E-13 Underflow Subnormal Inexact Rounded  Clamped
   #|sqtx8396 squareroot 2.25E-26 -> 2E-13 Underflow Subnormal Inexact Rounded
@@ -3347,6 +3444,8 @@ let sqrt_subset : String =
   #|sqtx8424 squareroot 8.7025E-24 -> 3.0E-12 Underflow Subnormal Inexact Rounded
   #|sqtx8425 squareroot 9.3025E-24 -> 3.0E-12 Underflow Subnormal Inexact Rounded
   #|sqtx8426 squareroot 9.9225E-24 -> 3.2E-12 Underflow Subnormal Inexact Rounded
+  #|
+  #|-- a random selection of values that Python2.5.1 rounds incorrectly
   #|precision: 1
   #|sqtx8427 squareroot 227 -> 2E+1 Inexact Rounded
   #|sqtx8428 squareroot 625 -> 2E+1 Inexact Rounded
@@ -3368,6 +3467,7 @@ let sqrt_subset : String =
   #|sqtx8444 squareroot 7215 -> 8E+1 Inexact Rounded
   #|sqtx8445 squareroot 9086 -> 1E+2 Inexact Rounded
   #|sqtx8446 squareroot 9095 -> 1E+2 Inexact Rounded
+  #|
   #|precision: 2
   #|sqtx8447 squareroot 1266 -> 36 Inexact Rounded
   #|sqtx8448 squareroot 2552 -> 51 Inexact Rounded
@@ -3389,6 +3489,7 @@ let sqrt_subset : String =
   #|sqtx8464 squareroot 93083 -> 3.1E+2 Inexact Rounded
   #|sqtx8465 squareroot 99230 -> 3.2E+2 Inexact Rounded
   #|sqtx8466 squareroot 99271 -> 3.2E+2 Inexact Rounded
+  #|
   #|precision: 3
   #|sqtx8467 squareroot 11349 -> 107 Inexact Rounded
   #|sqtx8468 squareroot 26738 -> 164 Inexact Rounded
@@ -3410,6 +3511,7 @@ let sqrt_subset : String =
   #|sqtx8484 squareroot 645629 -> 804 Inexact Rounded
   #|sqtx8485 squareroot 785836 -> 886 Inexact Rounded
   #|sqtx8486 squareroot 993066 -> 997 Inexact Rounded
+  #|
   #|precision: 6
   #|sqtx8487 squareroot 14917781 -> 3862.35 Inexact Rounded
   #|sqtx8488 squareroot 17237238 -> 4151.78 Inexact Rounded
@@ -3431,10 +3533,13 @@ let sqrt_subset : String =
   #|sqtx8504 squareroot 617047954 -> 24840.4 Inexact Rounded
   #|sqtx8505 squareroot 736870094 -> 27145.4 Inexact Rounded
   #|sqtx8506 squareroot 897322915 -> 29955.3 Inexact Rounded
+  #|
+  #|-- results close to minimum normal
   #|precision: 1
   #|sqtx8507 squareroot 1E-20 -> 0E-9 Underflow Subnormal Inexact Rounded Clamped
   #|sqtx8508 squareroot 1E-19 -> 0E-9 Underflow Subnormal Inexact Rounded Clamped
   #|sqtx8509 squareroot 1E-18 -> 1E-9
+  #|
   #|precision: 2
   #|sqtx8510 squareroot 8.1E-19 -> 9E-10 Subnormal
   #|sqtx8511 squareroot 8.10E-19 -> 9E-10 Subnormal Rounded
@@ -3456,6 +3561,7 @@ let sqrt_subset : String =
   #|sqtx8527 squareroot 1.01E-18 -> 1.0E-9 Inexact Rounded
   #|sqtx8528 squareroot 1.02E-18 -> 1.0E-9 Inexact Rounded
   #|sqtx8529 squareroot 1.1E-18 -> 1.0E-9 Inexact Rounded
+  #|
   #|precision: 3
   #|sqtx8530 squareroot 8.1E-19 -> 9E-10 Subnormal
   #|sqtx8531 squareroot 8.10E-19 -> 9.0E-10 Subnormal
@@ -3474,12 +3580,16 @@ let sqrt_subset : String =
   #|sqtx8544 squareroot 1.000000E-18 -> 1.00E-9 Rounded
   #|sqtx8545 squareroot 1.01E-18 -> 1.00E-9 Inexact Rounded
   #|sqtx8546 squareroot 1.02E-18 -> 1.01E-9 Inexact Rounded
+  #|
+  #|-- result exactly representable with precision p, but not necessarily
+  #|-- exactly representable as a subnormal;  check the correct flags are raised
   #|precision: 2
   #|sqtx8547 squareroot 1.21E-20 -> 1E-10 Underflow Subnormal Inexact Rounded
   #|sqtx8548 squareroot 1.44E-20 -> 1E-10 Underflow Subnormal Inexact Rounded
   #|sqtx8549 squareroot 9.61E-20 -> 3E-10 Underflow Subnormal Inexact Rounded
   #|sqtx8550 squareroot 8.836E-19 -> 9E-10 Underflow Subnormal Inexact Rounded
   #|sqtx8551 squareroot 9.216E-19 -> 1.0E-9 Underflow Subnormal Inexact Rounded
+  #|
   #|precision: 3
   #|sqtx8552 squareroot 1.21E-22 -> 1E-11 Underflow Subnormal Inexact Rounded
   #|sqtx8553 squareroot 1.21E-20 -> 1.1E-10 Subnormal
@@ -3495,6 +3605,8 @@ let sqrt_subset : String =
   #|sqtx8563 squareroot 1.1236E-20 -> 1.1E-10 Underflow Subnormal Inexact Rounded
   #|sqtx8564 squareroot 1.2996E-20 -> 1.1E-10 Underflow Subnormal Inexact Rounded
   #|sqtx8565 squareroot 1.3225E-20 -> 1.2E-10 Underflow Subnormal Inexact Rounded
+  #|
+  #|-- A selection of subnormal results prone to double rounding errors
   #|precision: 2
   #|sqtx8566 squareroot 2.3E-21 -> 0E-10 Underflow Subnormal Inexact Rounded Clamped
   #|sqtx8567 squareroot 2.4E-21 -> 0E-10 Underflow Subnormal Inexact Rounded Clamped
@@ -3558,12 +3670,17 @@ let sqrt_subset : String =
   #|sqtx8623 squareroot 1.726E-19 -> 4.15E-10 Underflow Subnormal Inexact Rounded
   #|sqtx8624 squareroot 1.853E-19 -> 4.30E-10 Underflow Subnormal Inexact Rounded
   #|sqtx8625 squareroot 4.245E-19 -> 6.52E-10 Underflow Subnormal Inexact Rounded
+  #|
+  #|-- clamping and overflow for large exponents
   #|precision: 1
   #|sqtx8626 squareroot 1E+18 -> 1E+9
   #|sqtx8627 squareroot 1E+19 -> 3E+9 Inexact Rounded
+  #|-- in this next one, intermediate result is 9486832980.505137996...
+  #|-- so rounds down to 9 (not up to 10 which would cause Infinity overflow)
   #|sqtx8628 squareroot 9E+19 -> 9E+9 Inexact Rounded
   #|sqtx8629 squareroot 9.1E+19 -> Infinity Overflow Inexact Rounded
   #|sqtx8630 squareroot 1E+20 -> Infinity Overflow Inexact Rounded
+  #|
   #|precision: 2
   #|sqtx8631 squareroot 1E+18 -> 1E+9
   #|sqtx8632 squareroot 1.0E+18 -> 1.0E+9
@@ -3575,6 +3692,7 @@ let sqrt_subset : String =
   #|sqtx8637 squareroot 1.0E+18 -> 1.0E+9
   #|sqtx8638 squareroot 1E+20 -> Infinity Overflow Inexact Rounded
   #|clamp: 0
+  #|
   #|precision: 6
   #|sqtx8639 squareroot 1E+18 -> 1E+9
   #|sqtx8640 squareroot 1.0000000000E+18 -> 1.00000E+9
@@ -3593,10 +3711,14 @@ let sqrt_subset : String =
   #|sqtx8652 squareroot 1.000000000E+18 -> 1.00000E+9
   #|sqtx8653 squareroot 1E+20 -> Infinity Overflow Inexact Rounded
   #|clamp: 0
+  #|
+  #|-- The following example causes a TypeError in Python 2.5.1
   #|precision: 3
   #|maxexponent: 9
   #|minexponent: -9
   #|sqtx8654 squareroot 10000000000 -> 1.00E+5 Rounded
+  #|
+  #|-- Additional tricky cases of underflown subnormals
   #|rounding: half_even
   #|precision: 5
   #|maxexponent: 999
@@ -3631,6 +3753,10 @@ let sqrt_subset : String =
   #|sqtx8727 squareroot 8.9970E-2000 -> 2.999E-1000 Underflow Subnormal Inexact Rounded
   #|sqtx8728 squareroot 9.4587E-2000 -> 3.075E-1000 Underflow Subnormal Inexact Rounded
   #|sqtx8729 squareroot 9.6069E-2000 -> 3.099E-1000 Underflow Subnormal Inexact Rounded
+  #|-- (End of Mark Dickinson's testcases.)
+  #|
+  #|
+  #|-- Some additional edge cases
   #|maxexponent: 9
   #|minexponent: -9
   #|precision: 2
@@ -3639,6 +3765,8 @@ let sqrt_subset : String =
   #|sqtx9001 squareroot 9980.01 -> 99.9
   #|precision: 4
   #|sqtx9002 squareroot 9980.01 -> 99.9
+  #|
+  #|-- Exact from over-precise
   #|precision: 4
   #|sqtx9003 squareroot 11025   -> 105
   #|precision: 3
@@ -3647,8 +3775,12 @@ let sqrt_subset : String =
   #|sqtx9005 squareroot 11025   -> 1.0E+2  Inexact Rounded
   #|precision: 1
   #|sqtx9006 squareroot 11025   -> 1E+2    Inexact Rounded
+  #|
+  #|-- an interesting case
   #|precision:   7
   #|sqtx9007 squareroot 1600000e1 -> 4000
+  #|
+  #|-- Out-of-bounds zeros
   #|precision: 4
   #|sqtx9010 squareroot 0E-9  -> 0.00000
   #|sqtx9011 squareroot 0E-10 -> 0.00000
@@ -3664,6 +3796,7 @@ let sqrt_subset : String =
   #|sqtx9025 squareroot 0E-26 -> 0E-12 Clamped
   #|sqtx9026 squareroot 0E-27 -> 0E-12 Clamped
   #|sqtx9027 squareroot 0E-28 -> 0E-12 Clamped
+  #|
   #|sqtx9030 squareroot 0E+8  -> 0E+4
   #|sqtx9031 squareroot 0E+10 -> 0E+5
   #|sqtx9032 squareroot 0E+12 -> 0E+6
@@ -3675,11 +3808,15 @@ let sqrt_subset : String =
   #|sqtx9038 squareroot 0E+20 -> 0E+9 Clamped
   #|sqtx9039 squareroot 0E+21 -> 0E+9 Clamped
   #|sqtx9040 squareroot 0E+22 -> 0E+9 Clamped
+  #|
+  #|-- if digits > emax maximum real exponent is negative
   #|maxexponent: 9
   #|minexponent: -9
   #|precision: 15
   #|clamp: 1
   #|sqtx9045 squareroot  1 -> 1.00000  Clamped
+  #|
+  #|-- other
   #|maxexponent: 999
   #|minexponent: -999
   #|precision: 16
@@ -3687,17 +3824,26 @@ let sqrt_subset : String =
   #|sqtx9047 squareroot  10E-1 -> 1.0
   #|sqtx9048 squareroot  10E-2 -> 0.3162277660168379         inexact rounded
   #|sqtx9049 squareroot  10E-3 -> 0.10
+  #|
+  #|
+  #|-- High-precision exact and inexact
   #|maxexponent: 999
   #|minexponent: -999
   #|precision: 400
   #|sqtx9050 squareroot 2 -> 1.414213562373095048801688724209698078569671875376948073176679737990732478462107038850387534327641572735013846230912297024924836055850737212644121497099935831413222665927505592755799950501152782060571470109559971605970274534596862014728517418640889198609552329230484308714321450839762603627995251407989687253396546331808829640620615258352395054745750287759961729835575220337531857011354374603408498847 Inexact Rounded
   #|sqtx9051 squareroot 1089 -> 33
   #|sqtx9052 squareroot 10.89 -> 3.3
+  #|
+  #|-- Null test
+  #|sqtx9900 squareroot  # -> NaN Invalid_operation
 
 ///|
 test "squareroot.decTest subset" {
   let cases = parse_dectest(sqrt_subset)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, skipped) = run_cases_with_flags(cases)
+  if skipped > 0 {
+    println("\{skipped} cases skipped (format-encoding / reference-specific)")
+  }
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 30 { failures.length() } else { 30 }

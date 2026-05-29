@@ -1,8 +1,41 @@
 ///|
-/// `comparetotal` cases from `comparetotal.decTest`, restricted to half_up
-/// rounding mode and precision >= 9 sections. Bit-level ops, so no
-/// rounding-related skips are needed.
+/// Full `comparetotal.decTest` corpus (IBM General Decimal
+/// Arithmetic testcases), embedded verbatim.
 let comparetotal_subset : String =
+  #|------------------------------------------------------------------------
+  #|-- comparetotal.decTest -- decimal comparison using total ordering    --
+  #|-- Copyright (c) IBM Corporation, 1981, 2008.  All rights reserved.   --
+  #|------------------------------------------------------------------------
+  #|-- Please see the document "General Decimal Arithmetic Testcases"     --
+  #|-- at http://www2.hursley.ibm.com/decimal for the description of      --
+  #|-- these testcases.                                                   --
+  #|--                                                                    --
+  #|-- These testcases are experimental ('beta' versions), and they       --
+  #|-- may contain errors.  They are offered on an as-is basis.  In       --
+  #|-- particular, achieving the same results as the tests here is not    --
+  #|-- a guarantee that an implementation complies with any Standard      --
+  #|-- or specification.  The tests are not exhaustive.                   --
+  #|--                                                                    --
+  #|-- Please send comments, suggestions, and corrections to the author:  --
+  #|--   Mike Cowlishaw, IBM Fellow                                       --
+  #|--   IBM UK, PO Box 31, Birmingham Road, Warwick CV34 5JL, UK         --
+  #|--   mfc@uk.ibm.com                                                   --
+  #|------------------------------------------------------------------------
+  #|version: 2.59
+  #|
+  #|-- Note that we cannot assume add/subtract tests cover paths adequately,
+  #|-- here, because the code might be quite different (comparison cannot
+  #|-- overflow or underflow, so actual subtractions are not necessary).
+  #|-- Similarly, comparetotal will have some radically different paths
+  #|-- than compare.
+  #|
+  #|extended:    1
+  #|precision:   16
+  #|rounding:    half_up
+  #|maxExponent: 384
+  #|minExponent: -383
+  #|
+  #|-- sanity checks
   #|cotx001 comparetotal  -2  -2  -> 0
   #|cotx002 comparetotal  -2  -1  -> -1
   #|cotx003 comparetotal  -2   0  -> -1
@@ -28,6 +61,7 @@ let comparetotal_subset : String =
   #|cotx023 comparetotal   2   0  -> 1
   #|cotx025 comparetotal   2   1  -> 1
   #|cotx026 comparetotal   2   2  -> 0
+  #|
   #|cotx031 comparetotal  -20  -20  -> 0
   #|cotx032 comparetotal  -20  -10  -> -1
   #|cotx033 comparetotal  -20   00  -> -1
@@ -53,6 +87,7 @@ let comparetotal_subset : String =
   #|cotx053 comparetotal   20   00  -> 1
   #|cotx055 comparetotal   20   10  -> 1
   #|cotx056 comparetotal   20   20  -> 0
+  #|
   #|cotx061 comparetotal  -2.0  -2.0  -> 0
   #|cotx062 comparetotal  -2.0  -1.0  -> -1
   #|cotx063 comparetotal  -2.0   0.0  -> -1
@@ -78,16 +113,25 @@ let comparetotal_subset : String =
   #|cotx083 comparetotal   2.0   0.0  -> 1
   #|cotx085 comparetotal   2.0   1.0  -> 1
   #|cotx086 comparetotal   2.0   2.0  -> 0
+  #|
+  #|-- now some cases which might overflow if subtract were used
+  #|maxexponent: 999999999
+  #|minexponent: -999999999
   #|cotx090 comparetotal  9.99999999E+999999999 9.99999999E+999999999  -> 0
   #|cotx091 comparetotal -9.99999999E+999999999 9.99999999E+999999999  -> -1
   #|cotx092 comparetotal  9.99999999E+999999999 -9.99999999E+999999999 -> 1
   #|cotx093 comparetotal -9.99999999E+999999999 -9.99999999E+999999999 -> 0
+  #|
+  #|-- Examples
   #|cotx094 comparetotal  12.73  127.9  -> -1
   #|cotx095 comparetotal  -127   12     -> -1
   #|cotx096 comparetotal  12.30  12.3   -> -1
   #|cotx097 comparetotal  12.30  12.30  ->  0
   #|cotx098 comparetotal  12.3   12.300 ->  1
   #|cotx099 comparetotal  12.3   NaN    -> -1
+  #|
+  #|-- some differing length/exponent cases
+  #|-- in this first group, compare would compare all equal
   #|cotx100 comparetotal   7.0    7.0    -> 0
   #|cotx101 comparetotal   7.0    7      -> -1
   #|cotx102 comparetotal   7      7.0    -> 1
@@ -99,6 +143,7 @@ let comparetotal_subset : String =
   #|cotx108 comparetotal   7.0    70E-1  -> 0
   #|cotx109 comparetotal   7      0.7E+1 -> 0
   #|cotx110 comparetotal   7      70E-1  -> 1
+  #|
   #|cotx120 comparetotal   8.0    7.0    -> 1
   #|cotx121 comparetotal   8.0    7      -> 1
   #|cotx122 comparetotal   8      7.0    -> 1
@@ -110,6 +155,7 @@ let comparetotal_subset : String =
   #|cotx128 comparetotal   8.0    70E-1  -> 1
   #|cotx129 comparetotal   8      0.7E+1  -> 1
   #|cotx130 comparetotal   8      70E-1  -> 1
+  #|
   #|cotx140 comparetotal   8.0    9.0    -> -1
   #|cotx141 comparetotal   8.0    9      -> -1
   #|cotx142 comparetotal   8      9.0    -> -1
@@ -121,6 +167,8 @@ let comparetotal_subset : String =
   #|cotx148 comparetotal   8.0    90E-1  -> -1
   #|cotx149 comparetotal   8      0.9E+1 -> -1
   #|cotx150 comparetotal   8      90E-1  -> -1
+  #|
+  #|-- and again, with sign changes -+ ..
   #|cotx200 comparetotal  -7.0    7.0    -> -1
   #|cotx201 comparetotal  -7.0    7      -> -1
   #|cotx202 comparetotal  -7      7.0    -> -1
@@ -132,6 +180,7 @@ let comparetotal_subset : String =
   #|cotx208 comparetotal  -7.0    70E-1  -> -1
   #|cotx209 comparetotal  -7      0.7E+1 -> -1
   #|cotx210 comparetotal  -7      70E-1  -> -1
+  #|
   #|cotx220 comparetotal  -8.0    7.0    -> -1
   #|cotx221 comparetotal  -8.0    7      -> -1
   #|cotx222 comparetotal  -8      7.0    -> -1
@@ -143,6 +192,7 @@ let comparetotal_subset : String =
   #|cotx228 comparetotal  -8.0    70E-1  -> -1
   #|cotx229 comparetotal  -8      0.7E+1 -> -1
   #|cotx230 comparetotal  -8      70E-1  -> -1
+  #|
   #|cotx240 comparetotal  -8.0    9.0    -> -1
   #|cotx241 comparetotal  -8.0    9      -> -1
   #|cotx242 comparetotal  -8      9.0    -> -1
@@ -154,6 +204,8 @@ let comparetotal_subset : String =
   #|cotx248 comparetotal  -8.0    90E-1  -> -1
   #|cotx249 comparetotal  -8      0.9E+1 -> -1
   #|cotx250 comparetotal  -8      90E-1  -> -1
+  #|
+  #|-- and again, with sign changes +- ..
   #|cotx300 comparetotal   7.0    -7.0    -> 1
   #|cotx301 comparetotal   7.0    -7      -> 1
   #|cotx302 comparetotal   7      -7.0    -> 1
@@ -165,6 +217,7 @@ let comparetotal_subset : String =
   #|cotx308 comparetotal   7.0    -70E-1  -> 1
   #|cotx309 comparetotal   7      -.7E+1  -> 1
   #|cotx310 comparetotal   7      -70E-1  -> 1
+  #|
   #|cotx320 comparetotal   8.0    -7.0    -> 1
   #|cotx321 comparetotal   8.0    -7      -> 1
   #|cotx322 comparetotal   8      -7.0    -> 1
@@ -176,6 +229,7 @@ let comparetotal_subset : String =
   #|cotx328 comparetotal   8.0    -70E-1  -> 1
   #|cotx329 comparetotal   8      -.7E+1  -> 1
   #|cotx330 comparetotal   8      -70E-1  -> 1
+  #|
   #|cotx340 comparetotal   8.0    -9.0    -> 1
   #|cotx341 comparetotal   8.0    -9      -> 1
   #|cotx342 comparetotal   8      -9.0    -> 1
@@ -187,6 +241,8 @@ let comparetotal_subset : String =
   #|cotx348 comparetotal   8.0    -90E-1  -> 1
   #|cotx349 comparetotal   8      -.9E+1  -> 1
   #|cotx350 comparetotal   8      -90E-1  -> 1
+  #|
+  #|-- and again, with sign changes -- ..
   #|cotx400 comparetotal   -7.0    -7.0    -> 0
   #|cotx401 comparetotal   -7.0    -7      -> 1
   #|cotx402 comparetotal   -7      -7.0    -> -1
@@ -198,6 +254,7 @@ let comparetotal_subset : String =
   #|cotx408 comparetotal   -7.0    -70E-1  -> 0
   #|cotx409 comparetotal   -7      -.7E+1  -> 0
   #|cotx410 comparetotal   -7      -70E-1  -> -1
+  #|
   #|cotx420 comparetotal   -8.0    -7.0    -> -1
   #|cotx421 comparetotal   -8.0    -7      -> -1
   #|cotx422 comparetotal   -8      -7.0    -> -1
@@ -209,6 +266,7 @@ let comparetotal_subset : String =
   #|cotx428 comparetotal   -8.0    -70E-1  -> -1
   #|cotx429 comparetotal   -8      -.7E+1  -> -1
   #|cotx430 comparetotal   -8      -70E-1  -> -1
+  #|
   #|cotx440 comparetotal   -8.0    -9.0    -> 1
   #|cotx441 comparetotal   -8.0    -9      -> 1
   #|cotx442 comparetotal   -8      -9.0    -> 1
@@ -220,6 +278,10 @@ let comparetotal_subset : String =
   #|cotx448 comparetotal   -8.0    -90E-1  -> 1
   #|cotx449 comparetotal   -8      -.9E+1  -> 1
   #|cotx450 comparetotal   -8      -90E-1  -> 1
+  #|
+  #|
+  #|-- testcases that subtract to lots of zeros at boundaries [pgr]
+  #|precision: 40
   #|cotx470 comparetotal 123.4560000000000000E789 123.456E789 -> -1
   #|cotx471 comparetotal 123.456000000000000E-89 123.456E-89 -> -1
   #|cotx472 comparetotal 123.45600000000000E789 123.456E789 -> -1
@@ -248,6 +310,9 @@ let comparetotal_subset : String =
   #|cotx495 comparetotal 123.456E789 123.45600E789 -> 1
   #|cotx496 comparetotal 123.456E-89 123.4560E-89 -> 1
   #|cotx497 comparetotal 123.456E789 123.456E789 -> 0
+  #|
+  #|-- wide-ranging, around precision; signs equal
+  #|precision: 9
   #|cotx500 comparetotal    1     1E-15    -> 1
   #|cotx501 comparetotal    1     1E-14    -> 1
   #|cotx502 comparetotal    1     1E-13    -> 1
@@ -279,6 +344,7 @@ let comparetotal_subset : String =
   #|cotx529 comparetotal    1     1E+13    -> -1
   #|cotx530 comparetotal    1     1E+14    -> -1
   #|cotx531 comparetotal    1     1E+15    -> -1
+  #|-- LR swap
   #|cotx540 comparetotal    1E-15  1       -> -1
   #|cotx541 comparetotal    1E-14  1       -> -1
   #|cotx542 comparetotal    1E-13  1       -> -1
@@ -310,6 +376,7 @@ let comparetotal_subset : String =
   #|cotx569 comparetotal    1E+13  1       ->  1
   #|cotx570 comparetotal    1E+14  1       ->  1
   #|cotx571 comparetotal    1E+15  1       ->  1
+  #|-- similar with an useful coefficient, one side only
   #|cotx580 comparetotal  0.000000987654321     1E-15    -> 1
   #|cotx581 comparetotal  0.000000987654321     1E-14    -> 1
   #|cotx582 comparetotal  0.000000987654321     1E-13    -> 1
@@ -330,6 +397,9 @@ let comparetotal_subset : String =
   #|cotx597 comparetotal  0.000000987654321     1E+2     -> -1
   #|cotx598 comparetotal  0.000000987654321     1E+3     -> -1
   #|cotx599 comparetotal  0.000000987654321     1E+4     -> -1
+  #|
+  #|-- check some unit-y traps
+  #|precision: 20
   #|cotx600 comparetotal   12            12.2345 -> -1
   #|cotx601 comparetotal   12.0          12.2345 -> -1
   #|cotx602 comparetotal   12.00         12.2345 -> -1
@@ -370,6 +440,9 @@ let comparetotal_subset : String =
   #|cotx637 comparetotal  -12.1234 -12.0000000   -> -1
   #|cotx638 comparetotal  -12.1234 -12.00000000  -> -1
   #|cotx639 comparetotal  -12.1234 -12.000000000 -> -1
+  #|precision: 9
+  #|
+  #|-- extended zeros
   #|cotx640 comparetotal   0     0   -> 0
   #|cotx641 comparetotal   0    -0   -> 1
   #|cotx642 comparetotal   0    -0.0 -> 1
@@ -386,6 +459,7 @@ let comparetotal_subset : String =
   #|cotx653 comparetotal  -0.0  -0   -> 1
   #|cotx654 comparetotal  -0.0  -0.0 -> 0
   #|cotx655 comparetotal  -0.0   0.0 -> -1
+  #|
   #|cotx656 comparetotal  -0E1   0.0 -> -1
   #|cotx657 comparetotal  -0E2   0.0 -> -1
   #|cotx658 comparetotal   0E1   0.0 -> 1
@@ -410,6 +484,9 @@ let comparetotal_subset : String =
   #|cotx677 comparetotal  -0E2   0E2 -> -1
   #|cotx678 comparetotal   0E1   0E2 -> -1
   #|cotx679 comparetotal   0E2   0E2 -> 0
+  #|
+  #|-- trailing zeros; unit-y
+  #|precision: 20
   #|cotx680 comparetotal   12    12           -> 0
   #|cotx681 comparetotal   12    12.0         -> 1
   #|cotx682 comparetotal   12    12.00        -> 1
@@ -430,6 +507,11 @@ let comparetotal_subset : String =
   #|cotx697 comparetotal   12.0000000      12 -> -1
   #|cotx698 comparetotal   12.00000000     12 -> -1
   #|cotx699 comparetotal   12.000000000    12 -> -1
+  #|
+  #|-- long operand checks
+  #|maxexponent: 999
+  #|minexponent: -999
+  #|precision: 9
   #|cotx701 comparetotal 12345678000  1 ->  1
   #|cotx702 comparetotal 1 12345678000  -> -1
   #|cotx703 comparetotal 1234567800   1 ->  1
@@ -448,6 +530,9 @@ let comparetotal_subset : String =
   #|cotx716 comparetotal 1 -12345678901 ->  1
   #|cotx717 comparetotal -1234567896  1 -> -1
   #|cotx718 comparetotal 1 -1234567896  ->  1
+  #|
+  #|precision: 15
+  #|-- same with plenty of precision
   #|cotx721 comparetotal 12345678000 1 -> 1
   #|cotx722 comparetotal 1 12345678000 -> -1
   #|cotx723 comparetotal 1234567800  1 -> 1
@@ -460,9 +545,55 @@ let comparetotal_subset : String =
   #|cotx730 comparetotal 1 12345678901 -> -1
   #|cotx731 comparetotal 1234567896  1 -> 1
   #|cotx732 comparetotal 1 1234567896  -> -1
+  #|
+  #|-- residue cases
+  #|precision: 5
+  #|cotx740 comparetotal  1  0.9999999  -> 1
+  #|cotx741 comparetotal  1  0.999999   -> 1
+  #|cotx742 comparetotal  1  0.99999    -> 1
+  #|cotx743 comparetotal  1  1.0000     -> 1
+  #|cotx744 comparetotal  1  1.00001    -> -1
+  #|cotx745 comparetotal  1  1.000001   -> -1
+  #|cotx746 comparetotal  1  1.0000001  -> -1
+  #|cotx750 comparetotal  0.9999999  1  -> -1
+  #|cotx751 comparetotal  0.999999   1  -> -1
+  #|cotx752 comparetotal  0.99999    1  -> -1
+  #|cotx753 comparetotal  1.0000     1  -> -1
+  #|cotx754 comparetotal  1.00001    1  -> 1
+  #|cotx755 comparetotal  1.000001   1  -> 1
+  #|cotx756 comparetotal  1.0000001  1  -> 1
+  #|
+  #|-- a selection of longies
+  #|cotx760 comparetotal -36852134.84194296250843579428931 -5830629.8347085025808756560357940 -> -1
+  #|cotx761 comparetotal -36852134.84194296250843579428931 -36852134.84194296250843579428931  -> 0
+  #|cotx762 comparetotal -36852134.94194296250843579428931 -36852134.84194296250843579428931  -> -1
+  #|cotx763 comparetotal -36852134.84194296250843579428931 -36852134.94194296250843579428931  -> 1
+  #|-- precisions above or below the difference should have no effect
+  #|precision:   11
   #|cotx764 comparetotal -36852134.84194296250843579428931 -36852134.94194296250843579428931  -> 1
+  #|precision:   10
   #|cotx765 comparetotal -36852134.84194296250843579428931 -36852134.94194296250843579428931  -> 1
+  #|precision:    9
   #|cotx766 comparetotal -36852134.84194296250843579428931 -36852134.94194296250843579428931  -> 1
+  #|precision:    8
+  #|cotx767 comparetotal -36852134.84194296250843579428931 -36852134.94194296250843579428931  -> 1
+  #|precision:    7
+  #|cotx768 comparetotal -36852134.84194296250843579428931 -36852134.94194296250843579428931  -> 1
+  #|precision:    6
+  #|cotx769 comparetotal -36852134.84194296250843579428931 -36852134.94194296250843579428931  -> 1
+  #|precision:    5
+  #|cotx770 comparetotal -36852134.84194296250843579428931 -36852134.94194296250843579428931  -> 1
+  #|precision:    4
+  #|cotx771 comparetotal -36852134.84194296250843579428931 -36852134.94194296250843579428931  -> 1
+  #|precision:    3
+  #|cotx772 comparetotal -36852134.84194296250843579428931 -36852134.94194296250843579428931  -> 1
+  #|precision:    2
+  #|cotx773 comparetotal -36852134.84194296250843579428931 -36852134.94194296250843579428931  -> 1
+  #|precision:    1
+  #|cotx774 comparetotal -36852134.84194296250843579428931 -36852134.94194296250843579428931  -> 1
+  #|
+  #|-- Specials
+  #|precision:   9
   #|cotx780 comparetotal  Inf  -Inf   ->  1
   #|cotx781 comparetotal  Inf  -1000  ->  1
   #|cotx782 comparetotal  Inf  -1     ->  1
@@ -479,6 +610,7 @@ let comparetotal_subset : String =
   #|cotx793 comparetotal  1     Inf   -> -1
   #|cotx794 comparetotal  1000  Inf   -> -1
   #|cotx795 comparetotal  Inf   Inf   ->  0
+  #|
   #|cotx800 comparetotal -Inf  -Inf   ->  0
   #|cotx801 comparetotal -Inf  -1000  -> -1
   #|cotx802 comparetotal -Inf  -1     -> -1
@@ -495,6 +627,7 @@ let comparetotal_subset : String =
   #|cotx813 comparetotal  1    -Inf   ->  1
   #|cotx814 comparetotal  1000 -Inf   ->  1
   #|cotx815 comparetotal  Inf  -Inf   ->  1
+  #|
   #|cotx821 comparetotal  NaN -Inf    ->  1
   #|cotx822 comparetotal  NaN -1000   ->  1
   #|cotx823 comparetotal  NaN -1      ->  1
@@ -515,6 +648,7 @@ let comparetotal_subset : String =
   #|cotx838 comparetotal -NaN -NaN    ->  0
   #|cotx839 comparetotal +NaN -NaN    ->  1
   #|cotx840 comparetotal -NaN +NaN    ->  -1
+  #|
   #|cotx841 comparetotal  sNaN -sNaN  ->  1
   #|cotx842 comparetotal  sNaN -NaN   ->  1
   #|cotx843 comparetotal  sNaN -Inf   ->  1
@@ -526,6 +660,7 @@ let comparetotal_subset : String =
   #|cotx849 comparetotal  sNaN  1000  ->  1
   #|cotx850 comparetotal  sNaN  NaN   ->  -1
   #|cotx851 comparetotal  sNaN sNaN   ->  0
+  #|
   #|cotx852 comparetotal -sNaN sNaN   ->  -1
   #|cotx853 comparetotal -NaN  sNaN   ->  -1
   #|cotx854 comparetotal -Inf  sNaN   ->  -1
@@ -538,6 +673,7 @@ let comparetotal_subset : String =
   #|cotx861 comparetotal  Inf  sNaN   ->  -1
   #|cotx862 comparetotal  NaN  sNaN   ->  1
   #|cotx863 comparetotal  sNaN sNaN   ->  0
+  #|
   #|cotx871 comparetotal  -sNaN -sNaN  ->  0
   #|cotx872 comparetotal  -sNaN -NaN   ->  1
   #|cotx873 comparetotal  -sNaN -Inf   ->  -1
@@ -549,6 +685,7 @@ let comparetotal_subset : String =
   #|cotx879 comparetotal  -sNaN  1000  ->  -1
   #|cotx880 comparetotal  -sNaN  NaN   ->  -1
   #|cotx881 comparetotal  -sNaN sNaN   ->  -1
+  #|
   #|cotx882 comparetotal -sNaN -sNaN   ->  0
   #|cotx883 comparetotal -NaN  -sNaN   ->  -1
   #|cotx884 comparetotal -Inf  -sNaN   ->  1
@@ -561,6 +698,8 @@ let comparetotal_subset : String =
   #|cotx891 comparetotal  Inf  -sNaN   ->  1
   #|cotx892 comparetotal  NaN  -sNaN   ->  1
   #|cotx893 comparetotal  sNaN -sNaN   ->  1
+  #|
+  #|-- NaNs with payload
   #|cotx960 comparetotal  NaN9 -Inf   ->  1
   #|cotx961 comparetotal  NaN8  999   ->  1
   #|cotx962 comparetotal  NaN77 Inf   ->  1
@@ -568,6 +707,7 @@ let comparetotal_subset : String =
   #|cotx964 comparetotal -Inf  -NaN4  ->  1
   #|cotx965 comparetotal -999  -NaN33 ->  1
   #|cotx966 comparetotal  Inf   NaN2  ->  -1
+  #|
   #|cotx970 comparetotal -NaN41 -NaN42 -> 1
   #|cotx971 comparetotal +NaN41 -NaN42 -> 1
   #|cotx972 comparetotal -NaN41 +NaN42 -> -1
@@ -576,6 +716,7 @@ let comparetotal_subset : String =
   #|cotx975 comparetotal +NaN42 -NaN01 ->  1
   #|cotx976 comparetotal -NaN42 +NaN01 -> -1
   #|cotx977 comparetotal +NaN42 +NaN01 ->  1
+  #|
   #|cotx980 comparetotal -sNaN771 -sNaN772 -> 1
   #|cotx981 comparetotal +sNaN771 -sNaN772 -> 1
   #|cotx982 comparetotal -sNaN771 +sNaN772 -> -1
@@ -584,6 +725,7 @@ let comparetotal_subset : String =
   #|cotx985 comparetotal +sNaN772 -sNaN771 ->  1
   #|cotx986 comparetotal -sNaN772 +sNaN771 -> -1
   #|cotx987 comparetotal +sNaN772 +sNaN771 ->  1
+  #|
   #|cotx991 comparetotal -sNaN99 -Inf    -> -1
   #|cotx992 comparetotal  sNaN98 -11     ->  1
   #|cotx993 comparetotal  sNaN97  NaN    -> -1
@@ -593,6 +735,10 @@ let comparetotal_subset : String =
   #|cotx997 comparetotal  088    sNaN81  -> -1
   #|cotx998 comparetotal  Inf    sNaN90  -> -1
   #|cotx999 comparetotal  NaN   -sNaN89  ->  1
+  #|
+  #|-- overflow and underflow tests .. subnormal results now allowed
+  #|maxExponent: 999999999
+  #|minexponent: -999999999
   #|cotx1080 comparetotal +1.23456789012345E-0 9E+999999999 -> -1
   #|cotx1081 comparetotal 9E+999999999 +1.23456789012345E-0 ->  1
   #|cotx1082 comparetotal +0.100 9E-999999999               ->  1
@@ -601,6 +747,7 @@ let comparetotal_subset : String =
   #|cotx1086 comparetotal 9E+999999999 -1.23456789012345E-0 ->  1
   #|cotx1087 comparetotal -0.100 9E-999999999               -> -1
   #|cotx1088 comparetotal 9E-999999999 -0.100               ->  1
+  #|
   #|cotx1089 comparetotal 1e-599999999 1e-400000001   -> -1
   #|cotx1090 comparetotal 1e-599999999 1e-400000000   -> -1
   #|cotx1091 comparetotal 1e-600000000 1e-400000000   -> -1
@@ -613,6 +760,7 @@ let comparetotal_subset : String =
   #|cotx1098 comparetotal 9e999999998 100             ->  1
   #|cotx1099 comparetotal 9e999999998 10              ->  1
   #|cotx1100 comparetotal 100  9e999999998            -> -1
+  #|-- signs
   #|cotx1101 comparetotal  1e+777777777  1e+411111111 ->  1
   #|cotx1102 comparetotal  1e+777777777 -1e+411111111 ->  1
   #|cotx1103 comparetotal -1e+777777777  1e+411111111 -> -1
@@ -621,6 +769,8 @@ let comparetotal_subset : String =
   #|cotx1106 comparetotal  1e-777777777 -1e-411111111 ->  1
   #|cotx1107 comparetotal -1e-777777777  1e-411111111 -> -1
   #|cotx1108 comparetotal -1e-777777777 -1e-411111111 ->  1
+  #|
+  #|-- spread zeros
   #|cotx1110 comparetotal   0E-383  0       -> -1
   #|cotx1111 comparetotal   0E-383 -0       ->  1
   #|cotx1112 comparetotal  -0E-383  0       -> -1
@@ -633,6 +783,7 @@ let comparetotal_subset : String =
   #|cotx1119 comparetotal   0      -0E+384  ->  1
   #|cotx1120 comparetotal  -0       0E+384  -> -1
   #|cotx1121 comparetotal  -0      -0E+384  ->  1
+  #|
   #|cotx1130 comparetotal   0E+384  0       ->  1
   #|cotx1131 comparetotal   0E+384 -0       ->  1
   #|cotx1132 comparetotal  -0E+384  0       -> -1
@@ -645,12 +796,18 @@ let comparetotal_subset : String =
   #|cotx1139 comparetotal   0      -0E-383  ->  1
   #|cotx1140 comparetotal  -0       0E-383  -> -1
   #|cotx1141 comparetotal  -0      -0E-383  -> -1
+  #|
+  #|-- Null tests
+  #|cotx9990 comparetotal 10  # -> NaN Invalid_operation
+  #|cotx9991 comparetotal  # 10 -> NaN Invalid_operation
 
 ///|
 test "comparetotal.decTest subset round-trips through parse + comparetotal + toSci" {
   let cases = parse_dectest(comparetotal_subset)
-  assert_eq(cases.length(), 642)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, skipped) = run_cases_with_flags(cases)
+  if skipped > 0 {
+    println("\{skipped} cases skipped (format-encoding / reference-specific)")
+  }
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 20 { failures.length() } else { 20 }

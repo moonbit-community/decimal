@@ -1,14 +1,44 @@
 ///|
-/// First 100 cases from `fma.decTest`. Skips Subnormal / Underflow /
-/// Overflow / Conversion_syntax / sNaN cases pending runner-side flag
-/// validation.
+/// Full `fma.decTest` corpus (IBM General Decimal Arithmetic
+/// testcases), embedded verbatim.
 let fma_subset : String =
-  #|version: 2.62
+  #|------------------------------------------------------------------------
+  #|-- fma.decTest -- decimal fused multiply add                          --
+  #|-- Copyright (c) IBM Corporation, 1981, 2008.  All rights reserved.   --
+  #|------------------------------------------------------------------------
+  #|-- Please see the document "General Decimal Arithmetic Testcases"     --
+  #|-- at http://www2.hursley.ibm.com/decimal for the description of      --
+  #|-- these testcases.                                                   --
+  #|--                                                                    --
+  #|-- These testcases are experimental ('beta' versions), and they       --
+  #|-- may contain errors.  They are offered on an as-is basis.  In       --
+  #|-- particular, achieving the same results as the tests here is not    --
+  #|-- a guarantee that an implementation complies with any Standard      --
+  #|-- or specification.  The tests are not exhaustive.                   --
+  #|--                                                                    --
+  #|-- Please send comments, suggestions, and corrections to the author:  --
+  #|--   Mike Cowlishaw, IBM Fellow                                       --
+  #|--   IBM UK, PO Box 31, Birmingham Road, Warwick CV34 5JL, UK         --
+  #|--   mfc@uk.ibm.com                                                   --
+  #|------------------------------------------------------------------------
+  #|version: 2.59
+  #|
   #|extended:    1
   #|precision:   9
   #|rounding:    half_up
   #|maxExponent: 384
   #|minexponent: -383
+  #|
+  #|-- These tests comprise three parts:
+  #|--   1. Sanity checks and other three-operand tests (especially those
+  #|--      where the fused operation makes a difference)
+  #|--   2. Multiply tests (third operand is neutral zero [0E+emax])
+  #|--   3. Addition tests (first operand is 1)
+  #|-- The multiply and addition tests are extensive because FMA may have
+  #|-- its own dedicated multiplication or addition routine(s), and they
+  #|-- also inherently check the left-to-right properties.
+  #|
+  #|-- Sanity checks
   #|fmax0001 fma  1   1   1 ->   2
   #|fmax0002 fma  1   1   2 ->   3
   #|fmax0003 fma  2   2   3 ->   7
@@ -27,6 +57,8 @@ let fma_subset : String =
   #|fmax0018 fma  9   9  -9 ->  72
   #|fmax0019 fma  3   5   7 ->  22
   #|fmax0029 fma  3  -5   7 ->  -8
+  #|
+  #|-- non-integer exacts
   #|fma0100  fma    25.2   63.6   -438  ->  1164.72
   #|fma0101  fma   0.301  0.380    334  ->  334.114380
   #|fma0102  fma    49.2   -4.8   23.3  ->  -212.86
@@ -48,14 +80,29 @@ let fma_subset : String =
   #|fma0118  fma   -3.87   3.06   78.0  ->  66.1578
   #|fma0119  fma   0.742    192   35.6  ->  178.064
   #|fma0120  fma   -91.6   5.29  0.153  ->  -484.411
+  #|
+  #|-- cases where result is different from separate multiply + add; each
+  #|-- is preceded by the result of unfused multiply and add
+  #|-- [this is about 20% of all similar  cases in general]
+  #|--               888565290   1557.96930  -86087.7578  -> 1.38435735E+12
   #|fma0201  fma     888565290   1557.96930  -86087.7578  -> 1.38435736E+12  Inexact Rounded
+  #|--             -85519342.9    735155419     42010431  -> -6.28700084E+16
   #|fma0205  fma   -85519342.9    735155419     42010431  -> -6.28700083E+16 Inexact Rounded
+  #|--                -98025.5  -294603.472   10414348.2  -> 2.88890669E+10
   #|fma0208  fma      -98025.5  -294603.472   10414348.2  -> 2.88890670E+10  Inexact Rounded
+  #|--              5967627.39   83526540.6   498494.810  -> 4.98455271E+14
   #|fma0211  fma    5967627.39   83526540.6   498494.810  -> 4.98455272E+14  Inexact Rounded
+  #|--               3456.9433    874.39518   197866.615  ->  3220601.18
   #|fma0216  fma     3456.9433    874.39518   197866.615  ->  3220601.17     Inexact Rounded
+  #|--              62769.8287   2096.98927    48.420317  ->  131627705
   #|fma0218  fma    62769.8287   2096.98927    48.420317  ->  131627706      Inexact Rounded
+  #|--               -68.81500   59961113.9     -8988862  -> -4.13521291E+9
   #|fma0219  fma     -68.81500   59961113.9     -8988862  -> -4.13521292E+9  Inexact Rounded
+  #|--              2126341.02   63491.5152    302427455  -> 1.35307040E+11
   #|fma0226  fma    2126341.02   63491.5152    302427455  -> 1.35307041E+11  Inexact Rounded
+  #|
+  #|
+  #|-- Infinite combinations
   #|fmax0800 fma  Inf   Inf   Inf    ->  Infinity
   #|fmax0801 fma  Inf   Inf  -Inf    ->  NaN Invalid_operation
   #|fmax0802 fma  Inf  -Inf   Inf    ->  NaN Invalid_operation
@@ -66,9 +113,22 @@ let fma_subset : String =
   #|fmax0807 fma -Inf  -Inf  -Inf    ->  NaN Invalid_operation
   #|fmax0808 fma -Inf   0       1    ->  NaN Invalid_operation
   #|fmax0809 fma -Inf   0     NaN    ->  NaN Invalid_operation
+  #|
+  #|-- Triple NaN propagation
   #|fmax0900 fma  NaN2  NaN3  NaN5   ->  NaN2
   #|fmax0901 fma  0     NaN3  NaN5   ->  NaN3
   #|fmax0902 fma  0     0     NaN5   ->  NaN5
+  #|-- first sNaN wins (consider qNaN from earlier sNaN being
+  #|-- overridden by an sNaN in third operand)
+  #|fmax0903 fma  sNaN1 sNaN2 sNaN3  ->  NaN1 Invalid_operation
+  #|fmax0904 fma  0     sNaN2 sNaN3  ->  NaN2 Invalid_operation
+  #|fmax0905 fma  0     0     sNaN3  ->  NaN3 Invalid_operation
+  #|fmax0906 fma  sNaN1 sNaN2 sNaN3  ->  NaN1 Invalid_operation
+  #|fmax0907 fma  NaN7  sNaN2 sNaN3  ->  NaN2 Invalid_operation
+  #|fmax0908 fma  NaN7  NaN5  sNaN3  ->  NaN3 Invalid_operation
+  #|
+  #|-- MULTIPLICATION TESTS ------------------------------------------------
+  #|-- sanity checks (as base, above)
   #|fmax2000 fma 2      2  0E+999999  -> 4
   #|fmax2001 fma 2      3  0E+999999  -> 6
   #|fmax2002 fma 5      1  0E+999999  -> 5
@@ -91,11 +151,16 @@ let fma_subset : String =
   #|fmax2018 fma  9.999999 -9.999999  0E+999999  -> -100.000 Inexact Rounded
   #|fmax2019 fma -9.999999  9.999999  0E+999999  -> -100.000 Inexact Rounded
   #|fmax2020 fma -9.999999 -9.999999  0E+999999  ->  100.000 Inexact Rounded
+  #|
+  #|-- 1999.12.21: next one is an edge case if intermediate longs are used
   #|precision: 15
   #|fmax2059 fma 999999999999 9765625  0E+999999  -> 9.76562499999023E+18 Inexact Rounded
   #|precision: 30
   #|fmax2160 fma 999999999999 9765625  0E+999999  -> 9765624999990234375
   #|precision: 9
+  #|-----
+  #|
+  #|-- zeros, etc.
   #|fmax2021 fma  0      0      0E+999999  ->  0
   #|fmax2022 fma  0     -0      0E+999999  ->  0
   #|fmax2023 fma -0      0      0E+999999  ->  0
@@ -120,11 +185,14 @@ let fma_subset : String =
   #|fmax2043 fma -00.00 -0.000  0E+999999  ->  0.00000
   #|fmax2044 fma -00.00 -0E-3   0E+999999  ->  0.00000     -- rhs is 0
   #|fmax2045 fma -0E-3  -00.00  0E+999999  ->  0.00000     -- lhs is 0
+  #|
+  #|-- examples from decarith multiply
   #|fmax2050 fma 1.20 3         0E+999999  -> 3.60
   #|fmax2051 fma 7    3         0E+999999  -> 21
   #|fmax2052 fma 0.9  0.8       0E+999999  -> 0.72
   #|fmax2053 fma 0.9  -0        0E+999999  -> 0.0
   #|fmax2054 fma 654321 654321  0E+999999  -> 4.28135971E+11  Inexact Rounded
+  #|
   #|fmax2060 fma 123.45 1e7   0E+999999  ->  1.2345E+9
   #|fmax2061 fma 123.45 1e8   0E+999999  ->  1.2345E+10
   #|fmax2062 fma 123.45 1e+9  0E+999999  ->  1.2345E+11
@@ -132,6 +200,9 @@ let fma_subset : String =
   #|fmax2064 fma 123.45 1e11  0E+999999  ->  1.2345E+13
   #|fmax2065 fma 123.45 1e12  0E+999999  ->  1.2345E+14
   #|fmax2066 fma 123.45 1e13  0E+999999  ->  1.2345E+15
+  #|
+  #|
+  #|-- test some intermediate lengths
   #|precision: 9
   #|fmax2080 fma 0.1 123456789           0E+999999  -> 12345678.9
   #|fmax2081 fma 0.1 1234567891          0E+999999  -> 123456789 Inexact Rounded
@@ -144,6 +215,7 @@ let fma_subset : String =
   #|precision: 7
   #|fmax2087 fma 0.1 12345678912         0E+999999  -> 1.234568E+9 Inexact Rounded
   #|fmax2088 fma 0.1 12345678912345      0E+999999  -> 1.234568E+12 Inexact Rounded
+  #|
   #|precision: 9
   #|fmax2090 fma 123456789          0.1  0E+999999  -> 12345678.9
   #|fmax2091 fma 1234567891         0.1  0E+999999  -> 123456789 Inexact Rounded
@@ -156,6 +228,8 @@ let fma_subset : String =
   #|precision: 7
   #|fmax2097 fma 12345678912        0.1  0E+999999  -> 1.234568E+9 Inexact Rounded
   #|fmax2098 fma 12345678912345     0.1  0E+999999  -> 1.234568E+12 Inexact Rounded
+  #|
+  #|-- test some more edge cases and carries
   #|maxexponent: 9999
   #|minexponent: -9999
   #|precision: 33
@@ -182,6 +256,7 @@ let fma_subset : String =
   #|fmax2121 fma 9 900000000000000000000    0E+999999  -> 8100000000000000000000
   #|fmax2122 fma 9 9000000000000000000000    0E+999999  -> 81000000000000000000000
   #|fmax2123 fma 9 90000000000000000000000    0E+999999  -> 810000000000000000000000
+  #|-- test some more edge cases without carries
   #|fmax2131 fma 3 3    0E+999999  -> 9
   #|fmax2132 fma 3 30    0E+999999  -> 90
   #|fmax2133 fma 3 300    0E+999999  -> 900
@@ -205,9 +280,11 @@ let fma_subset : String =
   #|fmax2151 fma 3 300000000000000000000    0E+999999  -> 900000000000000000000
   #|fmax2152 fma 3 3000000000000000000000    0E+999999  -> 9000000000000000000000
   #|fmax2153 fma 3 30000000000000000000000    0E+999999  -> 90000000000000000000000
+  #|
   #|maxexponent: 999999
   #|minexponent: -999999
   #|precision: 9
+  #|-- test some cases that are close to exponent overflow/underflow
   #|fmax2170 fma 1 9e999999     0E+999999  -> 9E+999999
   #|fmax2171 fma 1 9.9e999999   0E+999999  -> 9.9E+999999
   #|fmax2172 fma 1 9.99e999999  0E+999999  -> 9.99E+999999
@@ -216,21 +293,26 @@ let fma_subset : String =
   #|fmax2176 fma 9.99e999999 1  0E+999999  -> 9.99E+999999
   #|fmax2177 fma 1 9.99999e999999  0E+999999  -> 9.99999E+999999
   #|fmax2178 fma 9.99999e999999 1  0E+999999  -> 9.99999E+999999
+  #|
   #|fmax2180 fma 0.1 9e-999998    0E+999999  -> 9E-999999
   #|fmax2181 fma 0.1 99e-999998   0E+999999  -> 9.9E-999998
   #|fmax2182 fma 0.1 999e-999998  0E+999999  -> 9.99E-999997
+  #|
   #|fmax2183 fma 0.1 9e-999998      0E+999999  -> 9E-999999
   #|fmax2184 fma 0.1 99e-999998     0E+999999  -> 9.9E-999998
   #|fmax2185 fma 0.1 999e-999998    0E+999999  -> 9.99E-999997
   #|fmax2186 fma 0.1 999e-999997    0E+999999  -> 9.99E-999996
   #|fmax2187 fma 0.1 9999e-999997   0E+999999  -> 9.999E-999995
   #|fmax2188 fma 0.1 99999e-999997  0E+999999  -> 9.9999E-999994
+  #|
   #|fmax2190 fma 1 9e-999998    0E+999999  -> 9E-999998
   #|fmax2191 fma 1 99e-999998   0E+999999  -> 9.9E-999997
   #|fmax2192 fma 1 999e-999998  0E+999999  -> 9.99E-999996
   #|fmax2193 fma 9e-999998   1  0E+999999  -> 9E-999998
   #|fmax2194 fma 99e-999998  1  0E+999999  -> 9.9E-999997
   #|fmax2195 fma 999e-999998 1  0E+999999  -> 9.99E-999996
+  #|
+  #|-- long operand triangle
   #|precision: 33
   #|fmax2246 fma 30269.587755640502150977251770554 4.8046009735990873395936309640543  0E+999999  -> 145433.290801193369671916511992830 Inexact Rounded
   #|precision: 32
@@ -297,6 +379,8 @@ let fma_subset : String =
   #|fmax2277 fma 30269.587755640502150977251770554 4.8046009735990873395936309640543  0E+999999  -> 1.5E+5                         Inexact Rounded
   #|precision:  1
   #|fmax2278 fma 30269.587755640502150977251770554 4.8046009735990873395936309640543  0E+999999  -> 1E+5                          Inexact Rounded
+  #|
+  #|-- test some edge cases with exact rounding
   #|maxexponent: 9999
   #|minexponent: -9999
   #|precision: 9
@@ -323,16 +407,23 @@ let fma_subset : String =
   #|fmax2321 fma 9 900000000000000000000    0E+999999  -> 8.10000000E+21  Rounded
   #|fmax2322 fma 9 9000000000000000000000    0E+999999  -> 8.10000000E+22  Rounded
   #|fmax2323 fma 9 90000000000000000000000    0E+999999  -> 8.10000000E+23  Rounded
+  #|
+  #|-- fastpath breakers
   #|precision:   29
   #|fmax2330 fma 1.491824697641270317824852952837224 1.105170918075647624811707826490246514675628614562883537345747603  0E+999999  -> 1.6487212707001281468486507878 Inexact Rounded
   #|precision:   55
   #|fmax2331 fma 0.8958341352965282506768545828765117803873717284891040428 0.8958341352965282506768545828765117803873717284891040428  0E+999999  -> 0.8025187979624784829842553829934069955890983696752228299 Inexact Rounded
+  #|
+  #|
+  #|-- tryzeros cases
   #|precision:   7
   #|rounding:    half_up
   #|maxExponent: 92
   #|minexponent: -92
   #|fmax2504  fma  0E-60 1000E-60   0E+999999  -> 0E-98 Clamped
   #|fmax2505  fma  100E+60 0E+60    0E+999999  -> 0E+92 Clamped
+  #|
+  #|-- mixed with zeros
   #|maxexponent: 999999
   #|minexponent: -999999
   #|precision: 9
@@ -344,6 +435,7 @@ let fma_subset : String =
   #|fmax2546 fma -1    -0      0E+999999  ->  0
   #|fmax2547 fma  1     0      0E+999999  ->  0
   #|fmax2548 fma  1    -0      0E+999999  ->  0
+  #|
   #|fmax2551 fma  0.0  -1      0E+999999  ->  0.0
   #|fmax2552 fma -0.0  -1      0E+999999  ->  0.0
   #|fmax2553 fma  0.0   1      0E+999999  ->  0.0
@@ -352,6 +444,7 @@ let fma_subset : String =
   #|fmax2556 fma -1.0  -0      0E+999999  ->  0.0
   #|fmax2557 fma  1.0   0      0E+999999  ->  0.0
   #|fmax2558 fma  1.0  -0      0E+999999  ->  0.0
+  #|
   #|fmax2561 fma  0    -1.0    0E+999999  ->  0.0
   #|fmax2562 fma -0    -1.0    0E+999999  ->  0.0
   #|fmax2563 fma  0     1.0    0E+999999  ->  0.0
@@ -360,6 +453,7 @@ let fma_subset : String =
   #|fmax2566 fma -1    -0.0    0E+999999  ->  0.0
   #|fmax2567 fma  1     0.0    0E+999999  ->  0.0
   #|fmax2568 fma  1    -0.0    0E+999999  ->  0.0
+  #|
   #|fmax2571 fma  0.0  -1.0    0E+999999  ->  0.00
   #|fmax2572 fma -0.0  -1.0    0E+999999  ->  0.00
   #|fmax2573 fma  0.0   1.0    0E+999999  ->  0.00
@@ -368,6 +462,9 @@ let fma_subset : String =
   #|fmax2576 fma -1.0  -0.0    0E+999999  ->  0.00
   #|fmax2577 fma  1.0   0.0    0E+999999  ->  0.00
   #|fmax2578 fma  1.0  -0.0    0E+999999  ->  0.00
+  #|
+  #|
+  #|-- Specials
   #|fmax2580 fma  Inf  -Inf    0E+999999  -> -Infinity
   #|fmax2581 fma  Inf  -1000   0E+999999  -> -Infinity
   #|fmax2582 fma  Inf  -1      0E+999999  -> -Infinity
@@ -384,6 +481,7 @@ let fma_subset : String =
   #|fmax2593 fma  1     Inf    0E+999999  ->  Infinity
   #|fmax2594 fma  1000  Inf    0E+999999  ->  Infinity
   #|fmax2595 fma  Inf   Inf    0E+999999  ->  Infinity
+  #|
   #|fmax2600 fma -Inf  -Inf    0E+999999  ->  Infinity
   #|fmax2601 fma -Inf  -1000   0E+999999  ->  Infinity
   #|fmax2602 fma -Inf  -1      0E+999999  ->  Infinity
@@ -400,6 +498,7 @@ let fma_subset : String =
   #|fmax2613 fma  1    -Inf    0E+999999  -> -Infinity
   #|fmax2614 fma  1000 -Inf    0E+999999  -> -Infinity
   #|fmax2615 fma  Inf  -Inf    0E+999999  -> -Infinity
+  #|
   #|fmax2621 fma  NaN -Inf     0E+999999  ->  NaN
   #|fmax2622 fma  NaN -1000    0E+999999  ->  NaN
   #|fmax2623 fma  NaN -1       0E+999999  ->  NaN
@@ -417,6 +516,28 @@ let fma_subset : String =
   #|fmax2635 fma  1    NaN     0E+999999  ->  NaN
   #|fmax2636 fma  1000 NaN     0E+999999  ->  NaN
   #|fmax2637 fma  Inf  NaN     0E+999999  ->  NaN
+  #|
+  #|fmax2641 fma  sNaN -Inf    0E+999999  ->  NaN  Invalid_operation
+  #|fmax2642 fma  sNaN -1000   0E+999999  ->  NaN  Invalid_operation
+  #|fmax2643 fma  sNaN -1      0E+999999  ->  NaN  Invalid_operation
+  #|fmax2644 fma  sNaN -0      0E+999999  ->  NaN  Invalid_operation
+  #|fmax2645 fma  sNaN  0      0E+999999  ->  NaN  Invalid_operation
+  #|fmax2646 fma  sNaN  1      0E+999999  ->  NaN  Invalid_operation
+  #|fmax2647 fma  sNaN  1000   0E+999999  ->  NaN  Invalid_operation
+  #|fmax2648 fma  sNaN  NaN    0E+999999  ->  NaN  Invalid_operation
+  #|fmax2649 fma  sNaN sNaN    0E+999999  ->  NaN  Invalid_operation
+  #|fmax2650 fma  NaN  sNaN    0E+999999  ->  NaN  Invalid_operation
+  #|fmax2651 fma -Inf  sNaN    0E+999999  ->  NaN  Invalid_operation
+  #|fmax2652 fma -1000 sNaN    0E+999999  ->  NaN  Invalid_operation
+  #|fmax2653 fma -1    sNaN    0E+999999  ->  NaN  Invalid_operation
+  #|fmax2654 fma -0    sNaN    0E+999999  ->  NaN  Invalid_operation
+  #|fmax2655 fma  0    sNaN    0E+999999  ->  NaN  Invalid_operation
+  #|fmax2656 fma  1    sNaN    0E+999999  ->  NaN  Invalid_operation
+  #|fmax2657 fma  1000 sNaN    0E+999999  ->  NaN  Invalid_operation
+  #|fmax2658 fma  Inf  sNaN    0E+999999  ->  NaN  Invalid_operation
+  #|fmax2659 fma  NaN  sNaN    0E+999999  ->  NaN  Invalid_operation
+  #|
+  #|-- propagating NaNs
   #|fmax2661 fma  NaN9 -Inf    0E+999999  ->  NaN9
   #|fmax2662 fma  NaN8  999    0E+999999  ->  NaN8
   #|fmax2663 fma  NaN71 Inf    0E+999999  ->  NaN71
@@ -424,6 +545,17 @@ let fma_subset : String =
   #|fmax2665 fma -Inf   NaN4   0E+999999  ->  NaN4
   #|fmax2666 fma -999   NaN33  0E+999999  ->  NaN33
   #|fmax2667 fma  Inf   NaN2   0E+999999  ->  NaN2
+  #|
+  #|fmax2671 fma  sNaN99 -Inf     0E+999999  ->  NaN99 Invalid_operation
+  #|fmax2672 fma  sNaN98 -11      0E+999999  ->  NaN98 Invalid_operation
+  #|fmax2673 fma  sNaN97  NaN     0E+999999  ->  NaN97 Invalid_operation
+  #|fmax2674 fma  sNaN16 sNaN94   0E+999999  ->  NaN16 Invalid_operation
+  #|fmax2675 fma  NaN95  sNaN93   0E+999999  ->  NaN93 Invalid_operation
+  #|fmax2676 fma -Inf    sNaN92   0E+999999  ->  NaN92 Invalid_operation
+  #|fmax2677 fma  088    sNaN91   0E+999999  ->  NaN91 Invalid_operation
+  #|fmax2678 fma  Inf    sNaN90   0E+999999  ->  NaN90 Invalid_operation
+  #|fmax2679 fma  NaN    sNaN89   0E+999999  ->  NaN89 Invalid_operation
+  #|
   #|fmax2681 fma -NaN9 -Inf    0E+999999  -> -NaN9
   #|fmax2682 fma -NaN8  999    0E+999999  -> -NaN8
   #|fmax2683 fma -NaN71 Inf    0E+999999  -> -NaN71
@@ -431,6 +563,17 @@ let fma_subset : String =
   #|fmax2685 fma -Inf  -NaN4   0E+999999  -> -NaN4
   #|fmax2686 fma -999  -NaN33  0E+999999  -> -NaN33
   #|fmax2687 fma  Inf  -NaN2   0E+999999  -> -NaN2
+  #|
+  #|fmax2691 fma -sNaN99 -Inf     0E+999999  -> -NaN99 Invalid_operation
+  #|fmax2692 fma -sNaN98 -11      0E+999999  -> -NaN98 Invalid_operation
+  #|fmax2693 fma -sNaN97  NaN     0E+999999  -> -NaN97 Invalid_operation
+  #|fmax2694 fma -sNaN16 -sNaN94  0E+999999  -> -NaN16 Invalid_operation
+  #|fmax2695 fma -NaN95  -sNaN93  0E+999999  -> -NaN93 Invalid_operation
+  #|fmax2696 fma -Inf    -sNaN92  0E+999999  -> -NaN92 Invalid_operation
+  #|fmax2697 fma  088    -sNaN91  0E+999999  -> -NaN91 Invalid_operation
+  #|fmax2698 fma  Inf    -sNaN90  0E+999999  -> -NaN90 Invalid_operation
+  #|fmax2699 fma -NaN    -sNaN89  0E+999999  -> -NaN89 Invalid_operation
+  #|
   #|fmax2701 fma -NaN  -Inf    0E+999999  -> -NaN
   #|fmax2702 fma -NaN   999    0E+999999  -> -NaN
   #|fmax2703 fma -NaN   Inf    0E+999999  -> -NaN
@@ -438,6 +581,18 @@ let fma_subset : String =
   #|fmax2705 fma -Inf  -NaN0   0E+999999  -> -NaN
   #|fmax2706 fma -999  -NaN    0E+999999  -> -NaN
   #|fmax2707 fma  Inf  -NaN    0E+999999  -> -NaN
+  #|
+  #|fmax2711 fma -sNaN   -Inf     0E+999999  -> -NaN Invalid_operation
+  #|fmax2712 fma -sNaN   -11      0E+999999  -> -NaN Invalid_operation
+  #|fmax2713 fma -sNaN00  NaN     0E+999999  -> -NaN Invalid_operation
+  #|fmax2714 fma -sNaN   -sNaN    0E+999999  -> -NaN Invalid_operation
+  #|fmax2715 fma -NaN    -sNaN    0E+999999  -> -NaN Invalid_operation
+  #|fmax2716 fma -Inf    -sNaN    0E+999999  -> -NaN Invalid_operation
+  #|fmax2717 fma  088    -sNaN    0E+999999  -> -NaN Invalid_operation
+  #|fmax2718 fma  Inf    -sNaN    0E+999999  -> -NaN Invalid_operation
+  #|fmax2719 fma -NaN    -sNaN    0E+999999  -> -NaN Invalid_operation
+  #|
+  #|-- overflow and underflow tests .. note subnormal results
   #|maxexponent: 999999
   #|minexponent: -999999
   #|fmax2730 fma +1.23456789012345E-0 9E+999999  0E+999999  -> Infinity Inexact Overflow Rounded
@@ -448,6 +603,8 @@ let fma_subset : String =
   #|fmax2736 fma 9E+999999 -1.23456789012345E-0  0E+999999  -> -Infinity Inexact Overflow Rounded
   #|fmax2737 fma -0.100 9E-999999  0E+999999  -> -9.00E-1000000 Subnormal
   #|fmax2738 fma 9E-999999 -0.100  0E+999999  -> -9.00E-1000000 Subnormal
+  #|
+  #|-- signs
   #|fmax2751 fma  1e+777777  1e+411111  0E+999999  ->  Infinity Overflow Inexact Rounded
   #|fmax2752 fma  1e+777777 -1e+411111  0E+999999  -> -Infinity Overflow Inexact Rounded
   #|fmax2753 fma -1e+777777  1e+411111  0E+999999  -> -Infinity Overflow Inexact Rounded
@@ -456,6 +613,8 @@ let fma_subset : String =
   #|fmax2756 fma  1e-777777 -1e-411111  0E+999999  -> -0E-1000007 Underflow Subnormal Inexact Rounded Clamped
   #|fmax2757 fma -1e-777777  1e-411111  0E+999999  -> -0E-1000007 Underflow Subnormal Inexact Rounded Clamped
   #|fmax2758 fma -1e-777777 -1e-411111  0E+999999  ->  0E-1000007 Underflow Subnormal Inexact Rounded Clamped
+  #|
+  #|-- 'subnormal' boundary (all hard underflow or overflow in base arithmetic)
   #|precision: 9
   #|fmax2760 fma 1e-600000 1e-400001  0E+999999  -> 1E-1000001 Subnormal
   #|fmax2761 fma 1e-600000 1e-400002  0E+999999  -> 1E-1000002 Subnormal
@@ -467,6 +626,7 @@ let fma_subset : String =
   #|fmax2767 fma 1e-600000 1e-400008  0E+999999  -> 0E-1000007 Underflow Subnormal Inexact Rounded Clamped
   #|fmax2768 fma 1e-600000 1e-400009  0E+999999  -> 0E-1000007 Underflow Subnormal Inexact Rounded Clamped
   #|fmax2769 fma 1e-600000 1e-400010  0E+999999  -> 0E-1000007 Underflow Subnormal Inexact Rounded Clamped
+  #|-- [no equivalent of 'subnormal' for overflow]
   #|fmax2770 fma 1e+600000 1e+400001  0E+999999  -> Infinity Overflow Inexact Rounded
   #|fmax2771 fma 1e+600000 1e+400002  0E+999999  -> Infinity Overflow Inexact Rounded
   #|fmax2772 fma 1e+600000 1e+400003  0E+999999  -> Infinity Overflow Inexact Rounded
@@ -477,6 +637,8 @@ let fma_subset : String =
   #|fmax2777 fma 1e+600000 1e+400008  0E+999999  -> Infinity Overflow Inexact Rounded
   #|fmax2778 fma 1e+600000 1e+400009  0E+999999  -> Infinity Overflow Inexact Rounded
   #|fmax2779 fma 1e+600000 1e+400010  0E+999999  -> Infinity Overflow Inexact Rounded
+  #|
+  #|-- 'subnormal' test edge condition at higher precisions
   #|precision: 99
   #|fmax2780 fma 1e-600000 1e-400007  0E+999999  -> 1E-1000007 Subnormal
   #|fmax2781 fma 1e-600000 1e-400008  0E+999999  -> 1E-1000008 Subnormal
@@ -485,10 +647,13 @@ let fma_subset : String =
   #|precision: 999
   #|fmax2784 fma 1e-600000 1e-400997  0E+999999  -> 1E-1000997 Subnormal
   #|fmax2785 fma 1e-600000 1e-400998  0E+999999  -> 0E-1000997 Underflow Subnormal Inexact Rounded Clamped
+  #|
+  #|-- test subnormals rounding
   #|precision:   5
   #|maxExponent: 999
   #|minexponent: -999
   #|rounding:    half_even
+  #|
   #|fmax2801 fma  1.0000E-999  1      0E+999999  -> 1.0000E-999
   #|fmax2802 fma  1.000E-999   1e-1   0E+999999  -> 1.000E-1000 Subnormal
   #|fmax2803 fma  1.00E-999    1e-2   0E+999999  -> 1.00E-1001  Subnormal
@@ -506,12 +671,14 @@ let fma_subset : String =
   #|fmax2815 fma  2.49E-999    1e-4   0E+999999  -> 2E-1003     Underflow Subnormal Inexact Rounded
   #|fmax2816 fma  2.50E-999    1e-4   0E+999999  -> 2E-1003     Underflow Subnormal Inexact Rounded
   #|fmax2817 fma  2.51E-999    1e-4   0E+999999  -> 3E-1003     Underflow Subnormal Inexact Rounded
+  #|
   #|fmax2818 fma  1E-999       1e-4   0E+999999  -> 1E-1003     Subnormal
   #|fmax2819 fma  3E-999       1e-5   0E+999999  -> 0E-1003     Underflow Subnormal Inexact Rounded Clamped
   #|fmax2820 fma  5E-999       1e-5   0E+999999  -> 0E-1003     Underflow Subnormal Inexact Rounded Clamped
   #|fmax2821 fma  7E-999       1e-5   0E+999999  -> 1E-1003     Underflow Subnormal Inexact Rounded
   #|fmax2822 fma  9E-999       1e-5   0E+999999  -> 1E-1003     Underflow Subnormal Inexact Rounded
   #|fmax2823 fma  9.9E-999     1e-5   0E+999999  -> 1E-1003     Underflow Subnormal Inexact Rounded
+  #|
   #|fmax2824 fma  1E-999      -1e-4   0E+999999  -> -1E-1003    Subnormal
   #|fmax2825 fma  3E-999      -1e-5   0E+999999  -> -0E-1003    Underflow Subnormal Inexact Rounded Clamped
   #|fmax2826 fma -5E-999       1e-5   0E+999999  -> -0E-1003    Underflow Subnormal Inexact Rounded Clamped
@@ -519,12 +686,15 @@ let fma_subset : String =
   #|fmax2828 fma -9E-999       1e-5   0E+999999  -> -1E-1003    Underflow Subnormal Inexact Rounded
   #|fmax2829 fma  9.9E-999    -1e-5   0E+999999  -> -1E-1003    Underflow Subnormal Inexact Rounded
   #|fmax2830 fma  3.0E-999    -1e-5   0E+999999  -> -0E-1003    Underflow Subnormal Inexact Rounded Clamped
+  #|
   #|fmax2831 fma  1.0E-501     1e-501  0E+999999  -> 1.0E-1002   Subnormal
   #|fmax2832 fma  2.0E-501     2e-501  0E+999999  -> 4.0E-1002   Subnormal
   #|fmax2833 fma  4.0E-501     4e-501  0E+999999  -> 1.60E-1001  Subnormal
   #|fmax2834 fma 10.0E-501    10e-501  0E+999999  -> 1.000E-1000 Subnormal
   #|fmax2835 fma 30.0E-501    30e-501  0E+999999  -> 9.000E-1000 Subnormal
   #|fmax2836 fma 40.0E-501    40e-501  0E+999999  -> 1.6000E-999
+  #|
+  #|-- squares
   #|fmax2840 fma  1E-502       1e-502  0E+999999  -> 0E-1003     Underflow Subnormal Inexact Rounded Clamped
   #|fmax2841 fma  1E-501       1e-501  0E+999999  -> 1E-1002     Subnormal
   #|fmax2842 fma  2E-501       2e-501  0E+999999  -> 4E-1002     Subnormal
@@ -532,6 +702,8 @@ let fma_subset : String =
   #|fmax2844 fma 10E-501      10e-501  0E+999999  -> 1.00E-1000  Subnormal
   #|fmax2845 fma 30E-501      30e-501  0E+999999  -> 9.00E-1000  Subnormal
   #|fmax2846 fma 40E-501      40e-501  0E+999999  -> 1.600E-999
+  #|
+  #|-- cubes
   #|fmax2850 fma  1E-670     1e-335  0E+999999  -> 0E-1003    Underflow Subnormal Inexact Rounded Clamped
   #|fmax2851 fma  1E-668     1e-334  0E+999999  -> 1E-1002    Subnormal
   #|fmax2852 fma  4E-668     2e-334  0E+999999  -> 8E-1002    Subnormal
@@ -539,8 +711,12 @@ let fma_subset : String =
   #|fmax2854 fma 16E-668     4e-334  0E+999999  -> 6.4E-1001  Subnormal
   #|fmax2855 fma 25E-668     5e-334  0E+999999  -> 1.25E-1000 Subnormal
   #|fmax2856 fma 10E-668   100e-334  0E+999999  -> 1.000E-999
+  #|
+  #|-- test derived from result of 0.099 ** 999 at 15 digits with unlimited exponent
   #|precision: 19
   #|fmax2860 fma  6636851557994578716E-520 6636851557994578716E-520  0E+999999  -> 4.40477986028551E-1003 Underflow Subnormal Inexact Rounded
+  #|
+  #|-- Long operand overflow may be a different path
   #|precision: 3
   #|maxExponent: 999999
   #|minexponent: -999999
@@ -548,6 +724,8 @@ let fma_subset : String =
   #|fmax2871 fma 1 -9.999E+999999    0E+999999  -> -Infinity Inexact Overflow Rounded
   #|fmax2872 fma    9.999E+999999 1  0E+999999  ->  Infinity Inexact Overflow Rounded
   #|fmax2873 fma   -9.999E+999999 1  0E+999999  -> -Infinity Inexact Overflow Rounded
+  #|
+  #|-- check for double-rounded subnormals
   #|precision:   5
   #|maxexponent: 79
   #|minexponent: -79
@@ -561,28 +739,36 @@ let fma_subset : String =
   #|fmax2888 fma  1.3E-40    1.3E-42       0E+999999  ->  1.7E-82    Subnormal Inexact Rounded Underflow
   #|fmax2889 fma  1.3E-40    1.3E-43       0E+999999  ->    2E-83    Subnormal Inexact Rounded Underflow
   #|fmax2890 fma  1.3E-41    1.3E-43       0E+999999  ->    0E-83    Clamped Subnormal Inexact Rounded Underflow
+  #|
   #|fmax2891 fma  1.2345E-39   1.234E-40   0E+999999  ->  1.5234E-79 Inexact Rounded
   #|fmax2892 fma  1.23456E-39  1.234E-40   0E+999999  ->  1.5234E-79 Inexact Rounded
   #|fmax2893 fma  1.2345E-40   1.234E-40   0E+999999  ->  1.523E-80  Inexact Rounded Subnormal Underflow
   #|fmax2894 fma  1.23456E-40  1.234E-40   0E+999999  ->  1.523E-80  Inexact Rounded Subnormal Underflow
   #|fmax2895 fma  1.2345E-41   1.234E-40   0E+999999  ->  1.52E-81   Inexact Rounded Subnormal Underflow
   #|fmax2896 fma  1.23456E-41  1.234E-40   0E+999999  ->  1.52E-81   Inexact Rounded Subnormal Underflow
+  #|
+  #|-- Now explore the case where we get a normal result with Underflow
   #|precision:   16
   #|rounding:    half_up
   #|maxExponent: 384
   #|minExponent: -383
+  #|
   #|fmax2900 fma  0.3000000000E-191 0.3000000000E-191  0E+999999  -> 9.00000000000000E-384 Subnormal Rounded
   #|fmax2901 fma  0.3000000001E-191 0.3000000001E-191  0E+999999  -> 9.00000000600000E-384 Underflow Inexact Subnormal Rounded
   #|fmax2902 fma  9.999999999999999E-383  0.0999999999999          0E+999999  -> 9.99999999999000E-384 Underflow Inexact Subnormal Rounded
   #|fmax2903 fma  9.999999999999999E-383  0.09999999999999         0E+999999  -> 9.99999999999900E-384 Underflow Inexact Subnormal Rounded
   #|fmax2904 fma  9.999999999999999E-383  0.099999999999999        0E+999999  -> 9.99999999999990E-384 Underflow Inexact Subnormal Rounded
   #|fmax2905 fma  9.999999999999999E-383  0.0999999999999999       0E+999999  -> 9.99999999999999E-384 Underflow Inexact Subnormal Rounded
+  #|-- prove operands are exact
   #|fmax2906 fma  9.999999999999999E-383  1                        0E+999999  -> 9.999999999999999E-383
   #|fmax2907 fma                       1  0.09999999999999999      0E+999999  -> 0.09999999999999999
+  #|-- the next rounds to Nmin
   #|fmax2908 fma  9.999999999999999E-383  0.09999999999999999      0E+999999  -> 1.000000000000000E-383 Underflow Inexact Subnormal Rounded
   #|fmax2909 fma  9.999999999999999E-383  0.099999999999999999     0E+999999  -> 1.000000000000000E-383 Underflow Inexact Subnormal Rounded
   #|fmax2910 fma  9.999999999999999E-383  0.0999999999999999999    0E+999999  -> 1.000000000000000E-383 Underflow Inexact Subnormal Rounded
   #|fmax2911 fma  9.999999999999999E-383  0.09999999999999999999   0E+999999  -> 1.000000000000000E-383 Underflow Inexact Subnormal Rounded
+  #|
+  #|-- Examples from SQL proposal (Krishna Kulkarni)
   #|precision:   34
   #|rounding:    half_up
   #|maxExponent: 6144
@@ -590,10 +776,18 @@ let fma_subset : String =
   #|fmax2921  fma 130E-2  120E-2  0E+999999  -> 1.5600
   #|fmax2922  fma 130E-2  12E-1   0E+999999  -> 1.560
   #|fmax2923  fma 130E-2  1E0     0E+999999  -> 1.30
+  #|
+  #|-- Null tests
+  #|fmax2990 fma  # 10  0E+999999  -> NaN Invalid_operation
+  #|fmax2991 fma 10  #  0E+999999  -> NaN Invalid_operation
+  #|
+  #|-- ADDITION TESTS ------------------------------------------------------
   #|precision:   9
   #|rounding:    half_up
   #|maxExponent: 384
   #|minexponent: -383
+  #|
+  #|-- [first group are 'quick confidence check']
   #|fmax3001 fma  1   1       1       ->  2
   #|fmax3002 fma  1   2       3       ->  5
   #|fmax3003 fma  1   '5.75'  '3.3'   ->  9.05
@@ -604,6 +798,7 @@ let fma_subset : String =
   #|fmax3008 fma  1   '1.25'  '1.25'  ->  2.50
   #|fmax3009 fma  1   '1.23456789'  '1.00000000' -> '2.23456789'
   #|fmax3010 fma  1   '1.23456789'  '1.00000011' -> '2.23456800'
+  #|
   #|fmax3011 fma  1   '0.4444444444'  '0.5555555555' -> '1.00000000' Inexact Rounded
   #|fmax3012 fma  1   '0.4444444440'  '0.5555555555' -> '1.00000000' Inexact Rounded
   #|fmax3013 fma  1   '0.4444444444'  '0.5555555550' -> '0.999999999' Inexact Rounded
@@ -614,6 +809,7 @@ let fma_subset : String =
   #|fmax3018 fma  1   '0.4444444445001'  '0' -> '0.444444445' Inexact Rounded
   #|fmax3019 fma  1   '0.444444444501'   '0' -> '0.444444445' Inexact Rounded
   #|fmax3020 fma  1   '0.44444444451'    '0' -> '0.444444445' Inexact Rounded
+  #|
   #|fmax3021 fma  1   0 1 -> 1
   #|fmax3022 fma  1   1 1 -> 2
   #|fmax3023 fma  1   2 1 -> 3
@@ -624,20 +820,27 @@ let fma_subset : String =
   #|fmax3028 fma  1   7 1 -> 8
   #|fmax3029 fma  1   8 1 -> 9
   #|fmax3030 fma  1   9 1 -> 10
+  #|
+  #|-- some carrying effects
   #|fmax3031 fma  1   '0.9998'  '0.0000' -> '0.9998'
   #|fmax3032 fma  1   '0.9998'  '0.0001' -> '0.9999'
   #|fmax3033 fma  1   '0.9998'  '0.0002' -> '1.0000'
   #|fmax3034 fma  1   '0.9998'  '0.0003' -> '1.0001'
+  #|
   #|fmax3035 fma  1   '70'  '10000e+9' -> '1.00000000E+13' Inexact Rounded
   #|fmax3036 fma  1   '700'  '10000e+9' -> '1.00000000E+13' Inexact Rounded
   #|fmax3037 fma  1   '7000'  '10000e+9' -> '1.00000000E+13' Inexact Rounded
   #|fmax3038 fma  1   '70000'  '10000e+9' -> '1.00000001E+13' Inexact Rounded
   #|fmax3039 fma  1   '700000'  '10000e+9' -> '1.00000007E+13' Rounded
+  #|
+  #|-- symmetry:
   #|fmax3040 fma  1   '10000e+9'  '70' -> '1.00000000E+13' Inexact Rounded
   #|fmax3041 fma  1   '10000e+9'  '700' -> '1.00000000E+13' Inexact Rounded
   #|fmax3042 fma  1   '10000e+9'  '7000' -> '1.00000000E+13' Inexact Rounded
   #|fmax3044 fma  1   '10000e+9'  '70000' -> '1.00000001E+13' Inexact Rounded
   #|fmax3045 fma  1   '10000e+9'  '700000' -> '1.00000007E+13' Rounded
+  #|
+  #|-- same, higher precision
   #|precision: 15
   #|fmax3046 fma  1   '10000e+9'  '7' -> '10000000000007'
   #|fmax3047 fma  1   '10000e+9'  '70' -> '10000000000070'
@@ -646,11 +849,15 @@ let fma_subset : String =
   #|fmax3050 fma  1   '10000e+9'  '70000' -> '10000000070000'
   #|fmax3051 fma  1   '10000e+9'  '700000' -> '10000000700000'
   #|fmax3052 fma  1   '10000e+9'  '7000000' -> '10000007000000'
+  #|
+  #|-- examples from decarith
   #|fmax3053 fma  1   '12' '7.00' -> '19.00'
   #|fmax3054 fma  1   '1.3' '-1.07' -> '0.23'
   #|fmax3055 fma  1   '1.3' '-1.30' -> '0.00'
   #|fmax3056 fma  1   '1.3' '-2.07' -> '-0.77'
   #|fmax3057 fma  1   '1E+2' '1E+4' -> '1.01E+4'
+  #|
+  #|-- zero preservation
   #|precision: 6
   #|fmax3060 fma  1   '10000e+9'  '70000' -> '1.00000E+13' Inexact Rounded
   #|fmax3061 fma  1   1 '0.0001' -> '1.0001'
@@ -658,6 +865,8 @@ let fma_subset : String =
   #|fmax3063 fma  1   1 '0.000001' -> '1.00000' Inexact Rounded
   #|fmax3064 fma  1   1 '0.0000001' -> '1.00000' Inexact Rounded
   #|fmax3065 fma  1   1 '0.00000001' -> '1.00000' Inexact Rounded
+  #|
+  #|-- some funny zeros [in case of bad signum]
   #|fmax3070 fma  1   1  0    -> 1
   #|fmax3071 fma  1   1 0.    -> 1
   #|fmax3072 fma  1   1  .0   -> 1.0
@@ -668,7 +877,10 @@ let fma_subset : String =
   #|fmax3077 fma  1    .0 1   -> 1.0
   #|fmax3078 fma  1   0.0 1   -> 1.0
   #|fmax3079 fma  1   0.00 1  -> 1.00
+  #|
   #|precision: 9
+  #|
+  #|-- some carries
   #|fmax3080 fma  1   999999998 1  -> 999999999
   #|fmax3081 fma  1   999999999 1  -> 1.00000000E+9 Rounded
   #|fmax3082 fma  1    99999999 1  -> 100000000
@@ -679,6 +891,9 @@ let fma_subset : String =
   #|fmax3087 fma  1         999 1  -> 1000
   #|fmax3088 fma  1          99 1  -> 100
   #|fmax3089 fma  1           9 1  -> 10
+  #|
+  #|
+  #|-- more LHS swaps
   #|fmax3090 fma  1   '-56267E-10'   0 ->  '-0.0000056267'
   #|fmax3091 fma  1   '-56267E-6'    0 ->  '-0.056267'
   #|fmax3092 fma  1   '-56267E-5'    0 ->  '-0.56267'
@@ -701,6 +916,8 @@ let fma_subset : String =
   #|fmax3109 fma  1   '-5E10'        0 ->  '-5.00000000E+10'  Rounded
   #|fmax3110 fma  1   '-5E11'        0 ->  '-5.00000000E+11'  Rounded
   #|fmax3111 fma  1   '-5E100'       0 ->  '-5.00000000E+100' Rounded
+  #|
+  #|-- more RHS swaps
   #|fmax3113 fma  1   0  '-56267E-10' ->  '-0.0000056267'
   #|fmax3114 fma  1   0  '-56267E-6'  ->  '-0.056267'
   #|fmax3116 fma  1   0  '-56267E-5'  ->  '-0.56267'
@@ -723,6 +940,8 @@ let fma_subset : String =
   #|fmax3134 fma  1   0  '-5E10'      ->  '-5.00000000E+10'   Rounded
   #|fmax3135 fma  1   0  '-5E11'      ->  '-5.00000000E+11'   Rounded
   #|fmax3136 fma  1   0  '-5E100'     ->  '-5.00000000E+100'  Rounded
+  #|
+  #|-- related
   #|fmax3137 fma  1    1  '0E-12'      ->  '1.00000000'  Rounded
   #|fmax3138 fma  1   -1  '0E-12'      ->  '-1.00000000' Rounded
   #|fmax3139 fma  1   '0E-12' 1        ->  '1.00000000'  Rounded
@@ -731,6 +950,8 @@ let fma_subset : String =
   #|fmax3142 fma  1   1E+4    0.00000  ->  '10000.0000'  Rounded
   #|fmax3143 fma  1   0.000   1E+5     ->  '100000.000'
   #|fmax3144 fma  1   0.0000  1E+5     ->  '100000.000'  Rounded
+  #|
+  #|-- [some of the next group are really constructor tests]
   #|fmax3146 fma  1   '00.0'  0       ->  '0.0'
   #|fmax3147 fma  1   '0.00'  0       ->  '0.00'
   #|fmax3148 fma  1    0      '0.00'  ->  '0.00'
@@ -746,6 +967,8 @@ let fma_subset : String =
   #|fmax3158 fma  1   '3'     '-3'    ->  '0'
   #|fmax3159 fma  1   '0.3'   '-0.3'  ->  '0.0'
   #|fmax3160 fma  1   '0.03'  '-0.03' ->  '0.00'
+  #|
+  #|-- try borderline precision, with carries, etc.
   #|precision: 15
   #|fmax3161 fma  1   '1E+12' '-1'    -> '999999999999'
   #|fmax3162 fma  1   '1E+12'  '1.11' -> '1000000000001.11'
@@ -755,6 +978,8 @@ let fma_subset : String =
   #|fmax3166 fma  1   '7E+12'  '1.11' -> '7000000000001.11'
   #|fmax3167 fma  1   '1.11'  '7E+12' -> '7000000000001.11'
   #|fmax3168 fma  1   '-1'    '7E+12' -> '6999999999999'
+  #|
+  #|--             123456789012345      123456789012345      1 23456789012345
   #|fmax3170 fma  1   '0.444444444444444'  '0.555555555555563' -> '1.00000000000001' Inexact Rounded
   #|fmax3171 fma  1   '0.444444444444444'  '0.555555555555562' -> '1.00000000000001' Inexact Rounded
   #|fmax3172 fma  1   '0.444444444444444'  '0.555555555555561' -> '1.00000000000001' Inexact Rounded
@@ -769,6 +994,8 @@ let fma_subset : String =
   #|fmax3181 fma  1   '0.444444444444444'  '0.555555555555552' -> '0.999999999999996'
   #|fmax3182 fma  1   '0.444444444444444'  '0.555555555555551' -> '0.999999999999995'
   #|fmax3183 fma  1   '0.444444444444444'  '0.555555555555550' -> '0.999999999999994'
+  #|
+  #|-- and some more, including residue effects and different roundings
   #|precision: 9
   #|rounding: half_up
   #|fmax3200 fma  1   '123456789' 0             -> '123456789'
@@ -791,6 +1018,7 @@ let fma_subset : String =
   #|fmax3217 fma  1   '123456789' 1.000000001   -> '123456790' Inexact Rounded
   #|fmax3218 fma  1   '123456789' 1.00001       -> '123456790' Inexact Rounded
   #|fmax3219 fma  1   '123456789' 1.1           -> '123456790' Inexact Rounded
+  #|
   #|rounding: half_even
   #|fmax3220 fma  1   '123456789' 0             -> '123456789'
   #|fmax3221 fma  1   '123456789' 0.000000001   -> '123456789' Inexact Rounded
@@ -812,9 +1040,11 @@ let fma_subset : String =
   #|fmax3237 fma  1   '123456789' 1.00000001    -> '123456790' Inexact Rounded
   #|fmax3238 fma  1   '123456789' 1.00001       -> '123456790' Inexact Rounded
   #|fmax3239 fma  1   '123456789' 1.1           -> '123456790' Inexact Rounded
+  #|-- critical few with even bottom digit...
   #|fmax3240 fma  1   '123456788' 0.499999999   -> '123456788' Inexact Rounded
   #|fmax3241 fma  1   '123456788' 0.5           -> '123456788' Inexact Rounded
   #|fmax3242 fma  1   '123456788' 0.500000001   -> '123456789' Inexact Rounded
+  #|
   #|rounding: down
   #|fmax3250 fma  1   '123456789' 0             -> '123456789'
   #|fmax3251 fma  1   '123456789' 0.000000001   -> '123456789' Inexact Rounded
@@ -836,10 +1066,14 @@ let fma_subset : String =
   #|fmax3267 fma  1   '123456789' 1.00000001    -> '123456790' Inexact Rounded
   #|fmax3268 fma  1   '123456789' 1.00001       -> '123456790' Inexact Rounded
   #|fmax3269 fma  1   '123456789' 1.1           -> '123456790' Inexact Rounded
+  #|
+  #|-- input preparation tests (operands should not be rounded)
   #|precision: 3
   #|rounding: half_up
+  #|
   #|fmax3270 fma  1   '12345678900000'  9999999999999 ->  '2.23E+13' Inexact Rounded
   #|fmax3271 fma  1    '9999999999999' 12345678900000 ->  '2.23E+13' Inexact Rounded
+  #|
   #|fmax3272 fma  1   '12E+3'  '3444'   ->  '1.54E+4' Inexact Rounded
   #|fmax3273 fma  1   '12E+3'  '3446'   ->  '1.54E+4' Inexact Rounded
   #|fmax3274 fma  1   '12E+3'  '3449.9' ->  '1.54E+4' Inexact Rounded
@@ -847,6 +1081,7 @@ let fma_subset : String =
   #|fmax3276 fma  1   '12E+3'  '3450.1' ->  '1.55E+4' Inexact Rounded
   #|fmax3277 fma  1   '12E+3'  '3454'   ->  '1.55E+4' Inexact Rounded
   #|fmax3278 fma  1   '12E+3'  '3456'   ->  '1.55E+4' Inexact Rounded
+  #|
   #|fmax3281 fma  1   '3444'   '12E+3'  ->  '1.54E+4' Inexact Rounded
   #|fmax3282 fma  1   '3446'   '12E+3'  ->  '1.54E+4' Inexact Rounded
   #|fmax3283 fma  1   '3449.9' '12E+3'  ->  '1.54E+4' Inexact Rounded
@@ -854,6 +1089,7 @@ let fma_subset : String =
   #|fmax3285 fma  1   '3450.1' '12E+3'  ->  '1.55E+4' Inexact Rounded
   #|fmax3286 fma  1   '3454'   '12E+3'  ->  '1.55E+4' Inexact Rounded
   #|fmax3287 fma  1   '3456'   '12E+3'  ->  '1.55E+4' Inexact Rounded
+  #|
   #|rounding: half_down
   #|fmax3291 fma  1   '3444'   '12E+3'  ->  '1.54E+4' Inexact Rounded
   #|fmax3292 fma  1   '3446'   '12E+3'  ->  '1.54E+4' Inexact Rounded
@@ -862,6 +1098,8 @@ let fma_subset : String =
   #|fmax3295 fma  1   '3450.1' '12E+3'  ->  '1.55E+4' Inexact Rounded
   #|fmax3296 fma  1   '3454'   '12E+3'  ->  '1.55E+4' Inexact Rounded
   #|fmax3297 fma  1   '3456'   '12E+3'  ->  '1.55E+4' Inexact Rounded
+  #|
+  #|-- 1 in last place tests
   #|rounding: half_up
   #|fmax3301 fma  1    -1   1      ->   0
   #|fmax3302 fma  1     0   1      ->   1
@@ -879,6 +1117,7 @@ let fma_subset : String =
   #|fmax3314 fma  1    99  -1      ->  98
   #|fmax3315 fma  1   100  -1      ->  99
   #|fmax3316 fma  1   101  -1      -> 100
+  #|
   #|fmax3321 fma  1   -0.01  0.01    ->  0.00
   #|fmax3322 fma  1    0.00  0.01    ->  0.01
   #|fmax3323 fma  1    0.01  0.01    ->  0.02
@@ -895,11 +1134,14 @@ let fma_subset : String =
   #|fmax3334 fma  1    0.99 -0.01    ->  0.98
   #|fmax3335 fma  1    1.00 -0.01    ->  0.99
   #|fmax3336 fma  1    1.01 -0.01    ->  1.00
+  #|
+  #|-- some more cases where fma  1  ing 0 affects the coefficient
   #|precision: 9
   #|fmax3340 fma  1   1E+3    0    ->         1000
   #|fmax3341 fma  1   1E+8    0    ->    100000000
   #|fmax3342 fma  1   1E+9    0    ->   1.00000000E+9   Rounded
   #|fmax3343 fma  1   1E+10   0    ->   1.00000000E+10  Rounded
+  #|-- which simply follow from these cases ...
   #|fmax3344 fma  1   1E+3    1    ->         1001
   #|fmax3345 fma  1   1E+8    1    ->    100000001
   #|fmax3346 fma  1   1E+9    1    ->   1.00000000E+9   Inexact Rounded
@@ -908,6 +1150,8 @@ let fma_subset : String =
   #|fmax3349 fma  1   1E+8    7    ->    100000007
   #|fmax3350 fma  1   1E+9    7    ->   1.00000001E+9   Inexact Rounded
   #|fmax3351 fma  1   1E+10   7    ->   1.00000000E+10  Inexact Rounded
+  #|
+  #|-- tryzeros cases
   #|precision:   7
   #|rounding:    half_up
   #|maxExponent: 92
@@ -916,6 +1160,8 @@ let fma_subset : String =
   #|fmax3362  fma  1   10000E+1 0E-50  -> 100000.0  Rounded
   #|fmax3363  fma  1   10000E+1 10000E-50  -> 100000.0  Rounded Inexact
   #|fmax3364  fma  1   9.999999E+92 -9.999999E+92 -> 0E+86
+  #|
+  #|-- a curiosity from JSR 13 testing
   #|rounding:    half_down
   #|precision:   10
   #|fmax3370 fma  1   99999999 81512 -> 100081511
@@ -931,6 +1177,8 @@ let fma_subset : String =
   #|fmax3374 fma  1   99999999 81512 -> 100081511
   #|precision:      6
   #|fmax3375 fma  1   99999999 81512 -> 1.00082E+8 Rounded Inexact
+  #|
+  #|-- ulp replacement tests
   #|precision: 9
   #|maxexponent: 999999
   #|minexponent: -999999
@@ -942,6 +1190,7 @@ let fma_subset : String =
   #|fmax3405 fma  1     1   77e-12      ->  1.00000000 Inexact Rounded
   #|fmax3406 fma  1     1   77e-999     ->  1.00000000 Inexact Rounded
   #|fmax3407 fma  1     1   77e-999999  ->  1.00000000 Inexact Rounded
+  #|
   #|fmax3410 fma  1    10   77e-7       ->  10.0000077
   #|fmax3411 fma  1    10   77e-8       ->  10.0000008 Inexact Rounded
   #|fmax3412 fma  1    10   77e-9       ->  10.0000001 Inexact Rounded
@@ -950,6 +1199,7 @@ let fma_subset : String =
   #|fmax3415 fma  1    10   77e-12      ->  10.0000000 Inexact Rounded
   #|fmax3416 fma  1    10   77e-999     ->  10.0000000 Inexact Rounded
   #|fmax3417 fma  1    10   77e-999999  ->  10.0000000 Inexact Rounded
+  #|
   #|fmax3420 fma  1    77e-7        1   ->  1.0000077
   #|fmax3421 fma  1    77e-8        1   ->  1.00000077
   #|fmax3422 fma  1    77e-9        1   ->  1.00000008 Inexact Rounded
@@ -958,6 +1208,7 @@ let fma_subset : String =
   #|fmax3425 fma  1    77e-12       1   ->  1.00000000 Inexact Rounded
   #|fmax3426 fma  1    77e-999      1   ->  1.00000000 Inexact Rounded
   #|fmax3427 fma  1    77e-999999   1   ->  1.00000000 Inexact Rounded
+  #|
   #|fmax3430 fma  1    77e-7       10   ->  10.0000077
   #|fmax3431 fma  1    77e-8       10   ->  10.0000008 Inexact Rounded
   #|fmax3432 fma  1    77e-9       10   ->  10.0000001 Inexact Rounded
@@ -966,6 +1217,8 @@ let fma_subset : String =
   #|fmax3435 fma  1    77e-12      10   ->  10.0000000 Inexact Rounded
   #|fmax3436 fma  1    77e-999     10   ->  10.0000000 Inexact Rounded
   #|fmax3437 fma  1    77e-999999  10   ->  10.0000000 Inexact Rounded
+  #|
+  #|-- negative ulps
   #|fmax3440 fma  1     1   -77e-7       ->  0.9999923
   #|fmax3441 fma  1     1   -77e-8       ->  0.99999923
   #|fmax3442 fma  1     1   -77e-9       ->  0.999999923
@@ -974,6 +1227,7 @@ let fma_subset : String =
   #|fmax3445 fma  1     1   -77e-12      ->  1.00000000 Inexact Rounded
   #|fmax3446 fma  1     1   -77e-999     ->  1.00000000 Inexact Rounded
   #|fmax3447 fma  1     1   -77e-999999  ->  1.00000000 Inexact Rounded
+  #|
   #|fmax3450 fma  1    10   -77e-7       ->   9.9999923
   #|fmax3451 fma  1    10   -77e-8       ->   9.99999923
   #|fmax3452 fma  1    10   -77e-9       ->   9.99999992 Inexact Rounded
@@ -982,6 +1236,7 @@ let fma_subset : String =
   #|fmax3455 fma  1    10   -77e-12      ->  10.0000000 Inexact Rounded
   #|fmax3456 fma  1    10   -77e-999     ->  10.0000000 Inexact Rounded
   #|fmax3457 fma  1    10   -77e-999999  ->  10.0000000 Inexact Rounded
+  #|
   #|fmax3460 fma  1    -77e-7        1   ->  0.9999923
   #|fmax3461 fma  1    -77e-8        1   ->  0.99999923
   #|fmax3462 fma  1    -77e-9        1   ->  0.999999923
@@ -990,6 +1245,7 @@ let fma_subset : String =
   #|fmax3465 fma  1    -77e-12       1   ->  1.00000000 Inexact Rounded
   #|fmax3466 fma  1    -77e-999      1   ->  1.00000000 Inexact Rounded
   #|fmax3467 fma  1    -77e-999999   1   ->  1.00000000 Inexact Rounded
+  #|
   #|fmax3470 fma  1    -77e-7       10   ->   9.9999923
   #|fmax3471 fma  1    -77e-8       10   ->   9.99999923
   #|fmax3472 fma  1    -77e-9       10   ->   9.99999992 Inexact Rounded
@@ -998,6 +1254,8 @@ let fma_subset : String =
   #|fmax3475 fma  1    -77e-12      10   ->  10.0000000 Inexact Rounded
   #|fmax3476 fma  1    -77e-999     10   ->  10.0000000 Inexact Rounded
   #|fmax3477 fma  1    -77e-999999  10   ->  10.0000000 Inexact Rounded
+  #|
+  #|-- negative ulps
   #|fmax3480 fma  1    -1    77e-7       ->  -0.9999923
   #|fmax3481 fma  1    -1    77e-8       ->  -0.99999923
   #|fmax3482 fma  1    -1    77e-9       ->  -0.999999923
@@ -1006,6 +1264,7 @@ let fma_subset : String =
   #|fmax3485 fma  1    -1    77e-12      ->  -1.00000000 Inexact Rounded
   #|fmax3486 fma  1    -1    77e-999     ->  -1.00000000 Inexact Rounded
   #|fmax3487 fma  1    -1    77e-999999  ->  -1.00000000 Inexact Rounded
+  #|
   #|fmax3490 fma  1   -10    77e-7       ->   -9.9999923
   #|fmax3491 fma  1   -10    77e-8       ->   -9.99999923
   #|fmax3492 fma  1   -10    77e-9       ->   -9.99999992 Inexact Rounded
@@ -1014,6 +1273,7 @@ let fma_subset : String =
   #|fmax3495 fma  1   -10    77e-12      ->  -10.0000000 Inexact Rounded
   #|fmax3496 fma  1   -10    77e-999     ->  -10.0000000 Inexact Rounded
   #|fmax3497 fma  1   -10    77e-999999  ->  -10.0000000 Inexact Rounded
+  #|
   #|fmax3500 fma  1     77e-7       -1   ->  -0.9999923
   #|fmax3501 fma  1     77e-8       -1   ->  -0.99999923
   #|fmax3502 fma  1     77e-9       -1   ->  -0.999999923
@@ -1022,6 +1282,7 @@ let fma_subset : String =
   #|fmax3505 fma  1     77e-12      -1   ->  -1.00000000 Inexact Rounded
   #|fmax3506 fma  1     77e-999     -1   ->  -1.00000000 Inexact Rounded
   #|fmax3507 fma  1     77e-999999  -1   ->  -1.00000000 Inexact Rounded
+  #|
   #|fmax3510 fma  1     77e-7       -10  ->   -9.9999923
   #|fmax3511 fma  1     77e-8       -10  ->   -9.99999923
   #|fmax3512 fma  1     77e-9       -10  ->   -9.99999992 Inexact Rounded
@@ -1030,6 +1291,9 @@ let fma_subset : String =
   #|fmax3515 fma  1     77e-12      -10  ->  -10.0000000 Inexact Rounded
   #|fmax3516 fma  1     77e-999     -10  ->  -10.0000000 Inexact Rounded
   #|fmax3517 fma  1     77e-999999  -10  ->  -10.0000000 Inexact Rounded
+  #|
+  #|
+  #|-- long operands
   #|maxexponent: 999
   #|minexponent: -999
   #|precision: 9
@@ -1045,7 +1309,9 @@ let fma_subset : String =
   #|fmax3530 fma  1   0 12345678901 -> 1.23456789E+10 Inexact Rounded
   #|fmax3531 fma  1   1234567896  0 -> 1.23456790E+9 Inexact Rounded
   #|fmax3532 fma  1   0 1234567896  -> 1.23456790E+9 Inexact Rounded
+  #|
   #|precision: 15
+  #|-- still checking
   #|fmax3541 fma  1   12345678000 0 -> 12345678000
   #|fmax3542 fma  1   0 12345678000 -> 12345678000
   #|fmax3543 fma  1   1234567800  0 -> 1234567800
@@ -1058,18 +1324,24 @@ let fma_subset : String =
   #|fmax3550 fma  1   0 12345678901 -> 12345678901
   #|fmax3551 fma  1   1234567896  0 -> 1234567896
   #|fmax3552 fma  1   0 1234567896  -> 1234567896
+  #|
+  #|-- verify a query
   #|precision:    16
   #|maxExponent: +394
   #|minExponent: -393
   #|rounding:     down
   #|fmax3561 fma  1   1e-398 9.000000000000000E+384 -> 9.000000000000000E+384 Inexact Rounded
   #|fmax3562 fma  1        0 9.000000000000000E+384 -> 9.000000000000000E+384 Rounded
+  #|-- and using decimal64 bounds...
   #|precision:    16
   #|maxExponent: +384
   #|minExponent: -383
   #|rounding:     down
   #|fmax3563 fma  1   1e-388 9.000000000000000E+374 -> 9.000000000000000E+374 Inexact Rounded
   #|fmax3564 fma  1        0 9.000000000000000E+374 -> 9.000000000000000E+374 Rounded
+  #|
+  #|
+  #|-- some more residue effects with extreme rounding
   #|precision:   9
   #|rounding: half_up
   #|fmax3601 fma  1   123456789  0.000001 -> 123456789 Inexact Rounded
@@ -1085,6 +1357,7 @@ let fma_subset : String =
   #|fmax3606 fma  1   123456789  0.000001 -> 123456790 Inexact Rounded
   #|rounding: down
   #|fmax3607 fma  1   123456789  0.000001 -> 123456789 Inexact Rounded
+  #|
   #|rounding: half_up
   #|fmax3611 fma  1   123456789 -0.000001 -> 123456789 Inexact Rounded
   #|rounding: half_even
@@ -1099,6 +1372,7 @@ let fma_subset : String =
   #|fmax3616 fma  1   123456789 -0.000001 -> 123456789 Inexact Rounded
   #|rounding: down
   #|fmax3617 fma  1   123456789 -0.000001 -> 123456788 Inexact Rounded
+  #|
   #|rounding: half_up
   #|fmax3621 fma  1   123456789  0.499999 -> 123456789 Inexact Rounded
   #|rounding: half_even
@@ -1113,6 +1387,7 @@ let fma_subset : String =
   #|fmax3626 fma  1   123456789  0.499999 -> 123456790 Inexact Rounded
   #|rounding: down
   #|fmax3627 fma  1   123456789  0.499999 -> 123456789 Inexact Rounded
+  #|
   #|rounding: half_up
   #|fmax3631 fma  1   123456789 -0.499999 -> 123456789 Inexact Rounded
   #|rounding: half_even
@@ -1127,6 +1402,7 @@ let fma_subset : String =
   #|fmax3636 fma  1   123456789 -0.499999 -> 123456789 Inexact Rounded
   #|rounding: down
   #|fmax3637 fma  1   123456789 -0.499999 -> 123456788 Inexact Rounded
+  #|
   #|rounding: half_up
   #|fmax3641 fma  1   123456789  0.500001 -> 123456790 Inexact Rounded
   #|rounding: half_even
@@ -1141,6 +1417,7 @@ let fma_subset : String =
   #|fmax3646 fma  1   123456789  0.500001 -> 123456790 Inexact Rounded
   #|rounding: down
   #|fmax3647 fma  1   123456789  0.500001 -> 123456789 Inexact Rounded
+  #|
   #|rounding: half_up
   #|fmax3651 fma  1   123456789 -0.500001 -> 123456788 Inexact Rounded
   #|rounding: half_even
@@ -1155,6 +1432,8 @@ let fma_subset : String =
   #|fmax3656 fma  1   123456789 -0.500001 -> 123456789 Inexact Rounded
   #|rounding: down
   #|fmax3657 fma  1   123456789 -0.500001 -> 123456788 Inexact Rounded
+  #|
+  #|-- long operand triangle
   #|rounding: half_up
   #|precision:  37
   #|fmax3660 fma  1   98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 98471174166.42211023638922337114834538
@@ -1230,12 +1509,16 @@ let fma_subset : String =
   #|fmax3695 fma  1   98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 9.8E+10                          Inexact Rounded
   #|precision:   1
   #|fmax3696 fma  1   98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 1E+11                          Inexact Rounded
+  #|
+  #|-- more zeros, etc.
   #|rounding: half_up
   #|precision:   9
+  #|
   #|fmax3701 fma  1   5.00 1.00E-3 -> 5.00100
   #|fmax3702 fma  1   00.00 0.000  -> 0.000
   #|fmax3703 fma  1   00.00 0E-3   -> 0.000
   #|fmax3704 fma  1   0E-3  00.00  -> 0.000
+  #|
   #|fmax3710 fma  1   0E+3  00.00  -> 0.00
   #|fmax3711 fma  1   0E+3  00.0   -> 0.0
   #|fmax3712 fma  1   0E+3  00.    -> 0
@@ -1247,6 +1530,7 @@ let fma_subset : String =
   #|fmax3718 fma  1   0E+3  -00.0   -> 0.0
   #|fmax3719 fma  1   0E+3  -00.    -> 0
   #|fmax3731 fma  1   0E+3  -00.E+1 -> 0E+1
+  #|
   #|fmax3720 fma  1   00.00  0E+3  -> 0.00
   #|fmax3721 fma  1   00.0   0E+3  -> 0.0
   #|fmax3722 fma  1   00.    0E+3  -> 0
@@ -1258,14 +1542,17 @@ let fma_subset : String =
   #|fmax3728 fma  1   -00.00 0E+3  -> 0.00
   #|fmax3729 fma  1   -00.0  0E+3  -> 0.0
   #|fmax3730 fma  1   -00.   0E+3  -> 0
+  #|
   #|fmax3732 fma  1    0     0     ->  0
   #|fmax3733 fma  1    0    -0     ->  0
   #|fmax3734 fma  1   -0     0     ->  0
   #|fmax3735 fma  1   -0    -0     -> -0     -- IEEE 854 special case
+  #|
   #|fmax3736 fma  1    1    -1     ->  0
   #|fmax3737 fma  1   -1    -1     -> -2
   #|fmax3738 fma  1    1     1     ->  2
   #|fmax3739 fma  1   -1     1     ->  0
+  #|
   #|fmax3741 fma  1    0    -1     -> -1
   #|fmax3742 fma  1   -0    -1     -> -1
   #|fmax3743 fma  1    0     1     ->  1
@@ -1274,6 +1561,7 @@ let fma_subset : String =
   #|fmax3746 fma  1   -1    -0     -> -1
   #|fmax3747 fma  1    1     0     ->  1
   #|fmax3748 fma  1    1    -0     ->  1
+  #|
   #|fmax3751 fma  1    0.0  -1     -> -1.0
   #|fmax3752 fma  1   -0.0  -1     -> -1.0
   #|fmax3753 fma  1    0.0   1     ->  1.0
@@ -1282,6 +1570,7 @@ let fma_subset : String =
   #|fmax3756 fma  1   -1.0  -0     -> -1.0
   #|fmax3757 fma  1    1.0   0     ->  1.0
   #|fmax3758 fma  1    1.0  -0     ->  1.0
+  #|
   #|fmax3761 fma  1    0    -1.0   -> -1.0
   #|fmax3762 fma  1   -0    -1.0   -> -1.0
   #|fmax3763 fma  1    0     1.0   ->  1.0
@@ -1290,6 +1579,7 @@ let fma_subset : String =
   #|fmax3766 fma  1   -1    -0.0   -> -1.0
   #|fmax3767 fma  1    1     0.0   ->  1.0
   #|fmax3768 fma  1    1    -0.0   ->  1.0
+  #|
   #|fmax3771 fma  1    0.0  -1.0   -> -1.0
   #|fmax3772 fma  1   -0.0  -1.0   -> -1.0
   #|fmax3773 fma  1    0.0   1.0   ->  1.0
@@ -1298,6 +1588,8 @@ let fma_subset : String =
   #|fmax3776 fma  1   -1.0  -0.0   -> -1.0
   #|fmax3777 fma  1    1.0   0.0   ->  1.0
   #|fmax3778 fma  1    1.0  -0.0   ->  1.0
+  #|
+  #|-- Specials
   #|fmax3780 fma  1   -Inf  -Inf   -> -Infinity
   #|fmax3781 fma  1   -Inf  -1000  -> -Infinity
   #|fmax3782 fma  1   -Inf  -1     -> -Infinity
@@ -1313,6 +1605,7 @@ let fma_subset : String =
   #|fmax3792 fma  1    1    -Inf   -> -Infinity
   #|fmax3793 fma  1    1000 -Inf   -> -Infinity
   #|fmax3794 fma  1    Inf  -Inf   ->  NaN  Invalid_operation
+  #|
   #|fmax3800 fma  1    Inf  -Inf   ->  NaN  Invalid_operation
   #|fmax3801 fma  1    Inf  -1000  ->  Infinity
   #|fmax3802 fma  1    Inf  -1     ->  Infinity
@@ -1329,6 +1622,7 @@ let fma_subset : String =
   #|fmax3813 fma  1    1     Inf   ->  Infinity
   #|fmax3814 fma  1    1000  Inf   ->  Infinity
   #|fmax3815 fma  1    Inf   Inf   ->  Infinity
+  #|
   #|fmax3821 fma  1    NaN -Inf    ->  NaN
   #|fmax3822 fma  1    NaN -1000   ->  NaN
   #|fmax3823 fma  1    NaN -1      ->  NaN
@@ -1346,6 +1640,28 @@ let fma_subset : String =
   #|fmax3835 fma  1    1    NaN    ->  NaN
   #|fmax3836 fma  1    1000 NaN    ->  NaN
   #|fmax3837 fma  1    Inf  NaN    ->  NaN
+  #|
+  #|fmax3841 fma  1    sNaN -Inf   ->  NaN  Invalid_operation
+  #|fmax3842 fma  1    sNaN -1000  ->  NaN  Invalid_operation
+  #|fmax3843 fma  1    sNaN -1     ->  NaN  Invalid_operation
+  #|fmax3844 fma  1    sNaN -0     ->  NaN  Invalid_operation
+  #|fmax3845 fma  1    sNaN  0     ->  NaN  Invalid_operation
+  #|fmax3846 fma  1    sNaN  1     ->  NaN  Invalid_operation
+  #|fmax3847 fma  1    sNaN  1000  ->  NaN  Invalid_operation
+  #|fmax3848 fma  1    sNaN  NaN   ->  NaN  Invalid_operation
+  #|fmax3849 fma  1    sNaN sNaN   ->  NaN  Invalid_operation
+  #|fmax3850 fma  1    NaN  sNaN   ->  NaN  Invalid_operation
+  #|fmax3851 fma  1   -Inf  sNaN   ->  NaN  Invalid_operation
+  #|fmax3852 fma  1   -1000 sNaN   ->  NaN  Invalid_operation
+  #|fmax3853 fma  1   -1    sNaN   ->  NaN  Invalid_operation
+  #|fmax3854 fma  1   -0    sNaN   ->  NaN  Invalid_operation
+  #|fmax3855 fma  1    0    sNaN   ->  NaN  Invalid_operation
+  #|fmax3856 fma  1    1    sNaN   ->  NaN  Invalid_operation
+  #|fmax3857 fma  1    1000 sNaN   ->  NaN  Invalid_operation
+  #|fmax3858 fma  1    Inf  sNaN   ->  NaN  Invalid_operation
+  #|fmax3859 fma  1    NaN  sNaN   ->  NaN  Invalid_operation
+  #|
+  #|-- propagating NaNs
   #|fmax3861 fma  1    NaN1   -Inf    ->  NaN1
   #|fmax3862 fma  1   +NaN2   -1000   ->  NaN2
   #|fmax3863 fma  1    NaN3    1000   ->  NaN3
@@ -1355,8 +1671,23 @@ let fma_subset : String =
   #|fmax3867 fma  1   -1000    NaN8   ->  NaN8
   #|fmax3868 fma  1    1000    NaN9   ->  NaN9
   #|fmax3869 fma  1    Inf    +NaN10  ->  NaN10
+  #|fmax3871 fma  1    sNaN11  -Inf   ->  NaN11  Invalid_operation
+  #|fmax3872 fma  1    sNaN12  -1000  ->  NaN12  Invalid_operation
+  #|fmax3873 fma  1    sNaN13   1000  ->  NaN13  Invalid_operation
+  #|fmax3874 fma  1    sNaN14   NaN17 ->  NaN14  Invalid_operation
+  #|fmax3875 fma  1    sNaN15  sNaN18 ->  NaN15  Invalid_operation
+  #|fmax3876 fma  1    NaN16   sNaN19 ->  NaN19  Invalid_operation
+  #|fmax3877 fma  1   -Inf    +sNaN20 ->  NaN20  Invalid_operation
+  #|fmax3878 fma  1   -1000    sNaN21 ->  NaN21  Invalid_operation
+  #|fmax3879 fma  1    1000    sNaN22 ->  NaN22  Invalid_operation
+  #|fmax3880 fma  1    Inf     sNaN23 ->  NaN23  Invalid_operation
+  #|fmax3881 fma  1   +NaN25  +sNaN24 ->  NaN24  Invalid_operation
   #|fmax3882 fma  1   -NaN26    NaN28 -> -NaN26
+  #|fmax3883 fma  1   -sNaN27  sNaN29 -> -NaN27  Invalid_operation
   #|fmax3884 fma  1    1000    -NaN30 -> -NaN30
+  #|fmax3885 fma  1    1000   -sNaN31 -> -NaN31  Invalid_operation
+  #|
+  #|-- overflow, underflow and subnormal tests
   #|maxexponent: 999999
   #|minexponent: -999999
   #|precision: 9
@@ -1374,11 +1705,13 @@ let fma_subset : String =
   #|fmax3901 fma  1   -1E-999999   +1.0001e-999999 -> 1E-1000003 Subnormal
   #|fmax3902 fma  1   -1E+999999   +9E+999999   ->  8E+999999
   #|fmax3903 fma  1   -9E+999999   +1E+999999   -> -8E+999999
+  #|
   #|precision: 3
   #|fmax3904 fma  1        0 -9.999E+999999   -> -Infinity Inexact Overflow Rounded
   #|fmax3905 fma  1          -9.999E+999999 0 -> -Infinity Inexact Overflow Rounded
   #|fmax3906 fma  1        0  9.999E+999999   ->  Infinity Inexact Overflow Rounded
   #|fmax3907 fma  1           9.999E+999999 0 ->  Infinity Inexact Overflow Rounded
+  #|
   #|precision: 3
   #|maxexponent: 999
   #|minexponent: -999
@@ -1387,23 +1720,28 @@ let fma_subset : String =
   #|fmax3912 fma  1    0.10E-999   0    ->   1.0E-1000 Subnormal
   #|fmax3913 fma  1    0.100E-999  0    ->   1.0E-1000 Subnormal Rounded
   #|fmax3914 fma  1    0.01E-999   0    ->   1E-1001   Subnormal
+  #|-- next is rounded to Nmin
   #|fmax3915 fma  1    0.999E-999  0    ->   1.00E-999 Inexact Rounded Subnormal Underflow
   #|fmax3916 fma  1    0.099E-999  0    ->   1.0E-1000 Inexact Rounded Subnormal Underflow
   #|fmax3917 fma  1    0.009E-999  0    ->   1E-1001   Inexact Rounded Subnormal Underflow
   #|fmax3918 fma  1    0.001E-999  0    ->   0E-1001   Inexact Rounded Subnormal Underflow Clamped
   #|fmax3919 fma  1    0.0009E-999 0    ->   0E-1001   Inexact Rounded Subnormal Underflow Clamped
   #|fmax3920 fma  1    0.0001E-999 0    ->   0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|
   #|fmax3930 fma  1   -1.00E-999   0    ->  -1.00E-999
   #|fmax3931 fma  1   -0.1E-999    0    ->  -1E-1000   Subnormal
   #|fmax3932 fma  1   -0.10E-999   0    ->  -1.0E-1000 Subnormal
   #|fmax3933 fma  1   -0.100E-999  0    ->  -1.0E-1000 Subnormal Rounded
   #|fmax3934 fma  1   -0.01E-999   0    ->  -1E-1001   Subnormal
+  #|-- next is rounded to Nmin
   #|fmax3935 fma  1   -0.999E-999  0    ->  -1.00E-999 Inexact Rounded Subnormal Underflow
   #|fmax3936 fma  1   -0.099E-999  0    ->  -1.0E-1000 Inexact Rounded Subnormal Underflow
   #|fmax3937 fma  1   -0.009E-999  0    ->  -1E-1001   Inexact Rounded Subnormal Underflow
   #|fmax3938 fma  1   -0.001E-999  0    ->  -0E-1001   Inexact Rounded Subnormal Underflow Clamped
   #|fmax3939 fma  1   -0.0009E-999 0    ->  -0E-1001   Inexact Rounded Subnormal Underflow Clamped
   #|fmax3940 fma  1   -0.0001E-999 0    ->  -0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|
+  #|-- some non-zero subnormal fma  1  s
   #|fmax3950 fma  1    1.00E-999    0.1E-999  ->   1.10E-999
   #|fmax3951 fma  1    0.1E-999     0.1E-999  ->   2E-1000    Subnormal
   #|fmax3952 fma  1    0.10E-999    0.1E-999  ->   2.0E-1000  Subnormal
@@ -1415,6 +1753,7 @@ let fma_subset : String =
   #|fmax3958 fma  1    0.001E-999   0.1E-999  ->   1.0E-1000  Inexact Rounded Subnormal Underflow
   #|fmax3959 fma  1    0.0009E-999  0.1E-999  ->   1.0E-1000  Inexact Rounded Subnormal Underflow
   #|fmax3960 fma  1    0.0001E-999  0.1E-999  ->   1.0E-1000  Inexact Rounded Subnormal Underflow
+  #|-- negatives...
   #|fmax3961 fma  1    1.00E-999   -0.1E-999  ->   9.0E-1000  Subnormal
   #|fmax3962 fma  1    0.1E-999    -0.1E-999  ->   0E-1000
   #|fmax3963 fma  1    0.10E-999   -0.1E-999  ->   0E-1001
@@ -1426,6 +1765,8 @@ let fma_subset : String =
   #|fmax3969 fma  1    0.001E-999  -0.1E-999  ->   -1.0E-1000 Inexact Rounded Subnormal Underflow
   #|fmax3970 fma  1    0.0009E-999 -0.1E-999  ->   -1.0E-1000 Inexact Rounded Subnormal Underflow
   #|fmax3971 fma  1    0.0001E-999 -0.1E-999  ->   -1.0E-1000 Inexact Rounded Subnormal Underflow
+  #|
+  #|-- some 'real' numbers
   #|maxExponent: 384
   #|minExponent: -383
   #|precision: 8
@@ -1434,38 +1775,62 @@ let fma_subset : String =
   #|fmax3567 fma  1   99999061735E-394  0E-394 -> 9.99991E-384 Inexact Rounded Underflow Subnormal
   #|precision: 6
   #|fmax3568 fma  1   99999061735E-394  0E-394 -> 9.9999E-384 Inexact Rounded Underflow Subnormal
+  #|
+  #|-- now the case where we can get underflow but the result is normal
+  #|-- [note this can't happen if the operands are also bounded, as we
+  #|-- cannot represent 1E-399, for example]
   #|precision:   16
   #|rounding:    half_up
   #|maxExponent: 384
   #|minExponent: -383
+  #|
   #|fmax3571 fma  1         1E-383       0  -> 1E-383
   #|fmax3572 fma  1         1E-384       0  -> 1E-384   Subnormal
   #|fmax3573 fma  1         1E-383  1E-384  -> 1.1E-383
+  #|fmax3574 subtract  1E-383  1E-384  ->   9E-384 Subnormal
+  #|
+  #|-- Here we explore the boundary of rounding a subnormal to Nmin
+  #|fmax3575 subtract  1E-383  1E-398  ->   9.99999999999999E-384  Subnormal
+  #|fmax3576 subtract  1E-383  1E-398  ->   9.99999999999999E-384  Subnormal
+  #|fmax3577 subtract  1E-383  1E-399  ->   1.000000000000000E-383 Underflow Inexact Subnormal Rounded
+  #|fmax3578 subtract  1E-383  1E-400  ->   1.000000000000000E-383 Underflow Inexact Subnormal Rounded
+  #|fmax3579 subtract  1E-383  1E-401  ->   1.000000000000000E-383 Underflow Inexact Subnormal Rounded
+  #|fmax3580 subtract  1E-383  1E-402  ->   1.000000000000000E-383 Underflow Inexact Subnormal Rounded
+  #|
+  #|-- check for double-rounded subnormals
   #|precision:   5
   #|maxexponent: 79
   #|minexponent: -79
+  #|-- Add: lhs and rhs 0
   #|fmax31001 fma  1         1.52444E-80 0 -> 1.524E-80 Inexact Rounded Subnormal Underflow
   #|fmax31002 fma  1         1.52445E-80 0 -> 1.524E-80 Inexact Rounded Subnormal Underflow
   #|fmax31003 fma  1         1.52446E-80 0 -> 1.524E-80 Inexact Rounded Subnormal Underflow
   #|fmax31004 fma  1         0 1.52444E-80 -> 1.524E-80 Inexact Rounded Subnormal Underflow
   #|fmax31005 fma  1         0 1.52445E-80 -> 1.524E-80 Inexact Rounded Subnormal Underflow
   #|fmax31006 fma  1         0 1.52446E-80 -> 1.524E-80 Inexact Rounded Subnormal Underflow
+  #|
+  #|-- Add: lhs >> rhs and vice versa
   #|fmax31011 fma  1         1.52444E-80 1E-100 -> 1.524E-80 Inexact Rounded Subnormal Underflow
   #|fmax31012 fma  1         1.52445E-80 1E-100 -> 1.524E-80 Inexact Rounded Subnormal Underflow
   #|fmax31013 fma  1         1.52446E-80 1E-100 -> 1.524E-80 Inexact Rounded Subnormal Underflow
   #|fmax31014 fma  1         1E-100 1.52444E-80 -> 1.524E-80 Inexact Rounded Subnormal Underflow
   #|fmax31015 fma  1         1E-100 1.52445E-80 -> 1.524E-80 Inexact Rounded Subnormal Underflow
   #|fmax31016 fma  1         1E-100 1.52446E-80 -> 1.524E-80 Inexact Rounded Subnormal Underflow
+  #|
+  #|-- Add: lhs + rhs fma  1  ition carried out
   #|fmax31021 fma  1         1.52443E-80 1.00001E-80  -> 2.524E-80 Inexact Rounded Subnormal Underflow
   #|fmax31022 fma  1         1.52444E-80 1.00001E-80  -> 2.524E-80 Inexact Rounded Subnormal Underflow
   #|fmax31023 fma  1         1.52445E-80 1.00001E-80  -> 2.524E-80 Inexact Rounded Subnormal Underflow
   #|fmax31024 fma  1         1.00001E-80  1.52443E-80 -> 2.524E-80 Inexact Rounded Subnormal Underflow
   #|fmax31025 fma  1         1.00001E-80  1.52444E-80 -> 2.524E-80 Inexact Rounded Subnormal Underflow
   #|fmax31026 fma  1         1.00001E-80  1.52445E-80 -> 2.524E-80 Inexact Rounded Subnormal Underflow
+  #|
+  #|-- And for round down full and subnormal results
   #|precision:    16
   #|maxExponent: +384
   #|minExponent: -383
   #|rounding:     down
+  #|
   #|fmax31100 fma  1   1e+2 -1e-383    -> 99.99999999999999 Rounded Inexact
   #|fmax31101 fma  1   1e+1 -1e-383    -> 9.999999999999999  Rounded Inexact
   #|fmax31103 fma  1     +1 -1e-383    -> 0.9999999999999999  Rounded Inexact
@@ -1475,6 +1840,7 @@ let fma_subset : String =
   #|fmax31107 fma  1   1e-4 -1e-383    -> 0.00009999999999999999  Rounded Inexact
   #|fmax31108 fma  1   1e-5 -1e-383    -> 0.000009999999999999999  Rounded Inexact
   #|fmax31109 fma  1   1e-6 -1e-383    -> 9.999999999999999E-7  Rounded Inexact
+  #|
   #|rounding:     ceiling
   #|fmax31110 fma  1   -1e+2 +1e-383   -> -99.99999999999999 Rounded Inexact
   #|fmax31111 fma  1   -1e+1 +1e-383   -> -9.999999999999999  Rounded Inexact
@@ -1485,11 +1851,13 @@ let fma_subset : String =
   #|fmax31117 fma  1   -1e-4 +1e-383   -> -0.00009999999999999999  Rounded Inexact
   #|fmax31118 fma  1   -1e-5 +1e-383   -> -0.000009999999999999999  Rounded Inexact
   #|fmax31119 fma  1   -1e-6 +1e-383   -> -9.999999999999999E-7  Rounded Inexact
+  #|
   #|rounding:     down
   #|precision:    7
   #|maxExponent: +96
   #|minExponent: -95
   #|fmax31130 fma  1     1            -1e-200  -> 0.9999999  Rounded Inexact
+  #|-- subnormal boundary
   #|fmax31131 fma  1     1.000000E-94  -1e-200  ->  9.999999E-95  Rounded Inexact
   #|fmax31132 fma  1     1.000001E-95  -1e-200  ->  1.000000E-95  Rounded Inexact
   #|fmax31133 fma  1     1.000000E-95  -1e-200  ->  9.99999E-96  Rounded Inexact Subnormal Underflow
@@ -1504,6 +1872,7 @@ let fma_subset : String =
   #|fmax31142 fma  1            1E-101 -1e-200  ->  0E-101     Subnormal Inexact Rounded Underflow Clamped
   #|fmax31143 fma  1            0E-101 -1e-200  -> -0E-101     Subnormal Inexact Rounded Underflow Clamped
   #|fmax31144 fma  1            1E-102 -1e-200  ->  0E-101     Subnormal Inexact Rounded Underflow Clamped
+  #|
   #|fmax31151 fma  1        10000E-102 -1e-200  ->  9.99E-99  Subnormal Inexact Rounded Underflow
   #|fmax31152 fma  1         1000E-102 -1e-200  ->  9.9E-100  Subnormal Inexact Rounded Underflow
   #|fmax31153 fma  1          100E-102 -1e-200  ->  9E-101   Subnormal Inexact Rounded Underflow
@@ -1511,12 +1880,16 @@ let fma_subset : String =
   #|fmax31155 fma  1            1E-102 -1e-200  ->  0E-101     Subnormal Inexact Rounded Underflow Clamped
   #|fmax31156 fma  1            0E-102 -1e-200  -> -0E-101     Subnormal Inexact Rounded Underflow Clamped
   #|fmax31157 fma  1            1E-103 -1e-200  ->  0E-101     Subnormal Inexact Rounded Underflow Clamped
+  #|
   #|fmax31160 fma  1          100E-105 -1e-101  -> -0E-101 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31161 fma  1          100E-105 -1e-201  ->  0E-101 Subnormal Inexact Rounded Underflow Clamped
+  #|
+  #|-- tests based on Gunnar Degnbol's edge case
   #|precision:   15
   #|rounding:    half_up
   #|maxExponent: 384
   #|minexponent: -383
+  #|
   #|fmax31200 fma  1   1E15  -0.5                 ->  1.00000000000000E+15 Inexact Rounded
   #|fmax31201 fma  1   1E15  -0.50                ->  1.00000000000000E+15 Inexact Rounded
   #|fmax31210 fma  1   1E15  -0.51                ->  999999999999999      Inexact Rounded
@@ -1536,7 +1909,9 @@ let fma_subset : String =
   #|fmax31224 fma  1   1E15  -0.5000000000000001  ->  999999999999999      Inexact Rounded
   #|fmax31225 fma  1   1E15  -0.5000000000000000  ->  1.00000000000000E+15 Inexact Rounded
   #|fmax31230 fma  1   1E15  -5000000.000000001   ->  999999995000000      Inexact Rounded
+  #|
   #|precision:   16
+  #|
   #|fmax31300 fma  1   1E16  -0.5                 ->  1.000000000000000E+16 Inexact Rounded
   #|fmax31310 fma  1   1E16  -0.51                ->  9999999999999999      Inexact Rounded
   #|fmax31311 fma  1   1E16  -0.501               ->  9999999999999999      Inexact Rounded
@@ -1568,8 +1943,10 @@ let fma_subset : String =
   #|fmax31337 fma  1   1E16  -0.5000              ->  1.000000000000000E+16 Inexact Rounded
   #|fmax31338 fma  1   1E16  -0.500               ->  1.000000000000000E+16 Inexact Rounded
   #|fmax31339 fma  1   1E16  -0.50                ->  1.000000000000000E+16 Inexact Rounded
+  #|
   #|fmax31340 fma  1   1E16  -5000000.000010001   ->  9999999995000000      Inexact Rounded
   #|fmax31341 fma  1   1E16  -5000000.000000001   ->  9999999995000000      Inexact Rounded
+  #|
   #|fmax31349 fma  1   9999999999999999 0.4                 ->  9999999999999999      Inexact Rounded
   #|fmax31350 fma  1   9999999999999999 0.49                ->  9999999999999999      Inexact Rounded
   #|fmax31351 fma  1   9999999999999999 0.499               ->  9999999999999999      Inexact Rounded
@@ -1617,10 +1994,14 @@ let fma_subset : String =
   #|fmax31394 fma  1   9999999999999999 0.5001              ->  1.000000000000000E+16 Inexact Rounded
   #|fmax31395 fma  1   9999999999999999 0.501               ->  1.000000000000000E+16 Inexact Rounded
   #|fmax31396 fma  1   9999999999999999 0.51                ->  1.000000000000000E+16 Inexact Rounded
+  #|
+  #|-- More GD edge cases, where difference between the unadjusted
+  #|-- exponents is larger than the maximum precision and one side is 0
   #|precision:   15
   #|rounding:    half_up
   #|maxExponent: 384
   #|minexponent: -383
+  #|
   #|fmax31400 fma  1    0 1.23456789012345     -> 1.23456789012345
   #|fmax31401 fma  1    0 1.23456789012345E-1  -> 0.123456789012345
   #|fmax31402 fma  1    0 1.23456789012345E-2  -> 0.0123456789012345
@@ -1641,6 +2022,8 @@ let fma_subset : String =
   #|fmax31417 fma  1    0 1.23456789012345E-17 -> 1.23456789012345E-17
   #|fmax31418 fma  1    0 1.23456789012345E-18 -> 1.23456789012345E-18
   #|fmax31419 fma  1    0 1.23456789012345E-19 -> 1.23456789012345E-19
+  #|
+  #|-- same, precision 16..
   #|precision:   16
   #|fmax31420 fma  1    0 1.123456789012345     -> 1.123456789012345
   #|fmax31421 fma  1    0 1.123456789012345E-1  -> 0.1123456789012345
@@ -1662,6 +2045,8 @@ let fma_subset : String =
   #|fmax31437 fma  1    0 1.123456789012345E-17 -> 1.123456789012345E-17
   #|fmax31438 fma  1    0 1.123456789012345E-18 -> 1.123456789012345E-18
   #|fmax31439 fma  1    0 1.123456789012345E-19 -> 1.123456789012345E-19
+  #|
+  #|-- same, reversed 0
   #|fmax31440 fma  1   1.123456789012345     0 -> 1.123456789012345
   #|fmax31441 fma  1   1.123456789012345E-1  0 -> 0.1123456789012345
   #|fmax31442 fma  1   1.123456789012345E-2  0 -> 0.01123456789012345
@@ -1682,6 +2067,8 @@ let fma_subset : String =
   #|fmax31457 fma  1   1.123456789012345E-17 0 -> 1.123456789012345E-17
   #|fmax31458 fma  1   1.123456789012345E-18 0 -> 1.123456789012345E-18
   #|fmax31459 fma  1   1.123456789012345E-19 0 -> 1.123456789012345E-19
+  #|
+  #|-- same, Es on the 0
   #|fmax31460 fma  1   1.123456789012345  0E-0   -> 1.123456789012345
   #|fmax31461 fma  1   1.123456789012345  0E-1   -> 1.123456789012345
   #|fmax31462 fma  1   1.123456789012345  0E-2   -> 1.123456789012345
@@ -1698,14 +2085,19 @@ let fma_subset : String =
   #|fmax31473 fma  1   1.123456789012345  0E-13  -> 1.123456789012345
   #|fmax31474 fma  1   1.123456789012345  0E-14  -> 1.123456789012345
   #|fmax31475 fma  1   1.123456789012345  0E-15  -> 1.123456789012345
+  #|-- next four flag Rounded because the 0 extends the result
   #|fmax31476 fma  1   1.123456789012345  0E-16  -> 1.123456789012345 Rounded
   #|fmax31477 fma  1   1.123456789012345  0E-17  -> 1.123456789012345 Rounded
   #|fmax31478 fma  1   1.123456789012345  0E-18  -> 1.123456789012345 Rounded
   #|fmax31479 fma  1   1.123456789012345  0E-19  -> 1.123456789012345 Rounded
+  #|
+  #|-- sum of two opposite-sign operands is exactly 0 and floor => -0
   #|precision:   16
   #|maxExponent: 384
   #|minexponent: -383
+  #|
   #|rounding:    half_up
+  #|-- exact zeros from zeros
   #|fmax31500 fma  1    0        0E-19  ->  0E-19
   #|fmax31501 fma  1   -0        0E-19  ->  0E-19
   #|fmax31502 fma  1    0       -0E-19  ->  0E-19
@@ -1714,15 +2106,19 @@ let fma_subset : String =
   #|fmax31505 fma  1   -0E-400   0E-19  ->  0E-398 Clamped
   #|fmax31506 fma  1    0E-400  -0E-19  ->  0E-398 Clamped
   #|fmax31507 fma  1   -0E-400  -0E-19  -> -0E-398 Clamped
+  #|-- inexact zeros
   #|fmax31511 fma  1    1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31512 fma  1   -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31513 fma  1    1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31514 fma  1   -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|-- some exact zeros from non-zeros
   #|fmax31515 fma  1    1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31516 fma  1   -1E-401   1E-401 ->  0E-398 Clamped
   #|fmax31517 fma  1    1E-401  -1E-401 ->  0E-398 Clamped
   #|fmax31518 fma  1   -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|
   #|rounding:    half_down
+  #|-- exact zeros from zeros
   #|fmax31520 fma  1    0        0E-19  ->  0E-19
   #|fmax31521 fma  1   -0        0E-19  ->  0E-19
   #|fmax31522 fma  1    0       -0E-19  ->  0E-19
@@ -1731,15 +2127,19 @@ let fma_subset : String =
   #|fmax31525 fma  1   -0E-400   0E-19  ->  0E-398 Clamped
   #|fmax31526 fma  1    0E-400  -0E-19  ->  0E-398 Clamped
   #|fmax31527 fma  1   -0E-400  -0E-19  -> -0E-398 Clamped
+  #|-- inexact zeros
   #|fmax31531 fma  1    1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31532 fma  1   -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31533 fma  1    1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31534 fma  1   -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|-- some exact zeros from non-zeros
   #|fmax31535 fma  1    1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31536 fma  1   -1E-401   1E-401 ->  0E-398 Clamped
   #|fmax31537 fma  1    1E-401  -1E-401 ->  0E-398 Clamped
   #|fmax31538 fma  1   -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|
   #|rounding:    half_even
+  #|-- exact zeros from zeros
   #|fmax31540 fma  1    0        0E-19  ->  0E-19
   #|fmax31541 fma  1   -0        0E-19  ->  0E-19
   #|fmax31542 fma  1    0       -0E-19  ->  0E-19
@@ -1748,15 +2148,19 @@ let fma_subset : String =
   #|fmax31545 fma  1   -0E-400   0E-19  ->  0E-398 Clamped
   #|fmax31546 fma  1    0E-400  -0E-19  ->  0E-398 Clamped
   #|fmax31547 fma  1   -0E-400  -0E-19  -> -0E-398 Clamped
+  #|-- inexact zeros
   #|fmax31551 fma  1    1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31552 fma  1   -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31553 fma  1    1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31554 fma  1   -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|-- some exact zeros from non-zeros
   #|fmax31555 fma  1    1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31556 fma  1   -1E-401   1E-401 ->  0E-398 Clamped
   #|fmax31557 fma  1    1E-401  -1E-401 ->  0E-398 Clamped
   #|fmax31558 fma  1   -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|
   #|rounding:    up
+  #|-- exact zeros from zeros
   #|fmax31560 fma  1    0        0E-19  ->  0E-19
   #|fmax31561 fma  1   -0        0E-19  ->  0E-19
   #|fmax31562 fma  1    0       -0E-19  ->  0E-19
@@ -1765,15 +2169,19 @@ let fma_subset : String =
   #|fmax31565 fma  1   -0E-400   0E-19  ->  0E-398 Clamped
   #|fmax31566 fma  1    0E-400  -0E-19  ->  0E-398 Clamped
   #|fmax31567 fma  1   -0E-400  -0E-19  -> -0E-398 Clamped
+  #|-- inexact zeros
   #|fmax31571 fma  1    1E-401   1E-400 ->  1E-398 Subnormal Inexact Rounded Underflow
   #|fmax31572 fma  1   -1E-401   1E-400 ->  1E-398 Subnormal Inexact Rounded Underflow
   #|fmax31573 fma  1    1E-401  -1E-400 -> -1E-398 Subnormal Inexact Rounded Underflow
   #|fmax31574 fma  1   -1E-401  -1E-400 -> -1E-398 Subnormal Inexact Rounded Underflow
+  #|-- some exact zeros from non-zeros
   #|fmax31575 fma  1    1E-401   1E-401 ->  1E-398 Subnormal Inexact Rounded Underflow
   #|fmax31576 fma  1   -1E-401   1E-401 ->  0E-398 Clamped
   #|fmax31577 fma  1    1E-401  -1E-401 ->  0E-398 Clamped
   #|fmax31578 fma  1   -1E-401  -1E-401 -> -1E-398 Subnormal Inexact Rounded Underflow
+  #|
   #|rounding:    down
+  #|-- exact zeros from zeros
   #|fmax31580 fma  1    0        0E-19  ->  0E-19
   #|fmax31581 fma  1   -0        0E-19  ->  0E-19
   #|fmax31582 fma  1    0       -0E-19  ->  0E-19
@@ -1782,15 +2190,19 @@ let fma_subset : String =
   #|fmax31585 fma  1   -0E-400   0E-19  ->  0E-398 Clamped
   #|fmax31586 fma  1    0E-400  -0E-19  ->  0E-398 Clamped
   #|fmax31587 fma  1   -0E-400  -0E-19  -> -0E-398 Clamped
+  #|-- inexact zeros
   #|fmax31591 fma  1    1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31592 fma  1   -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31593 fma  1    1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31594 fma  1   -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|-- some exact zeros from non-zeros
   #|fmax31595 fma  1    1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31596 fma  1   -1E-401   1E-401 ->  0E-398 Clamped
   #|fmax31597 fma  1    1E-401  -1E-401 ->  0E-398 Clamped
   #|fmax31598 fma  1   -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|
   #|rounding:    ceiling
+  #|-- exact zeros from zeros
   #|fmax31600 fma  1    0        0E-19  ->  0E-19
   #|fmax31601 fma  1   -0        0E-19  ->  0E-19
   #|fmax31602 fma  1    0       -0E-19  ->  0E-19
@@ -1799,15 +2211,20 @@ let fma_subset : String =
   #|fmax31605 fma  1   -0E-400   0E-19  ->  0E-398 Clamped
   #|fmax31606 fma  1    0E-400  -0E-19  ->  0E-398 Clamped
   #|fmax31607 fma  1   -0E-400  -0E-19  -> -0E-398 Clamped
+  #|-- inexact zeros
   #|fmax31611 fma  1    1E-401   1E-400 ->  1E-398 Subnormal Inexact Rounded Underflow
   #|fmax31612 fma  1   -1E-401   1E-400 ->  1E-398 Subnormal Inexact Rounded Underflow
   #|fmax31613 fma  1    1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31614 fma  1   -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|-- some exact zeros from non-zeros
   #|fmax31615 fma  1    1E-401   1E-401 ->  1E-398 Subnormal Inexact Rounded Underflow
   #|fmax31616 fma  1   -1E-401   1E-401 ->  0E-398 Clamped
   #|fmax31617 fma  1    1E-401  -1E-401 ->  0E-398 Clamped
   #|fmax31618 fma  1   -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|
+  #|-- and the extra-special ugly case; unusual minuses marked by -- *
   #|rounding:    floor
+  #|-- exact zeros from zeros
   #|fmax31620 fma  1    0        0E-19  ->  0E-19
   #|fmax31621 fma  1   -0        0E-19  -> -0E-19           -- *
   #|fmax31622 fma  1    0       -0E-19  -> -0E-19           -- *
@@ -1816,17 +2233,22 @@ let fma_subset : String =
   #|fmax31625 fma  1   -0E-400   0E-19  -> -0E-398 Clamped  -- *
   #|fmax31626 fma  1    0E-400  -0E-19  -> -0E-398 Clamped  -- *
   #|fmax31627 fma  1   -0E-400  -0E-19  -> -0E-398 Clamped
+  #|-- inexact zeros
   #|fmax31631 fma  1    1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31632 fma  1   -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31633 fma  1    1E-401  -1E-400 -> -1E-398 Subnormal Inexact Rounded Underflow
   #|fmax31634 fma  1   -1E-401  -1E-400 -> -1E-398 Subnormal Inexact Rounded Underflow
+  #|-- some exact zeros from non-zeros
   #|fmax31635 fma  1    1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax31636 fma  1   -1E-401   1E-401 -> -0E-398 Clamped  -- *
   #|fmax31637 fma  1    1E-401  -1E-401 -> -0E-398 Clamped  -- *
   #|fmax31638 fma  1   -1E-401  -1E-401 -> -1E-398 Subnormal Inexact Rounded Underflow
+  #|
+  #|-- BigDecimal problem testcases 2006.01.23
   #|precision:   16
   #|maxExponent: 384
   #|minexponent: -383
+  #|
   #|rounding:  down
   #|precision: 7
   #|fmax31651 fma  1    10001E+2  -2E+1 -> 1.00008E+6
@@ -1842,6 +2264,7 @@ let fma_subset : String =
   #|fmax31656 fma  1    10001E+2  -2E+1 -> 1.0E+6      Inexact Rounded
   #|precision: 1
   #|fmax31657 fma  1    10001E+2  -2E+1 -> 1E+6        Inexact Rounded
+  #|
   #|rounding:  half_even
   #|precision: 7
   #|fmax31661 fma  1    10001E+2  -2E+1 -> 1.00008E+6
@@ -1857,6 +2280,7 @@ let fma_subset : String =
   #|fmax31666 fma  1    10001E+2  -2E+1 -> 1.0E+6      Inexact Rounded
   #|precision: 1
   #|fmax31667 fma  1    10001E+2  -2E+1 -> 1E+6        Inexact Rounded
+  #|
   #|rounding:  up
   #|precision: 7
   #|fmax31671 fma  1    10001E+2  -2E+1 -> 1.00008E+6
@@ -1872,18 +2296,30 @@ let fma_subset : String =
   #|fmax31676 fma  1    10001E+2  -2E+1 -> 1.1E+6      Inexact Rounded
   #|precision: 1
   #|fmax31677 fma  1    10001E+2  -2E+1 -> 2E+6        Inexact Rounded
+  #|
   #|precision:   34
   #|rounding:    half_up
   #|maxExponent: 6144
   #|minExponent: -6143
+  #|-- Examples from SQL proposal (Krishna Kulkarni)
   #|fmax31701  fma  1   130E-2    120E-2    -> 2.50
   #|fmax31702  fma  1   130E-2    12E-1     -> 2.50
   #|fmax31703  fma  1   130E-2    1E0       -> 2.30
   #|fmax31704  fma  1   1E2       1E4       -> 1.01E+4
+  #|fmax31705  subtract 130E-2  120E-2 -> 0.10
+  #|fmax31706  subtract 130E-2  12E-1  -> 0.10
+  #|fmax31707  subtract 130E-2  1E0    -> 0.30
+  #|fmax31708  subtract 1E2     1E4    -> -9.9E+3
+  #|
+  #|------------------------------------------------------------------------
+  #|-- Same as above, using decimal64 default parameters                  --
+  #|------------------------------------------------------------------------
   #|precision:   16
   #|rounding:    half_even
   #|maxExponent: 384
   #|minexponent: -383
+  #|
+  #|-- [first group are 'quick confidence check']
   #|fmax36001 fma  1   1       1       ->  2
   #|fmax36002 fma  1   2       3       ->  5
   #|fmax36003 fma  1   '5.75'  '3.3'   ->  9.05
@@ -1894,6 +2330,7 @@ let fma_subset : String =
   #|fmax36008 fma  1   '1.25'  '1.25'  ->  2.50
   #|fmax36009 fma  1   '1.23456789'  '1.00000000' -> '2.23456789'
   #|fmax36010 fma  1   '1.23456789'  '1.00000011' -> '2.23456800'
+  #|
   #|fmax36011 fma  1   '0.44444444444444444'  '0.55555555555555555' -> '1.000000000000000' Inexact Rounded
   #|fmax36012 fma  1   '0.44444444444444440'  '0.55555555555555555' -> '1.000000000000000' Inexact Rounded
   #|fmax36013 fma  1   '0.44444444444444444'  '0.55555555555555550' -> '0.9999999999999999' Inexact Rounded
@@ -1904,6 +2341,7 @@ let fma_subset : String =
   #|fmax36018 fma  1   '0.44444444444444445001'  '0' -> '0.4444444444444445' Inexact Rounded
   #|fmax36019 fma  1   '0.4444444444444444501'   '0' -> '0.4444444444444445' Inexact Rounded
   #|fmax36020 fma  1   '0.444444444444444451'    '0' -> '0.4444444444444445' Inexact Rounded
+  #|
   #|fmax36021 fma  1   0 1 -> 1
   #|fmax36022 fma  1   1 1 -> 2
   #|fmax36023 fma  1   2 1 -> 3
@@ -1914,31 +2352,41 @@ let fma_subset : String =
   #|fmax36028 fma  1   7 1 -> 8
   #|fmax36029 fma  1   8 1 -> 9
   #|fmax36030 fma  1   9 1 -> 10
+  #|
+  #|-- some carrying effects
   #|fmax36031 fma  1   '0.9998'  '0.0000' -> '0.9998'
   #|fmax36032 fma  1   '0.9998'  '0.0001' -> '0.9999'
   #|fmax36033 fma  1   '0.9998'  '0.0002' -> '1.0000'
   #|fmax36034 fma  1   '0.9998'  '0.0003' -> '1.0001'
+  #|
   #|fmax36035 fma  1   '70'      '10000e+16' -> '1.000000000000000E+20' Inexact Rounded
   #|fmax36036 fma  1   '700'     '10000e+16' -> '1.000000000000000E+20' Inexact Rounded
   #|fmax36037 fma  1   '7000'    '10000e+16' -> '1.000000000000000E+20' Inexact Rounded
   #|fmax36038 fma  1   '70000'   '10000e+16' -> '1.000000000000001E+20' Inexact Rounded
   #|fmax36039 fma  1   '700000'  '10000e+16' -> '1.000000000000007E+20' Rounded
+  #|
+  #|-- symmetry:
   #|fmax36040 fma  1   '10000e+16'  '70' -> '1.000000000000000E+20' Inexact Rounded
   #|fmax36041 fma  1   '10000e+16'  '700' -> '1.000000000000000E+20' Inexact Rounded
   #|fmax36042 fma  1   '10000e+16'  '7000' -> '1.000000000000000E+20' Inexact Rounded
   #|fmax36044 fma  1   '10000e+16'  '70000' -> '1.000000000000001E+20' Inexact Rounded
   #|fmax36045 fma  1   '10000e+16'  '700000' -> '1.000000000000007E+20' Rounded
+  #|
   #|fmax36046 fma  1   '10000e+9'  '7' -> '10000000000007'
   #|fmax36047 fma  1   '10000e+9'  '70' -> '10000000000070'
   #|fmax36048 fma  1   '10000e+9'  '700' -> '10000000000700'
   #|fmax36049 fma  1   '10000e+9'  '7000' -> '10000000007000'
   #|fmax36050 fma  1   '10000e+9'  '70000' -> '10000000070000'
   #|fmax36051 fma  1   '10000e+9'  '700000' -> '10000000700000'
+  #|
+  #|-- examples from decarith
   #|fmax36053 fma  1   '12' '7.00' -> '19.00'
   #|fmax36054 fma  1   '1.3' '-1.07' -> '0.23'
   #|fmax36055 fma  1   '1.3' '-1.30' -> '0.00'
   #|fmax36056 fma  1   '1.3' '-2.07' -> '-0.77'
   #|fmax36057 fma  1   '1E+2' '1E+4' -> '1.01E+4'
+  #|
+  #|-- from above
   #|fmax36061 fma  1   1 '0.1' -> '1.1'
   #|fmax36062 fma  1   1 '0.01' -> '1.01'
   #|fmax36063 fma  1   1 '0.001' -> '1.001'
@@ -1947,6 +2395,8 @@ let fma_subset : String =
   #|fmax36066 fma  1   1 '0.000001' -> '1.000001'
   #|fmax36067 fma  1   1 '0.0000001' -> '1.0000001'
   #|fmax36068 fma  1   1 '0.00000001' -> '1.00000001'
+  #|
+  #|-- some funny zeros [in case of bad signum]
   #|fmax36070 fma  1   1  0    -> 1
   #|fmax36071 fma  1   1 0.    -> 1
   #|fmax36072 fma  1   1  .0   -> 1.0
@@ -1957,6 +2407,8 @@ let fma_subset : String =
   #|fmax36077 fma  1    .0 1   -> 1.0
   #|fmax36078 fma  1   0.0 1   -> 1.0
   #|fmax36079 fma  1   0.00 1  -> 1.00
+  #|
+  #|-- some carries
   #|fmax36080 fma  1   9999999999999998 1  -> 9999999999999999
   #|fmax36081 fma  1   9999999999999999 1  -> 1.000000000000000E+16 Rounded
   #|fmax36082 fma  1    999999999999999 1  -> 1000000000000000
@@ -1967,6 +2419,9 @@ let fma_subset : String =
   #|fmax36087 fma  1              99999 1  -> 100000
   #|fmax36088 fma  1                999 1  -> 1000
   #|fmax36089 fma  1                  9 1  -> 10
+  #|
+  #|
+  #|-- more LHS swaps
   #|fmax36090 fma  1   '-56267E-10'   0 ->  '-0.0000056267'
   #|fmax36091 fma  1   '-56267E-6'    0 ->  '-0.056267'
   #|fmax36092 fma  1   '-56267E-5'    0 ->  '-0.56267'
@@ -1989,6 +2444,8 @@ let fma_subset : String =
   #|fmax36109 fma  1   '-5E17'        0 ->  '-5.000000000000000E+17'  Rounded
   #|fmax36110 fma  1   '-5E18'        0 ->  '-5.000000000000000E+18'  Rounded
   #|fmax36111 fma  1   '-5E100'       0 ->  '-5.000000000000000E+100' Rounded
+  #|
+  #|-- more RHS swaps
   #|fmax36113 fma  1   0  '-56267E-10' ->  '-0.0000056267'
   #|fmax36114 fma  1   0  '-56267E-6'  ->  '-0.056267'
   #|fmax36116 fma  1   0  '-56267E-5'  ->  '-0.56267'
@@ -2011,6 +2468,8 @@ let fma_subset : String =
   #|fmax36134 fma  1   0  '-5E17'      ->  '-5.000000000000000E+17'   Rounded
   #|fmax36135 fma  1   0  '-5E18'      ->  '-5.000000000000000E+18'   Rounded
   #|fmax36136 fma  1   0  '-5E100'     ->  '-5.000000000000000E+100'  Rounded
+  #|
+  #|-- related
   #|fmax36137 fma  1    1  '0E-19'      ->  '1.000000000000000'  Rounded
   #|fmax36138 fma  1   -1  '0E-19'      ->  '-1.000000000000000' Rounded
   #|fmax36139 fma  1   '0E-19' 1        ->  '1.000000000000000'  Rounded
@@ -2019,6 +2478,8 @@ let fma_subset : String =
   #|fmax36142 fma  1   1E+11   0.00000  ->  '100000000000.0000'  Rounded
   #|fmax36143 fma  1   0.000   1E+12    ->  '1000000000000.000'
   #|fmax36144 fma  1   0.0000  1E+12    ->  '1000000000000.000'  Rounded
+  #|
+  #|-- [some of the next group are really constructor tests]
   #|fmax36146 fma  1   '00.0'  0       ->  '0.0'
   #|fmax36147 fma  1   '0.00'  0       ->  '0.00'
   #|fmax36148 fma  1    0      '0.00'  ->  '0.00'
@@ -2034,6 +2495,8 @@ let fma_subset : String =
   #|fmax36158 fma  1   '3'     '-3'    ->  '0'
   #|fmax36159 fma  1   '0.3'   '-0.3'  ->  '0.0'
   #|fmax36160 fma  1   '0.03'  '-0.03' ->  '0.00'
+  #|
+  #|-- try borderline precision, with carries, etc.
   #|fmax36161 fma  1   '1E+13' '-1'    -> '9999999999999'
   #|fmax36162 fma  1   '1E+13'  '1.11' -> '10000000000001.11'
   #|fmax36163 fma  1   '1.11'  '1E+13' -> '10000000000001.11'
@@ -2042,6 +2505,8 @@ let fma_subset : String =
   #|fmax36166 fma  1   '7E+13'  '1.11' -> '70000000000001.11'
   #|fmax36167 fma  1   '1.11'  '7E+13' -> '70000000000001.11'
   #|fmax36168 fma  1   '-1'    '7E+13' -> '69999999999999'
+  #|
+  #|--                    1234567890123456      1234567890123456      1 234567890123456
   #|fmax36170 fma  1   '0.4444444444444444'  '0.5555555555555563' -> '1.000000000000001' Inexact Rounded
   #|fmax36171 fma  1   '0.4444444444444444'  '0.5555555555555562' -> '1.000000000000001' Inexact Rounded
   #|fmax36172 fma  1   '0.4444444444444444'  '0.5555555555555561' -> '1.000000000000000' Inexact Rounded
@@ -2056,6 +2521,8 @@ let fma_subset : String =
   #|fmax36181 fma  1   '0.4444444444444444'  '0.5555555555555552' -> '0.9999999999999996'
   #|fmax36182 fma  1   '0.4444444444444444'  '0.5555555555555551' -> '0.9999999999999995'
   #|fmax36183 fma  1   '0.4444444444444444'  '0.5555555555555550' -> '0.9999999999999994'
+  #|
+  #|-- and some more, including residue effects and different roundings
   #|rounding: half_up
   #|fmax36200 fma  1   '6543210123456789' 0             -> '6543210123456789'
   #|fmax36201 fma  1   '6543210123456789' 0.000000001   -> '6543210123456789' Inexact Rounded
@@ -2077,6 +2544,7 @@ let fma_subset : String =
   #|fmax36217 fma  1   '6543210123456789' 1.000000001   -> '6543210123456790' Inexact Rounded
   #|fmax36218 fma  1   '6543210123456789' 1.00001       -> '6543210123456790' Inexact Rounded
   #|fmax36219 fma  1   '6543210123456789' 1.1           -> '6543210123456790' Inexact Rounded
+  #|
   #|rounding: half_even
   #|fmax36220 fma  1   '6543210123456789' 0             -> '6543210123456789'
   #|fmax36221 fma  1   '6543210123456789' 0.000000001   -> '6543210123456789' Inexact Rounded
@@ -2098,9 +2566,11 @@ let fma_subset : String =
   #|fmax36237 fma  1   '6543210123456789' 1.00000001    -> '6543210123456790' Inexact Rounded
   #|fmax36238 fma  1   '6543210123456789' 1.00001       -> '6543210123456790' Inexact Rounded
   #|fmax36239 fma  1   '6543210123456789' 1.1           -> '6543210123456790' Inexact Rounded
+  #|-- critical few with even bottom digit...
   #|fmax36240 fma  1   '6543210123456788' 0.499999   -> '6543210123456788' Inexact Rounded
   #|fmax36241 fma  1   '6543210123456788' 0.5           -> '6543210123456788' Inexact Rounded
   #|fmax36242 fma  1   '6543210123456788' 0.500000001   -> '6543210123456789' Inexact Rounded
+  #|
   #|rounding: down
   #|fmax36250 fma  1   '6543210123456789' 0             -> '6543210123456789'
   #|fmax36251 fma  1   '6543210123456789' 0.000000001   -> '6543210123456789' Inexact Rounded
@@ -2122,6 +2592,8 @@ let fma_subset : String =
   #|fmax36267 fma  1   '6543210123456789' 1.00000001    -> '6543210123456790' Inexact Rounded
   #|fmax36268 fma  1   '6543210123456789' 1.00001       -> '6543210123456790' Inexact Rounded
   #|fmax36269 fma  1   '6543210123456789' 1.1           -> '6543210123456790' Inexact Rounded
+  #|
+  #|-- 1 in last place tests
   #|rounding: half_even
   #|fmax36301 fma  1    -1   1      ->   0
   #|fmax36302 fma  1     0   1      ->   1
@@ -2139,6 +2611,7 @@ let fma_subset : String =
   #|fmax36314 fma  1    99  -1      ->  98
   #|fmax36315 fma  1   100  -1      ->  99
   #|fmax36316 fma  1   101  -1      -> 100
+  #|
   #|fmax36321 fma  1   -0.01  0.01    ->  0.00
   #|fmax36322 fma  1    0.00  0.01    ->  0.01
   #|fmax36323 fma  1    0.01  0.01    ->  0.02
@@ -2155,10 +2628,13 @@ let fma_subset : String =
   #|fmax36334 fma  1    0.99 -0.01    ->  0.98
   #|fmax36335 fma  1    1.00 -0.01    ->  0.99
   #|fmax36336 fma  1    1.01 -0.01    ->  1.00
+  #|
+  #|-- some more cases where fma  1  ing 0 affects the coefficient
   #|fmax36340 fma  1   1E+3    0    ->         1000
   #|fmax36341 fma  1   1E+15   0    ->    1000000000000000
   #|fmax36342 fma  1   1E+16   0    ->   1.000000000000000E+16  Rounded
   #|fmax36343 fma  1   1E+17   0    ->   1.000000000000000E+17  Rounded
+  #|-- which simply follow from these cases ...
   #|fmax36344 fma  1   1E+3    1    ->         1001
   #|fmax36345 fma  1   1E+15   1    ->    1000000000000001
   #|fmax36346 fma  1   1E+16   1    ->   1.000000000000000E+16  Inexact Rounded
@@ -2167,10 +2643,14 @@ let fma_subset : String =
   #|fmax36349 fma  1   1E+15   7    ->    1000000000000007
   #|fmax36350 fma  1   1E+16   7    ->   1.000000000000001E+16  Inexact Rounded
   #|fmax36351 fma  1   1E+17   7    ->   1.000000000000000E+17  Inexact Rounded
+  #|
+  #|-- tryzeros cases
   #|fmax36361  fma  1   0E+50 10000E+1  -> 1.0000E+5
   #|fmax36362  fma  1   10000E+1 0E-50  -> 100000.0000000000  Rounded
   #|fmax36363  fma  1   10000E+1 10000E-50  -> 100000.0000000000  Rounded Inexact
   #|fmax36364  fma  1   12.34    0e-398  -> 12.34000000000000  Rounded
+  #|
+  #|-- ulp replacement tests
   #|fmax36400 fma  1     1   77e-14      ->  1.00000000000077
   #|fmax36401 fma  1     1   77e-15      ->  1.000000000000077
   #|fmax36402 fma  1     1   77e-16      ->  1.000000000000008 Inexact Rounded
@@ -2178,6 +2658,7 @@ let fma_subset : String =
   #|fmax36404 fma  1     1   77e-18      ->  1.000000000000000 Inexact Rounded
   #|fmax36405 fma  1     1   77e-19      ->  1.000000000000000 Inexact Rounded
   #|fmax36406 fma  1     1   77e-99      ->  1.000000000000000 Inexact Rounded
+  #|
   #|fmax36410 fma  1    10   77e-14      ->  10.00000000000077
   #|fmax36411 fma  1    10   77e-15      ->  10.00000000000008 Inexact Rounded
   #|fmax36412 fma  1    10   77e-16      ->  10.00000000000001 Inexact Rounded
@@ -2185,6 +2666,7 @@ let fma_subset : String =
   #|fmax36414 fma  1    10   77e-18      ->  10.00000000000000 Inexact Rounded
   #|fmax36415 fma  1    10   77e-19      ->  10.00000000000000 Inexact Rounded
   #|fmax36416 fma  1    10   77e-99      ->  10.00000000000000 Inexact Rounded
+  #|
   #|fmax36420 fma  1    77e-14       1   ->  1.00000000000077
   #|fmax36421 fma  1    77e-15       1   ->  1.000000000000077
   #|fmax36422 fma  1    77e-16       1   ->  1.000000000000008 Inexact Rounded
@@ -2192,6 +2674,7 @@ let fma_subset : String =
   #|fmax36424 fma  1    77e-18       1   ->  1.000000000000000 Inexact Rounded
   #|fmax36425 fma  1    77e-19       1   ->  1.000000000000000 Inexact Rounded
   #|fmax36426 fma  1    77e-99       1   ->  1.000000000000000 Inexact Rounded
+  #|
   #|fmax36430 fma  1    77e-14      10   ->  10.00000000000077
   #|fmax36431 fma  1    77e-15      10   ->  10.00000000000008 Inexact Rounded
   #|fmax36432 fma  1    77e-16      10   ->  10.00000000000001 Inexact Rounded
@@ -2199,6 +2682,8 @@ let fma_subset : String =
   #|fmax36434 fma  1    77e-18      10   ->  10.00000000000000 Inexact Rounded
   #|fmax36435 fma  1    77e-19      10   ->  10.00000000000000 Inexact Rounded
   #|fmax36436 fma  1    77e-99      10   ->  10.00000000000000 Inexact Rounded
+  #|
+  #|-- negative ulps
   #|fmax36440 fma  1     1   -77e-14      ->  0.99999999999923
   #|fmax36441 fma  1     1   -77e-15      ->  0.999999999999923
   #|fmax36442 fma  1     1   -77e-16      ->  0.9999999999999923
@@ -2206,6 +2691,7 @@ let fma_subset : String =
   #|fmax36444 fma  1     1   -77e-18      ->  0.9999999999999999 Inexact Rounded
   #|fmax36445 fma  1     1   -77e-19      ->  1.000000000000000 Inexact Rounded
   #|fmax36446 fma  1     1   -77e-99      ->  1.000000000000000 Inexact Rounded
+  #|
   #|fmax36450 fma  1    10   -77e-14      ->   9.99999999999923
   #|fmax36451 fma  1    10   -77e-15      ->   9.999999999999923
   #|fmax36452 fma  1    10   -77e-16      ->   9.999999999999992 Inexact Rounded
@@ -2213,6 +2699,7 @@ let fma_subset : String =
   #|fmax36454 fma  1    10   -77e-18      ->  10.00000000000000 Inexact Rounded
   #|fmax36455 fma  1    10   -77e-19      ->  10.00000000000000 Inexact Rounded
   #|fmax36456 fma  1    10   -77e-99      ->  10.00000000000000 Inexact Rounded
+  #|
   #|fmax36460 fma  1    -77e-14       1   ->  0.99999999999923
   #|fmax36461 fma  1    -77e-15       1   ->  0.999999999999923
   #|fmax36462 fma  1    -77e-16       1   ->  0.9999999999999923
@@ -2220,6 +2707,7 @@ let fma_subset : String =
   #|fmax36464 fma  1    -77e-18       1   ->  0.9999999999999999 Inexact Rounded
   #|fmax36465 fma  1    -77e-19       1   ->  1.000000000000000 Inexact Rounded
   #|fmax36466 fma  1    -77e-99       1   ->  1.000000000000000 Inexact Rounded
+  #|
   #|fmax36470 fma  1    -77e-14      10   ->   9.99999999999923
   #|fmax36471 fma  1    -77e-15      10   ->   9.999999999999923
   #|fmax36472 fma  1    -77e-16      10   ->   9.999999999999992 Inexact Rounded
@@ -2227,6 +2715,8 @@ let fma_subset : String =
   #|fmax36474 fma  1    -77e-18      10   ->  10.00000000000000 Inexact Rounded
   #|fmax36475 fma  1    -77e-19      10   ->  10.00000000000000 Inexact Rounded
   #|fmax36476 fma  1    -77e-99      10   ->  10.00000000000000 Inexact Rounded
+  #|
+  #|-- negative ulps
   #|fmax36480 fma  1    -1    77e-14      ->  -0.99999999999923
   #|fmax36481 fma  1    -1    77e-15      ->  -0.999999999999923
   #|fmax36482 fma  1    -1    77e-16      ->  -0.9999999999999923
@@ -2234,6 +2724,7 @@ let fma_subset : String =
   #|fmax36484 fma  1    -1    77e-18      ->  -0.9999999999999999 Inexact Rounded
   #|fmax36485 fma  1    -1    77e-19      ->  -1.000000000000000 Inexact Rounded
   #|fmax36486 fma  1    -1    77e-99      ->  -1.000000000000000 Inexact Rounded
+  #|
   #|fmax36490 fma  1   -10    77e-14      ->   -9.99999999999923
   #|fmax36491 fma  1   -10    77e-15      ->   -9.999999999999923
   #|fmax36492 fma  1   -10    77e-16      ->   -9.999999999999992 Inexact Rounded
@@ -2241,6 +2732,7 @@ let fma_subset : String =
   #|fmax36494 fma  1   -10    77e-18      ->  -10.00000000000000 Inexact Rounded
   #|fmax36495 fma  1   -10    77e-19      ->  -10.00000000000000 Inexact Rounded
   #|fmax36496 fma  1   -10    77e-99      ->  -10.00000000000000 Inexact Rounded
+  #|
   #|fmax36500 fma  1     77e-14      -1   ->  -0.99999999999923
   #|fmax36501 fma  1     77e-15      -1   ->  -0.999999999999923
   #|fmax36502 fma  1     77e-16      -1   ->  -0.9999999999999923
@@ -2248,6 +2740,7 @@ let fma_subset : String =
   #|fmax36504 fma  1     77e-18      -1   ->  -0.9999999999999999 Inexact Rounded
   #|fmax36505 fma  1     77e-19      -1   ->  -1.000000000000000 Inexact Rounded
   #|fmax36506 fma  1     77e-99      -1   ->  -1.000000000000000 Inexact Rounded
+  #|
   #|fmax36510 fma  1     77e-14      -10  ->   -9.99999999999923
   #|fmax36511 fma  1     77e-15      -10  ->   -9.999999999999923
   #|fmax36512 fma  1     77e-16      -10  ->   -9.999999999999992 Inexact Rounded
@@ -2255,6 +2748,9 @@ let fma_subset : String =
   #|fmax36514 fma  1     77e-18      -10  ->  -10.00000000000000 Inexact Rounded
   #|fmax36515 fma  1     77e-19      -10  ->  -10.00000000000000 Inexact Rounded
   #|fmax36516 fma  1     77e-99      -10  ->  -10.00000000000000 Inexact Rounded
+  #|
+  #|
+  #|-- long operands
   #|fmax36521 fma  1   101234562345678000 0 -> 1.012345623456780E+17 Rounded
   #|fmax36522 fma  1   0 101234562345678000 -> 1.012345623456780E+17 Rounded
   #|fmax36523 fma  1   10123456234567800  0 -> 1.012345623456780E+16 Rounded
@@ -2267,17 +2763,24 @@ let fma_subset : String =
   #|fmax36530 fma  1   0 101234562345678901 -> 1.012345623456789E+17 Inexact Rounded
   #|fmax36531 fma  1   10123456234567896  0 -> 1.012345623456790E+16 Inexact Rounded
   #|fmax36532 fma  1   0 10123456234567896  -> 1.012345623456790E+16 Inexact Rounded
+  #|
+  #|-- verify a query
   #|rounding:     down
   #|fmax36561 fma  1   1e-398 9.000000000000000E+384 -> 9.000000000000000E+384 Inexact Rounded
   #|fmax36562 fma  1        0 9.000000000000000E+384 -> 9.000000000000000E+384 Rounded
+  #|-- and using decimal64 bounds...
   #|rounding:     down
   #|fmax36563 fma  1   1e-388 9.000000000000000E+374 -> 9.000000000000000E+374 Inexact Rounded
   #|fmax36564 fma  1        0 9.000000000000000E+374 -> 9.000000000000000E+374 Rounded
+  #|
+  #|-- more zeros, etc.
   #|rounding: half_even
+  #|
   #|fmax36701 fma  1   5.00 1.00E-3 -> 5.00100
   #|fmax36702 fma  1   00.00 0.000  -> 0.000
   #|fmax36703 fma  1   00.00 0E-3   -> 0.000
   #|fmax36704 fma  1   0E-3  00.00  -> 0.000
+  #|
   #|fmax36710 fma  1   0E+3  00.00  -> 0.00
   #|fmax36711 fma  1   0E+3  00.0   -> 0.0
   #|fmax36712 fma  1   0E+3  00.    -> 0
@@ -2289,6 +2792,7 @@ let fma_subset : String =
   #|fmax36718 fma  1   0E+3  -00.0   -> 0.0
   #|fmax36719 fma  1   0E+3  -00.    -> 0
   #|fmax36731 fma  1   0E+3  -00.E+1 -> 0E+1
+  #|
   #|fmax36720 fma  1   00.00  0E+3  -> 0.00
   #|fmax36721 fma  1   00.0   0E+3  -> 0.0
   #|fmax36722 fma  1   00.    0E+3  -> 0
@@ -2300,14 +2804,17 @@ let fma_subset : String =
   #|fmax36728 fma  1   -00.00 0E+3  -> 0.00
   #|fmax36729 fma  1   -00.0  0E+3  -> 0.0
   #|fmax36730 fma  1   -00.   0E+3  -> 0
+  #|
   #|fmax36732 fma  1    0     0     ->  0
   #|fmax36733 fma  1    0    -0     ->  0
   #|fmax36734 fma  1   -0     0     ->  0
   #|fmax36735 fma  1   -0    -0     -> -0     -- IEEE 854 special case
+  #|
   #|fmax36736 fma  1    1    -1     ->  0
   #|fmax36737 fma  1   -1    -1     -> -2
   #|fmax36738 fma  1    1     1     ->  2
   #|fmax36739 fma  1   -1     1     ->  0
+  #|
   #|fmax36741 fma  1    0    -1     -> -1
   #|fmax36742 fma  1   -0    -1     -> -1
   #|fmax36743 fma  1    0     1     ->  1
@@ -2316,6 +2823,7 @@ let fma_subset : String =
   #|fmax36746 fma  1   -1    -0     -> -1
   #|fmax36747 fma  1    1     0     ->  1
   #|fmax36748 fma  1    1    -0     ->  1
+  #|
   #|fmax36751 fma  1    0.0  -1     -> -1.0
   #|fmax36752 fma  1   -0.0  -1     -> -1.0
   #|fmax36753 fma  1    0.0   1     ->  1.0
@@ -2324,6 +2832,7 @@ let fma_subset : String =
   #|fmax36756 fma  1   -1.0  -0     -> -1.0
   #|fmax36757 fma  1    1.0   0     ->  1.0
   #|fmax36758 fma  1    1.0  -0     ->  1.0
+  #|
   #|fmax36761 fma  1    0    -1.0   -> -1.0
   #|fmax36762 fma  1   -0    -1.0   -> -1.0
   #|fmax36763 fma  1    0     1.0   ->  1.0
@@ -2332,6 +2841,7 @@ let fma_subset : String =
   #|fmax36766 fma  1   -1    -0.0   -> -1.0
   #|fmax36767 fma  1    1     0.0   ->  1.0
   #|fmax36768 fma  1    1    -0.0   ->  1.0
+  #|
   #|fmax36771 fma  1    0.0  -1.0   -> -1.0
   #|fmax36772 fma  1   -0.0  -1.0   -> -1.0
   #|fmax36773 fma  1    0.0   1.0   ->  1.0
@@ -2340,6 +2850,8 @@ let fma_subset : String =
   #|fmax36776 fma  1   -1.0  -0.0   -> -1.0
   #|fmax36777 fma  1    1.0   0.0   ->  1.0
   #|fmax36778 fma  1    1.0  -0.0   ->  1.0
+  #|
+  #|-- Specials
   #|fmax36780 fma  1   -Inf  -Inf   -> -Infinity
   #|fmax36781 fma  1   -Inf  -1000  -> -Infinity
   #|fmax36782 fma  1   -Inf  -1     -> -Infinity
@@ -2355,6 +2867,7 @@ let fma_subset : String =
   #|fmax36792 fma  1    1    -Inf   -> -Infinity
   #|fmax36793 fma  1    1000 -Inf   -> -Infinity
   #|fmax36794 fma  1    Inf  -Inf   ->  NaN  Invalid_operation
+  #|
   #|fmax36800 fma  1    Inf  -Inf   ->  NaN  Invalid_operation
   #|fmax36801 fma  1    Inf  -1000  ->  Infinity
   #|fmax36802 fma  1    Inf  -1     ->  Infinity
@@ -2371,6 +2884,7 @@ let fma_subset : String =
   #|fmax36813 fma  1    1     Inf   ->  Infinity
   #|fmax36814 fma  1    1000  Inf   ->  Infinity
   #|fmax36815 fma  1    Inf   Inf   ->  Infinity
+  #|
   #|fmax36821 fma  1    NaN -Inf    ->  NaN
   #|fmax36822 fma  1    NaN -1000   ->  NaN
   #|fmax36823 fma  1    NaN -1      ->  NaN
@@ -2388,6 +2902,28 @@ let fma_subset : String =
   #|fmax36835 fma  1    1    NaN    ->  NaN
   #|fmax36836 fma  1    1000 NaN    ->  NaN
   #|fmax36837 fma  1    Inf  NaN    ->  NaN
+  #|
+  #|fmax36841 fma  1    sNaN -Inf   ->  NaN  Invalid_operation
+  #|fmax36842 fma  1    sNaN -1000  ->  NaN  Invalid_operation
+  #|fmax36843 fma  1    sNaN -1     ->  NaN  Invalid_operation
+  #|fmax36844 fma  1    sNaN -0     ->  NaN  Invalid_operation
+  #|fmax36845 fma  1    sNaN  0     ->  NaN  Invalid_operation
+  #|fmax36846 fma  1    sNaN  1     ->  NaN  Invalid_operation
+  #|fmax36847 fma  1    sNaN  1000  ->  NaN  Invalid_operation
+  #|fmax36848 fma  1    sNaN  NaN   ->  NaN  Invalid_operation
+  #|fmax36849 fma  1    sNaN sNaN   ->  NaN  Invalid_operation
+  #|fmax36850 fma  1    NaN  sNaN   ->  NaN  Invalid_operation
+  #|fmax36851 fma  1   -Inf  sNaN   ->  NaN  Invalid_operation
+  #|fmax36852 fma  1   -1000 sNaN   ->  NaN  Invalid_operation
+  #|fmax36853 fma  1   -1    sNaN   ->  NaN  Invalid_operation
+  #|fmax36854 fma  1   -0    sNaN   ->  NaN  Invalid_operation
+  #|fmax36855 fma  1    0    sNaN   ->  NaN  Invalid_operation
+  #|fmax36856 fma  1    1    sNaN   ->  NaN  Invalid_operation
+  #|fmax36857 fma  1    1000 sNaN   ->  NaN  Invalid_operation
+  #|fmax36858 fma  1    Inf  sNaN   ->  NaN  Invalid_operation
+  #|fmax36859 fma  1    NaN  sNaN   ->  NaN  Invalid_operation
+  #|
+  #|-- propagating NaNs
   #|fmax36861 fma  1    NaN1   -Inf    ->  NaN1
   #|fmax36862 fma  1   +NaN2   -1000   ->  NaN2
   #|fmax36863 fma  1    NaN3    1000   ->  NaN3
@@ -2397,11 +2933,42 @@ let fma_subset : String =
   #|fmax36867 fma  1   -1000    NaN8   ->  NaN8
   #|fmax36868 fma  1    1000    NaN9   ->  NaN9
   #|fmax36869 fma  1    Inf    +NaN10  ->  NaN10
+  #|fmax36871 fma  1    sNaN11  -Inf   ->  NaN11  Invalid_operation
+  #|fmax36872 fma  1    sNaN12  -1000  ->  NaN12  Invalid_operation
+  #|fmax36873 fma  1    sNaN13   1000  ->  NaN13  Invalid_operation
+  #|fmax36874 fma  1    sNaN14   NaN17 ->  NaN14  Invalid_operation
+  #|fmax36875 fma  1    sNaN15  sNaN18 ->  NaN15  Invalid_operation
+  #|fmax36876 fma  1    NaN16   sNaN19 ->  NaN19  Invalid_operation
+  #|fmax36877 fma  1   -Inf    +sNaN20 ->  NaN20  Invalid_operation
+  #|fmax36878 fma  1   -1000    sNaN21 ->  NaN21  Invalid_operation
+  #|fmax36879 fma  1    1000    sNaN22 ->  NaN22  Invalid_operation
+  #|fmax36880 fma  1    Inf     sNaN23 ->  NaN23  Invalid_operation
+  #|fmax36881 fma  1   +NaN25  +sNaN24 ->  NaN24  Invalid_operation
   #|fmax36882 fma  1   -NaN26    NaN28 -> -NaN26
+  #|fmax36883 fma  1   -sNaN27  sNaN29 -> -NaN27  Invalid_operation
   #|fmax36884 fma  1    1000    -NaN30 -> -NaN30
+  #|fmax36885 fma  1    1000   -sNaN31 -> -NaN31  Invalid_operation
+  #|
+  #|-- now the case where we can get underflow but the result is normal
+  #|-- [note this can't happen if the operands are also bounded, as we
+  #|-- cannot represent 1E-399, for example]
+  #|
   #|fmax36571 fma  1         1E-383       0  -> 1E-383
   #|fmax36572 fma  1         1E-384       0  -> 1E-384   Subnormal
   #|fmax36573 fma  1         1E-383  1E-384  -> 1.1E-383
+  #|fmax36574 subtract  1E-383  1E-384  ->   9E-384 Subnormal
+  #|
+  #|-- Here we explore the boundary of rounding a subnormal to Nmin
+  #|fmax36575 subtract  1E-383  1E-398  ->   9.99999999999999E-384  Subnormal
+  #|fmax36576 subtract  1E-383  1E-398  ->   9.99999999999999E-384  Subnormal
+  #|fmax36577 subtract  1E-383  1E-399  ->   1.000000000000000E-383 Underflow Inexact Subnormal Rounded
+  #|fmax36578 subtract  1E-383  1E-400  ->   1.000000000000000E-383 Underflow Inexact Subnormal Rounded
+  #|fmax36579 subtract  1E-383  1E-401  ->   1.000000000000000E-383 Underflow Inexact Subnormal Rounded
+  #|fmax36580 subtract  1E-383  1E-402  ->   1.000000000000000E-383 Underflow Inexact Subnormal Rounded
+  #|
+  #|-- check overflow edge case
+  #|--               1234567890123456
+  #|fmax36972 apply        9.999999999999999E+384         -> 9.999999999999999E+384
   #|fmax36973 fma  1       9.999999999999999E+384  1      -> 9.999999999999999E+384 Inexact Rounded
   #|fmax36974 fma  1        9999999999999999E+369  1      -> 9.999999999999999E+384 Inexact Rounded
   #|fmax36975 fma  1        9999999999999999E+369  1E+369  -> Infinity Overflow Inexact Rounded
@@ -2414,6 +2981,8 @@ let fma_subset : String =
   #|fmax36982 fma  1        9999999999999999E+369  3E+368  -> 9.999999999999999E+384 Inexact Rounded
   #|fmax36983 fma  1        9999999999999999E+369  2E+368  -> 9.999999999999999E+384 Inexact Rounded
   #|fmax36984 fma  1        9999999999999999E+369  1E+368  -> 9.999999999999999E+384 Inexact Rounded
+  #|
+  #|fmax36985 apply       -9.999999999999999E+384         -> -9.999999999999999E+384
   #|fmax36986 fma  1      -9.999999999999999E+384 -1      -> -9.999999999999999E+384 Inexact Rounded
   #|fmax36987 fma  1       -9999999999999999E+369 -1      -> -9.999999999999999E+384 Inexact Rounded
   #|fmax36988 fma  1       -9999999999999999E+369 -1E+369  -> -Infinity Overflow Inexact Rounded
@@ -2426,6 +2995,8 @@ let fma_subset : String =
   #|fmax36995 fma  1       -9999999999999999E+369 -3E+368  -> -9.999999999999999E+384 Inexact Rounded
   #|fmax36996 fma  1       -9999999999999999E+369 -2E+368  -> -9.999999999999999E+384 Inexact Rounded
   #|fmax36997 fma  1       -9999999999999999E+369 -1E+368  -> -9.999999999999999E+384 Inexact Rounded
+  #|
+  #|-- And for round down full and subnormal results
   #|rounding:     down
   #|fmax361100 fma  1   1e+2 -1e-383    -> 99.99999999999999 Rounded Inexact
   #|fmax361101 fma  1   1e+1 -1e-383    -> 9.999999999999999  Rounded Inexact
@@ -2436,6 +3007,7 @@ let fma_subset : String =
   #|fmax361107 fma  1   1e-4 -1e-383    -> 0.00009999999999999999  Rounded Inexact
   #|fmax361108 fma  1   1e-5 -1e-383    -> 0.000009999999999999999  Rounded Inexact
   #|fmax361109 fma  1   1e-6 -1e-383    -> 9.999999999999999E-7  Rounded Inexact
+  #|
   #|rounding:     ceiling
   #|fmax361110 fma  1   -1e+2 +1e-383   -> -99.99999999999999 Rounded Inexact
   #|fmax361111 fma  1   -1e+1 +1e-383   -> -9.999999999999999  Rounded Inexact
@@ -2446,7 +3018,10 @@ let fma_subset : String =
   #|fmax361117 fma  1   -1e-4 +1e-383   -> -0.00009999999999999999  Rounded Inexact
   #|fmax361118 fma  1   -1e-5 +1e-383   -> -0.000009999999999999999  Rounded Inexact
   #|fmax361119 fma  1   -1e-6 +1e-383   -> -9.999999999999999E-7  Rounded Inexact
+  #|
+  #|-- tests based on Gunnar Degnbol's edge case
   #|rounding:     half_even
+  #|
   #|fmax361300 fma  1   1E16  -0.5                 ->  1.000000000000000E+16 Inexact Rounded
   #|fmax361310 fma  1   1E16  -0.51                ->  9999999999999999      Inexact Rounded
   #|fmax361311 fma  1   1E16  -0.501               ->  9999999999999999      Inexact Rounded
@@ -2478,8 +3053,10 @@ let fma_subset : String =
   #|fmax361337 fma  1   1E16  -0.5000              ->  1.000000000000000E+16 Inexact Rounded
   #|fmax361338 fma  1   1E16  -0.500               ->  1.000000000000000E+16 Inexact Rounded
   #|fmax361339 fma  1   1E16  -0.50                ->  1.000000000000000E+16 Inexact Rounded
+  #|
   #|fmax361340 fma  1   1E16  -5000000.000010001   ->  9999999995000000      Inexact Rounded
   #|fmax361341 fma  1   1E16  -5000000.000000001   ->  9999999995000000      Inexact Rounded
+  #|
   #|fmax361349 fma  1   9999999999999999 0.4                 ->  9999999999999999      Inexact Rounded
   #|fmax361350 fma  1   9999999999999999 0.49                ->  9999999999999999      Inexact Rounded
   #|fmax361351 fma  1   9999999999999999 0.499               ->  9999999999999999      Inexact Rounded
@@ -2527,6 +3104,9 @@ let fma_subset : String =
   #|fmax361394 fma  1   9999999999999999 0.5001              ->  1.000000000000000E+16 Inexact Rounded
   #|fmax361395 fma  1   9999999999999999 0.501               ->  1.000000000000000E+16 Inexact Rounded
   #|fmax361396 fma  1   9999999999999999 0.51                ->  1.000000000000000E+16 Inexact Rounded
+  #|
+  #|-- More GD edge cases, where difference between the unadjusted
+  #|-- exponents is larger than the maximum precision and one side is 0
   #|fmax361420 fma  1    0 1.123456789012345     -> 1.123456789012345
   #|fmax361421 fma  1    0 1.123456789012345E-1  -> 0.1123456789012345
   #|fmax361422 fma  1    0 1.123456789012345E-2  -> 0.01123456789012345
@@ -2547,6 +3127,8 @@ let fma_subset : String =
   #|fmax361437 fma  1    0 1.123456789012345E-17 -> 1.123456789012345E-17
   #|fmax361438 fma  1    0 1.123456789012345E-18 -> 1.123456789012345E-18
   #|fmax361439 fma  1    0 1.123456789012345E-19 -> 1.123456789012345E-19
+  #|
+  #|-- same, reversed 0
   #|fmax361440 fma  1   1.123456789012345     0 -> 1.123456789012345
   #|fmax361441 fma  1   1.123456789012345E-1  0 -> 0.1123456789012345
   #|fmax361442 fma  1   1.123456789012345E-2  0 -> 0.01123456789012345
@@ -2567,6 +3149,8 @@ let fma_subset : String =
   #|fmax361457 fma  1   1.123456789012345E-17 0 -> 1.123456789012345E-17
   #|fmax361458 fma  1   1.123456789012345E-18 0 -> 1.123456789012345E-18
   #|fmax361459 fma  1   1.123456789012345E-19 0 -> 1.123456789012345E-19
+  #|
+  #|-- same, Es on the 0
   #|fmax361460 fma  1   1.123456789012345  0E-0   -> 1.123456789012345
   #|fmax361461 fma  1   1.123456789012345  0E-1   -> 1.123456789012345
   #|fmax361462 fma  1   1.123456789012345  0E-2   -> 1.123456789012345
@@ -2583,11 +3167,15 @@ let fma_subset : String =
   #|fmax361473 fma  1   1.123456789012345  0E-13  -> 1.123456789012345
   #|fmax361474 fma  1   1.123456789012345  0E-14  -> 1.123456789012345
   #|fmax361475 fma  1   1.123456789012345  0E-15  -> 1.123456789012345
+  #|-- next four flag Rounded because the 0 extends the result
   #|fmax361476 fma  1   1.123456789012345  0E-16  -> 1.123456789012345 Rounded
   #|fmax361477 fma  1   1.123456789012345  0E-17  -> 1.123456789012345 Rounded
   #|fmax361478 fma  1   1.123456789012345  0E-18  -> 1.123456789012345 Rounded
   #|fmax361479 fma  1   1.123456789012345  0E-19  -> 1.123456789012345 Rounded
+  #|
+  #|-- sum of two opposite-sign operands is exactly 0 and floor => -0
   #|rounding:    half_up
+  #|-- exact zeros from zeros
   #|fmax361500 fma  1    0        0E-19  ->  0E-19
   #|fmax361501 fma  1   -0        0E-19  ->  0E-19
   #|fmax361502 fma  1    0       -0E-19  ->  0E-19
@@ -2596,15 +3184,19 @@ let fma_subset : String =
   #|fmax361505 fma  1   -0E-400   0E-19  ->  0E-398 Clamped
   #|fmax361506 fma  1    0E-400  -0E-19  ->  0E-398 Clamped
   #|fmax361507 fma  1   -0E-400  -0E-19  -> -0E-398 Clamped
+  #|-- inexact zeros
   #|fmax361511 fma  1    1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361512 fma  1   -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361513 fma  1    1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361514 fma  1   -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|-- some exact zeros from non-zeros
   #|fmax361515 fma  1    1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361516 fma  1   -1E-401   1E-401 ->  0E-398 Clamped
   #|fmax361517 fma  1    1E-401  -1E-401 ->  0E-398 Clamped
   #|fmax361518 fma  1   -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|
   #|rounding:    half_down
+  #|-- exact zeros from zeros
   #|fmax361520 fma  1    0        0E-19  ->  0E-19
   #|fmax361521 fma  1   -0        0E-19  ->  0E-19
   #|fmax361522 fma  1    0       -0E-19  ->  0E-19
@@ -2613,15 +3205,19 @@ let fma_subset : String =
   #|fmax361525 fma  1   -0E-400   0E-19  ->  0E-398 Clamped
   #|fmax361526 fma  1    0E-400  -0E-19  ->  0E-398 Clamped
   #|fmax361527 fma  1   -0E-400  -0E-19  -> -0E-398 Clamped
+  #|-- inexact zeros
   #|fmax361531 fma  1    1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361532 fma  1   -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361533 fma  1    1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361534 fma  1   -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|-- some exact zeros from non-zeros
   #|fmax361535 fma  1    1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361536 fma  1   -1E-401   1E-401 ->  0E-398 Clamped
   #|fmax361537 fma  1    1E-401  -1E-401 ->  0E-398 Clamped
   #|fmax361538 fma  1   -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|
   #|rounding:    half_even
+  #|-- exact zeros from zeros
   #|fmax361540 fma  1    0        0E-19  ->  0E-19
   #|fmax361541 fma  1   -0        0E-19  ->  0E-19
   #|fmax361542 fma  1    0       -0E-19  ->  0E-19
@@ -2630,15 +3226,19 @@ let fma_subset : String =
   #|fmax361545 fma  1   -0E-400   0E-19  ->  0E-398 Clamped
   #|fmax361546 fma  1    0E-400  -0E-19  ->  0E-398 Clamped
   #|fmax361547 fma  1   -0E-400  -0E-19  -> -0E-398 Clamped
+  #|-- inexact zeros
   #|fmax361551 fma  1    1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361552 fma  1   -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361553 fma  1    1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361554 fma  1   -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|-- some exact zeros from non-zeros
   #|fmax361555 fma  1    1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361556 fma  1   -1E-401   1E-401 ->  0E-398 Clamped
   #|fmax361557 fma  1    1E-401  -1E-401 ->  0E-398 Clamped
   #|fmax361558 fma  1   -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|
   #|rounding:    up
+  #|-- exact zeros from zeros
   #|fmax361560 fma  1    0        0E-19  ->  0E-19
   #|fmax361561 fma  1   -0        0E-19  ->  0E-19
   #|fmax361562 fma  1    0       -0E-19  ->  0E-19
@@ -2647,15 +3247,19 @@ let fma_subset : String =
   #|fmax361565 fma  1   -0E-400   0E-19  ->  0E-398 Clamped
   #|fmax361566 fma  1    0E-400  -0E-19  ->  0E-398 Clamped
   #|fmax361567 fma  1   -0E-400  -0E-19  -> -0E-398 Clamped
+  #|-- inexact zeros
   #|fmax361571 fma  1    1E-401   1E-400 ->  1E-398 Subnormal Inexact Rounded Underflow
   #|fmax361572 fma  1   -1E-401   1E-400 ->  1E-398 Subnormal Inexact Rounded Underflow
   #|fmax361573 fma  1    1E-401  -1E-400 -> -1E-398 Subnormal Inexact Rounded Underflow
   #|fmax361574 fma  1   -1E-401  -1E-400 -> -1E-398 Subnormal Inexact Rounded Underflow
+  #|-- some exact zeros from non-zeros
   #|fmax361575 fma  1    1E-401   1E-401 ->  1E-398 Subnormal Inexact Rounded Underflow
   #|fmax361576 fma  1   -1E-401   1E-401 ->  0E-398 Clamped
   #|fmax361577 fma  1    1E-401  -1E-401 ->  0E-398 Clamped
   #|fmax361578 fma  1   -1E-401  -1E-401 -> -1E-398 Subnormal Inexact Rounded Underflow
+  #|
   #|rounding:    down
+  #|-- exact zeros from zeros
   #|fmax361580 fma  1    0        0E-19  ->  0E-19
   #|fmax361581 fma  1   -0        0E-19  ->  0E-19
   #|fmax361582 fma  1    0       -0E-19  ->  0E-19
@@ -2664,15 +3268,19 @@ let fma_subset : String =
   #|fmax361585 fma  1   -0E-400   0E-19  ->  0E-398 Clamped
   #|fmax361586 fma  1    0E-400  -0E-19  ->  0E-398 Clamped
   #|fmax361587 fma  1   -0E-400  -0E-19  -> -0E-398 Clamped
+  #|-- inexact zeros
   #|fmax361591 fma  1    1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361592 fma  1   -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361593 fma  1    1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361594 fma  1   -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|-- some exact zeros from non-zeros
   #|fmax361595 fma  1    1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361596 fma  1   -1E-401   1E-401 ->  0E-398 Clamped
   #|fmax361597 fma  1    1E-401  -1E-401 ->  0E-398 Clamped
   #|fmax361598 fma  1   -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|
   #|rounding:    ceiling
+  #|-- exact zeros from zeros
   #|fmax361600 fma  1    0        0E-19  ->  0E-19
   #|fmax361601 fma  1   -0        0E-19  ->  0E-19
   #|fmax361602 fma  1    0       -0E-19  ->  0E-19
@@ -2681,15 +3289,20 @@ let fma_subset : String =
   #|fmax361605 fma  1   -0E-400   0E-19  ->  0E-398 Clamped
   #|fmax361606 fma  1    0E-400  -0E-19  ->  0E-398 Clamped
   #|fmax361607 fma  1   -0E-400  -0E-19  -> -0E-398 Clamped
+  #|-- inexact zeros
   #|fmax361611 fma  1    1E-401   1E-400 ->  1E-398 Subnormal Inexact Rounded Underflow
   #|fmax361612 fma  1   -1E-401   1E-400 ->  1E-398 Subnormal Inexact Rounded Underflow
   #|fmax361613 fma  1    1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361614 fma  1   -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|-- some exact zeros from non-zeros
   #|fmax361615 fma  1    1E-401   1E-401 ->  1E-398 Subnormal Inexact Rounded Underflow
   #|fmax361616 fma  1   -1E-401   1E-401 ->  0E-398 Clamped
   #|fmax361617 fma  1    1E-401  -1E-401 ->  0E-398 Clamped
   #|fmax361618 fma  1   -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|
+  #|-- and the extra-special ugly case; unusual minuses marked by -- *
   #|rounding:    floor
+  #|-- exact zeros from zeros
   #|fmax361620 fma  1    0        0E-19  ->  0E-19
   #|fmax361621 fma  1   -0        0E-19  -> -0E-19           -- *
   #|fmax361622 fma  1    0       -0E-19  -> -0E-19           -- *
@@ -2698,19 +3311,30 @@ let fma_subset : String =
   #|fmax361625 fma  1   -0E-400   0E-19  -> -0E-398 Clamped  -- *
   #|fmax361626 fma  1    0E-400  -0E-19  -> -0E-398 Clamped  -- *
   #|fmax361627 fma  1   -0E-400  -0E-19  -> -0E-398 Clamped
+  #|-- inexact zeros
   #|fmax361631 fma  1    1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361632 fma  1   -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361633 fma  1    1E-401  -1E-400 -> -1E-398 Subnormal Inexact Rounded Underflow
   #|fmax361634 fma  1   -1E-401  -1E-400 -> -1E-398 Subnormal Inexact Rounded Underflow
+  #|-- some exact zeros from non-zeros
   #|fmax361635 fma  1    1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|fmax361636 fma  1   -1E-401   1E-401 -> -0E-398 Clamped  -- *
   #|fmax361637 fma  1    1E-401  -1E-401 -> -0E-398 Clamped  -- *
   #|fmax361638 fma  1   -1E-401  -1E-401 -> -1E-398 Subnormal Inexact Rounded Underflow
+  #|
+  #|-- Examples from SQL proposal (Krishna Kulkarni)
   #|fmax361701 fma  1   130E-2    120E-2    -> 2.50
   #|fmax361702 fma  1   130E-2    12E-1     -> 2.50
   #|fmax361703 fma  1   130E-2    1E0       -> 2.30
   #|fmax361704 fma  1   1E2       1E4       -> 1.01E+4
+  #|fmax361705 subtract 130E-2  120E-2 -> 0.10
+  #|fmax361706 subtract 130E-2  12E-1  -> 0.10
+  #|fmax361707 subtract 130E-2  1E0    -> 0.30
+  #|fmax361708 subtract 1E2     1E4    -> -9.9E+3
+  #|
+  #|-- Gappy coefficients; check residue handling even with full coefficient gap
   #|rounding: half_even
+  #|
   #|fmax362001 fma  1   1234567890123456 1      -> 1234567890123457
   #|fmax362002 fma  1   1234567890123456 0.6    -> 1234567890123457  Inexact Rounded
   #|fmax362003 fma  1   1234567890123456 0.06   -> 1234567890123456  Inexact Rounded
@@ -2732,6 +3356,8 @@ let fma_subset : String =
   #|fmax362019 fma  1   1234567890123456 6E-18  -> 1234567890123456  Inexact Rounded
   #|fmax362020 fma  1   1234567890123456 6E-19  -> 1234567890123456  Inexact Rounded
   #|fmax362021 fma  1   1234567890123456 6E-20  -> 1234567890123456  Inexact Rounded
+  #|
+  #|-- widening second argument at gap
   #|fmax362030 fma  1   12345678 1                       -> 12345679
   #|fmax362031 fma  1   12345678 0.1                     -> 12345678.1
   #|fmax362032 fma  1   12345678 0.12                    -> 12345678.12
@@ -2752,6 +3378,7 @@ let fma_subset : String =
   #|fmax362047 fma  1   12345678 0.123456785000001       -> 12345678.12345679 Inexact Rounded
   #|fmax362048 fma  1   12345678 0.1234567850000001      -> 12345678.12345679 Inexact Rounded
   #|fmax362049 fma  1   12345678 0.1234567850000000      -> 12345678.12345678 Inexact Rounded
+  #|--                               90123456
   #|rounding: half_even
   #|fmax362050 fma  1   12345678 0.0234567750000000      -> 12345678.02345678 Inexact Rounded
   #|fmax362051 fma  1   12345678 0.0034567750000000      -> 12345678.00345678 Inexact Rounded
@@ -2769,6 +3396,7 @@ let fma_subset : String =
   #|fmax362065 fma  1   12345678 0.0000007750000001      -> 12345678.00000078 Inexact Rounded
   #|fmax362066 fma  1   12345678 0.0000000750000001      -> 12345678.00000008 Inexact Rounded
   #|fmax362067 fma  1   12345678 0.0000000050000001      -> 12345678.00000001 Inexact Rounded
+  #|-- far-out residues (full coefficient gap is 16+15 digits)
   #|rounding: up
   #|fmax362070 fma  1   12345678 1E-8                    -> 12345678.00000001
   #|fmax362071 fma  1   12345678 1E-9                    -> 12345678.00000001 Inexact Rounded
@@ -2790,12 +3418,24 @@ let fma_subset : String =
   #|fmax362087 fma  1   12345678 1E-33                   -> 12345678.00000001 Inexact Rounded
   #|fmax362088 fma  1   12345678 1E-34                   -> 12345678.00000001 Inexact Rounded
   #|fmax362089 fma  1   12345678 1E-35                   -> 12345678.00000001 Inexact Rounded
+  #|
+  #|-- payload decapitate x3
   #|precision: 5
+  #|fmax363000 fma  1 1  sNaN1234567890     ->  NaN67890  Invalid_operation
+  #|fmax363001 fma    1 -sNaN1234512345 1   -> -NaN12345  Invalid_operation
+  #|fmax363002 fma       sNaN1234554321 1 1 ->  NaN54321  Invalid_operation
+  #|
+  #|-- Null tests
+  #|fmax39990 fma  1   10  # -> NaN Invalid_operation
+  #|fmax39991 fma  1    # 10 -> NaN Invalid_operation
 
 ///|
 test "fma.decTest subset" {
   let cases = parse_dectest(fma_subset)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, skipped) = run_cases_with_flags(cases)
+  if skipped > 0 {
+    println("\{skipped} cases skipped (format-encoding / reference-specific)")
+  }
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 30 { failures.length() } else { 30 }

@@ -1,12 +1,39 @@
 ///|
-/// `samequantum` cases from `samequantum.decTest`, restricted to half_up
-/// rounding mode and precision >= 9 sections. Bit-level ops, so no
-/// rounding-related skips are needed.
+/// Full `samequantum.decTest` corpus (IBM General Decimal
+/// Arithmetic testcases), embedded verbatim.
 let samequantum_subset : String =
+  #|------------------------------------------------------------------------
+  #|-- samequantum.decTest -- check quantums match                        --
+  #|-- Copyright (c) IBM Corporation, 2001, 2008.  All rights reserved.   --
+  #|------------------------------------------------------------------------
+  #|-- Please see the document "General Decimal Arithmetic Testcases"     --
+  #|-- at http://www2.hursley.ibm.com/decimal for the description of      --
+  #|-- these testcases.                                                   --
+  #|--                                                                    --
+  #|-- These testcases are experimental ('beta' versions), and they       --
+  #|-- may contain errors.  They are offered on an as-is basis.  In       --
+  #|-- particular, achieving the same results as the tests here is not    --
+  #|-- a guarantee that an implementation complies with any Standard      --
+  #|-- or specification.  The tests are not exhaustive.                   --
+  #|--                                                                    --
+  #|-- Please send comments, suggestions, and corrections to the author:  --
+  #|--   Mike Cowlishaw, IBM Fellow                                       --
+  #|--   IBM UK, PO Box 31, Birmingham Road, Warwick CV34 5JL, UK         --
+  #|--   mfc@uk.ibm.com                                                   --
+  #|------------------------------------------------------------------------
+  #|version: 2.59
+  #|
+  #|extended:    1
+  #|precision:   9
+  #|rounding:    half_up
+  #|maxExponent: 999
+  #|minExponent: -999
+  #|
   #|samq001 samequantum  0      0      ->  1
   #|samq002 samequantum  0      1      ->  1
   #|samq003 samequantum  1      0      ->  1
   #|samq004 samequantum  1      1      ->  1
+  #|
   #|samq011 samequantum  10     1E+1   -> 0
   #|samq012 samequantum  10E+1  10E+1  -> 1
   #|samq013 samequantum  100    10E+1  -> 0
@@ -18,6 +45,8 @@ let samequantum_subset : String =
   #|samq019 samequantum  999E-1 99.9   -> 1
   #|samq020 samequantum  111E-1 22.2   -> 1
   #|samq021 samequantum  111E-1 1234.2 -> 1
+  #|
+  #|-- zeros
   #|samq030 samequantum  0.0    1.1    -> 1
   #|samq031 samequantum  0.0    1.11   -> 0
   #|samq032 samequantum  0.0    0      -> 0
@@ -38,6 +67,8 @@ let samequantum_subset : String =
   #|samq047 samequantum -0E-17  0.0E-17 -> 0
   #|samq048 samequantum -0E-17 -0.0E-16 -> 1
   #|samq049 samequantum -0E-17 -0.0E-17 -> 0
+  #|
+  #|-- Nmax, Nmin, Ntiny
   #|samq051 samequantum  9.99999999E+999    9.99999999E+999  -> 1
   #|samq052 samequantum  1E-999             1E-999           -> 1
   #|samq053 samequantum  1.00000000E-999    1.00000000E-999  -> 1
@@ -46,6 +77,7 @@ let samequantum_subset : String =
   #|samq056 samequantum  1E-999             1E-999           -> 1
   #|samq057 samequantum  1.00000000E-999    1.00000000E-999  -> 1
   #|samq058 samequantum  1E-1007            1E-1007          -> 1
+  #|
   #|samq061 samequantum  -1E-1007           -1E-1007         -> 1
   #|samq062 samequantum  -1.00000000E-999   -1.00000000E-999 -> 1
   #|samq063 samequantum  -1E-999            -1E-999          -> 1
@@ -54,6 +86,7 @@ let samequantum_subset : String =
   #|samq066 samequantum  -1.00000000E-999   -1.00000000E-999 -> 1
   #|samq067 samequantum  -1E-999            -1E-999          -> 1
   #|samq068 samequantum  -9.99999999E+999   -9.99999999E+999 -> 1
+  #|
   #|samq071 samequantum  -4E-1007           -1E-1007         -> 1
   #|samq072 samequantum  -4.00000000E-999   -1.00004000E-999 -> 1
   #|samq073 samequantum  -4E-999            -1E-999          -> 1
@@ -62,6 +95,7 @@ let samequantum_subset : String =
   #|samq076 samequantum  -4.00000000E-999   -1.00400000E-999 -> 1
   #|samq077 samequantum  -4E-999            -1E-999          -> 1
   #|samq078 samequantum  -4.99999999E+999   -9.94999999E+999 -> 1
+  #|
   #|samq081 samequantum  -4E-1006           -1E-1007         -> 0
   #|samq082 samequantum  -4.00000000E-999   -1.00004000E-996 -> 0
   #|samq083 samequantum  -4E-996            -1E-999          -> 0
@@ -70,6 +104,8 @@ let samequantum_subset : String =
   #|samq086 samequantum  -4.00000000E-999   -1.00400000E-996 -> 0
   #|samq087 samequantum  -4E-996            -1E-999          -> 0
   #|samq088 samequantum  -4.99999999E+999   -9.94999999E+996 -> 0
+  #|
+  #|-- specials & combinations
   #|samq0110 samequantum  -Inf    -Inf   -> 1
   #|samq0111 samequantum  -Inf     Inf   -> 1
   #|samq0112 samequantum  -Inf     NaN   -> 0
@@ -86,6 +122,7 @@ let samequantum_subset : String =
   #|samq0123 samequantum  -Inf     7     -> 0
   #|samq0124 samequantum  -Inf     7E+3  -> 0
   #|samq0125 samequantum  -Inf     sNaN  -> 0
+  #|
   #|samq0210 samequantum   Inf    -Inf   -> 1
   #|samq0211 samequantum   Inf     Inf   -> 1
   #|samq0212 samequantum   Inf     NaN   -> 0
@@ -102,6 +139,7 @@ let samequantum_subset : String =
   #|samq0223 samequantum   Inf     7     -> 0
   #|samq0224 samequantum   Inf     7E+3  -> 0
   #|samq0225 samequantum   Inf     sNaN  -> 0
+  #|
   #|samq0310 samequantum   NaN    -Inf   -> 0
   #|samq0311 samequantum   NaN     Inf   -> 0
   #|samq0312 samequantum   NaN     NaN   -> 1
@@ -118,6 +156,7 @@ let samequantum_subset : String =
   #|samq0323 samequantum   NaN     7     -> 0
   #|samq0324 samequantum   NaN     7E+3  -> 0
   #|samq0325 samequantum   NaN     sNaN  -> 1
+  #|
   #|samq0410 samequantum  -7E+3    -Inf   -> 0
   #|samq0411 samequantum  -7E+3     Inf   -> 0
   #|samq0412 samequantum  -7E+3     NaN   -> 0
@@ -134,6 +173,7 @@ let samequantum_subset : String =
   #|samq0423 samequantum  -7E+3     7     -> 0
   #|samq0424 samequantum  -7E+3     7E+3  -> 1
   #|samq0425 samequantum  -7E+3     sNaN  -> 0
+  #|
   #|samq0510 samequantum  -7      -Inf   -> 0
   #|samq0511 samequantum  -7       Inf   -> 0
   #|samq0512 samequantum  -7       NaN   -> 0
@@ -150,6 +190,7 @@ let samequantum_subset : String =
   #|samq0523 samequantum  -7       7     -> 1
   #|samq0524 samequantum  -7       7E+3  -> 0
   #|samq0525 samequantum  -7       sNaN  -> 0
+  #|
   #|samq0610 samequantum  -7E-3    -Inf   -> 0
   #|samq0611 samequantum  -7E-3     Inf   -> 0
   #|samq0612 samequantum  -7E-3     NaN   -> 0
@@ -166,6 +207,7 @@ let samequantum_subset : String =
   #|samq0623 samequantum  -7E-3     7     -> 0
   #|samq0624 samequantum  -7E-3     7E+3  -> 0
   #|samq0625 samequantum  -7E-3     sNaN  -> 0
+  #|
   #|samq0710 samequantum  -0E-3    -Inf   -> 0
   #|samq0711 samequantum  -0E-3     Inf   -> 0
   #|samq0712 samequantum  -0E-3     NaN   -> 0
@@ -182,6 +224,7 @@ let samequantum_subset : String =
   #|samq0723 samequantum  -0E-3     7     -> 0
   #|samq0724 samequantum  -0E-3     7E+3  -> 0
   #|samq0725 samequantum  -0E-3     sNaN  -> 0
+  #|
   #|samq0810 samequantum  -0      -Inf   -> 0
   #|samq0811 samequantum  -0       Inf   -> 0
   #|samq0812 samequantum  -0       NaN   -> 0
@@ -198,6 +241,7 @@ let samequantum_subset : String =
   #|samq0823 samequantum  -0       7     -> 1
   #|samq0824 samequantum  -0       7E+3  -> 0
   #|samq0825 samequantum  -0       sNaN  -> 0
+  #|
   #|samq0910 samequantum  -0E+3    -Inf   -> 0
   #|samq0911 samequantum  -0E+3     Inf   -> 0
   #|samq0912 samequantum  -0E+3     NaN   -> 0
@@ -214,6 +258,7 @@ let samequantum_subset : String =
   #|samq0923 samequantum  -0E+3     7     -> 0
   #|samq0924 samequantum  -0E+3     7E+3  -> 1
   #|samq0925 samequantum  -0E+3     sNaN  -> 0
+  #|
   #|samq1110 samequantum  0E-3    -Inf   -> 0
   #|samq1111 samequantum  0E-3     Inf   -> 0
   #|samq1112 samequantum  0E-3     NaN   -> 0
@@ -230,6 +275,7 @@ let samequantum_subset : String =
   #|samq1123 samequantum  0E-3     7     -> 0
   #|samq1124 samequantum  0E-3     7E+3  -> 0
   #|samq1125 samequantum  0E-3     sNaN  -> 0
+  #|
   #|samq1210 samequantum  0       -Inf   -> 0
   #|samq1211 samequantum  0        Inf   -> 0
   #|samq1212 samequantum  0        NaN   -> 0
@@ -246,6 +292,7 @@ let samequantum_subset : String =
   #|samq1223 samequantum  0        7     -> 1
   #|samq1224 samequantum  0        7E+3  -> 0
   #|samq1225 samequantum  0        sNaN  -> 0
+  #|
   #|samq1310 samequantum  0E+3    -Inf   -> 0
   #|samq1311 samequantum  0E+3     Inf   -> 0
   #|samq1312 samequantum  0E+3     NaN   -> 0
@@ -262,6 +309,7 @@ let samequantum_subset : String =
   #|samq1323 samequantum  0E+3     7     -> 0
   #|samq1324 samequantum  0E+3     7E+3  -> 1
   #|samq1325 samequantum  0E+3     sNaN  -> 0
+  #|
   #|samq1410 samequantum  7E-3    -Inf   -> 0
   #|samq1411 samequantum  7E-3     Inf   -> 0
   #|samq1412 samequantum  7E-3     NaN   -> 0
@@ -278,6 +326,7 @@ let samequantum_subset : String =
   #|samq1423 samequantum  7E-3     7     -> 0
   #|samq1424 samequantum  7E-3     7E+3  -> 0
   #|samq1425 samequantum  7E-3     sNaN  -> 0
+  #|
   #|samq1510 samequantum  7      -Inf   -> 0
   #|samq1511 samequantum  7       Inf   -> 0
   #|samq1512 samequantum  7       NaN   -> 0
@@ -294,6 +343,7 @@ let samequantum_subset : String =
   #|samq1523 samequantum  7       7     -> 1
   #|samq1524 samequantum  7       7E+3  -> 0
   #|samq1525 samequantum  7       sNaN  -> 0
+  #|
   #|samq1610 samequantum  7E+3    -Inf   -> 0
   #|samq1611 samequantum  7E+3     Inf   -> 0
   #|samq1612 samequantum  7E+3     NaN   -> 0
@@ -310,6 +360,7 @@ let samequantum_subset : String =
   #|samq1623 samequantum  7E+3     7     -> 0
   #|samq1624 samequantum  7E+3     7E+3  -> 1
   #|samq1625 samequantum  7E+3     sNaN  -> 0
+  #|
   #|samq1710 samequantum  sNaN    -Inf   -> 0
   #|samq1711 samequantum  sNaN     Inf   -> 0
   #|samq1712 samequantum  sNaN     NaN   -> 1
@@ -326,6 +377,7 @@ let samequantum_subset : String =
   #|samq1723 samequantum  sNaN     7     -> 0
   #|samq1724 samequantum  sNaN     7E+3  -> 0
   #|samq1725 samequantum  sNaN     sNaN  -> 1
+  #|-- noisy NaNs
   #|samq1730 samequantum  sNaN3    sNaN3 -> 1
   #|samq1731 samequantum  sNaN3    sNaN4 -> 1
   #|samq1732 samequantum   NaN3     NaN3 -> 1
@@ -340,8 +392,10 @@ let samequantum_subset : String =
 ///|
 test "samequantum.decTest subset round-trips through parse + samequantum + toSci" {
   let cases = parse_dectest(samequantum_subset)
-  assert_eq(cases.length(), 333)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, skipped) = run_cases_with_flags(cases)
+  if skipped > 0 {
+    println("\{skipped} cases skipped (format-encoding / reference-specific)")
+  }
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 20 { failures.length() } else { 20 }
