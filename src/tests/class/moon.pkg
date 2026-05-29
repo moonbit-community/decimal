@@ -1,4 +1,4 @@
 import {
-  "dzmingli/decimal/decimal",
+  "dzmingli/decimal",
   "dzmingli/decimal/dectest",
 }
