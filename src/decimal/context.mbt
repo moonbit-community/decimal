@@ -203,3 +203,7 @@ fn Context::raise_clamped(self : Context) -> Unit {
 fn Context::raise_division_undefined(self : Context) -> Unit {
   self.flags.division_undefined = true
 }
+
+fn Context::raise_division_impossible(self : Context) -> Unit {
+  self.flags.division_impossible = true
+}

@@ -109,7 +109,7 @@ pub fn Decimal::divide_int(
           signed_infinity(sign)
         }
       } else {
-        divide_int_finite(self, other)
+        divide_int_finite(self, other, ctx)
       }
     _ => abort("Decimal::divide_int: unreachable class combination")
   }

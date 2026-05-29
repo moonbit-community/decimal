@@ -5,7 +5,7 @@
 /// operands' exponents differ by a billion. If the upper bound on the
 /// quotient digit count is implausibly large we surface `NaN` (GDA's
 /// `Division_impossible`) instead of attempting an intractable BigInt op.
-fn divide_int_finite(a : Decimal, b : Decimal) -> Decimal {
+fn divide_int_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
   let adj_a = adjusted_exponent(a)
   let adj_b = adjusted_exponent(b)
   if adj_a < adj_b {
@@ -16,19 +16,28 @@ fn divide_int_finite(a : Decimal, b : Decimal) -> Decimal {
       exponent: 0,
     }
   }
-  // `adj_a - adj_b + 1` upper-bounds the digit count of the integer quotient.
-  // 100_000 digits is well past any precision a Context would set, so further
-  // computation is pointless and the GDA outcome here is Division_impossible.
+  // Bail out before align_for_int_div on intractable inputs. Use a fixed
+  // 100_000-digit cap rather than the precision cap — `adj_a - adj_b + 1`
+  // is only an *upper* bound on the quotient's digit count (loose for
+  // many real cases like `remainder(1000003, 5)` where adj diff is 6 but
+  // the actual quotient has 6 digits, fitting precision 6).
   if adj_a - adj_b + 1 > 100_000 {
+    ctx.raise_division_impossible()
     return Decimal::nan()
   }
   let (an, bn) = align_for_int_div(
     a.coefficient, a.exponent, b.coefficient, b.exponent,
   )
+  let quotient = an / bn
+  // Tight Division_impossible check using the actual quotient digit count.
+  if ctx.precision > 0 && digit_count(quotient) > ctx.precision {
+    ctx.raise_division_impossible()
+    return Decimal::nan()
+  }
   {
     class: Finite,
     negative: a.negative != b.negative,
-    coefficient: an / bn,
+    coefficient: quotient,
     exponent: 0,
   }
 }
@@ -198,7 +207,13 @@ fn decide_div_round(
 /// at the public result boundary.
 fn remainder_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
   let exact_ctx = Context::exact()
-  let quot = divide_int_finite(a, b)
+  // Use the caller's `ctx` so Division_impossible flags through when the
+  // integer quotient overflows precision — remainder shares the
+  // quotient-size constraint with divide-integer.
+  let quot = divide_int_finite(a, b, ctx)
+  if quot.class is QNaN {
+    return quot
+  }
   let prod = Decimal::multiply(quot, b, exact_ctx)
   let result = Decimal::subtract(a, prod, ctx)
   if result.class is Finite && result.coefficient.is_zero() {
