@@ -25,10 +25,12 @@
           default = pkgs.mkShell {
             packages = [
               pkgs.moonbit
+              pkgs.gcc
             ];
             shellHook = ''
               echo "decimal dev shell"
               echo "  moon: $(moon version 2>/dev/null || echo 'not found')"
+              echo "  gcc:  $(gcc --version 2>/dev/null | head -1 || echo 'not found')"
             '';
           };
         });
