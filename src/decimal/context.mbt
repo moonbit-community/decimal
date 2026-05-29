@@ -188,6 +188,14 @@ fn Context::raise_overflow(self : Context) -> Unit {
   self.flags.overflow = true
 }
 
+fn Context::raise_underflow(self : Context) -> Unit {
+  self.flags.underflow = true
+}
+
+fn Context::raise_subnormal(self : Context) -> Unit {
+  self.flags.subnormal = true
+}
+
 fn Context::raise_clamped(self : Context) -> Unit {
   self.flags.clamped = true
 }

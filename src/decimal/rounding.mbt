@@ -67,11 +67,50 @@ fn check_range(d : Decimal, ctx : Context) -> Decimal {
   if adj > ctx.e_max {
     return apply_overflow(d, ctx)
   }
+  if adj < ctx.e_min {
+    return apply_subnormal(d, ctx)
+  }
   if ctx.clamp {
     apply_clamp(d, ctx)
   } else {
     d
   }
+}
+
+///| GDA §9.5.2 subnormal / underflow. A finite non-zero result whose
+/// adjusted exponent sits below `e_min` is "tiny" — representable only
+/// at the etiny floor, possibly losing additional digits in the process.
+///
+/// If the operand's exponent is already at or above `etiny`, no re-
+/// rounding is needed; the result is just flagged `Subnormal`. If the
+/// exponent is below etiny, the coefficient is re-rounded so the
+/// exponent lifts to etiny, and `Underflow` + `Inexact` fire when the
+/// re-rounding discards non-zero digits.
+fn apply_subnormal(d : Decimal, ctx : Context) -> Decimal {
+  ctx.raise_subnormal()
+  let etiny = ctx.e_min - ctx.precision + 1
+  if d.exponent >= etiny {
+    return d
+  }
+  let drop = etiny - d.exponent
+  let divisor = pow10(drop)
+  let kept = d.coefficient / divisor
+  let dropped = d.coefficient % divisor
+  let round_up = round_decision(
+    dropped, drop, kept, d.negative, ctx.rounding,
+  )
+  let candidate = if round_up { kept + 1N } else { kept }
+  if !dropped.is_zero() {
+    ctx.raise_inexact()
+    ctx.raise_underflow()
+    ctx.raise_rounded()
+  }
+  if candidate.is_zero() {
+    // Rounded all the way to zero — etiny clamp applies as Clamped (per
+    // the zero etiny rule above).
+    ctx.raise_clamped()
+  }
+  { ..d, coefficient: candidate, exponent: etiny }
 }
 
 ///| GDA §9.5.3 clamp. When the result's exponent exceeds `etop`, fold it
