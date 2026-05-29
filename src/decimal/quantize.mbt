@@ -245,9 +245,14 @@ fn to_integral(d : Decimal, ctx : Context, raise_flags : Bool) -> Decimal {
 }
 
 ///|
-/// GDA `trim`: strip the *insignificant* trailing zeros — those past the
-/// decimal point. Unlike `reduce`, this only collapses zeros to the right
-/// of the radix; integer-side trailing zeros stay.
+/// `trim`: strip the *insignificant* trailing zeros — those past the decimal
+/// point. Unlike `reduce`, this only collapses zeros to the right of the
+/// radix; integer-side trailing zeros stay.
+///
+/// This is a convenience extension (it originates in the decNumber reference
+/// implementation), not one of the General Decimal Arithmetic standard
+/// operations — `reduce`, which removes *all* trailing zeros, is the standard
+/// one. Kept because it's a useful, well-defined utility.
 ///
 /// Concretely:
 /// * `exponent == 0`: identity (`10` stays `10`).
