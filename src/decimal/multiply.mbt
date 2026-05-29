@@ -1,8 +1,9 @@
-///| GDA `multiply`. Coefficients multiply, exponents add, signs XOR.
+///|
+/// GDA `multiply`. Coefficients multiply, exponents add, signs XOR.
 ///
 /// Special values follow the usual priority: sNaN wins over QNaN (with the
-/// quieten-and-keep-sign rule); `0 * Infinity` is `NaN + Invalid_operation`
-/// (signal currently dropped); finite-nonzero * Infinity yields an infinity
+/// quieten-and-keep-sign rule); `0 * Infinity` is `NaN` and raises `Invalid_operation`; finite-nonzero *
+/// Infinity yields an infinity
 /// with the XOR sign; Infinity * Infinity yields the XOR-signed Infinity.
 pub fn Decimal::multiply(
   self : Decimal,
@@ -33,7 +34,8 @@ pub fn Decimal::multiply(
   }
 }
 
-///| GDA `fused-multiply-add`: `(self * other) + addend` with a single
+///|
+/// GDA `fused-multiply-add`: `(self * other) + addend` with a single
 /// rounding at the final addition. Equivalent to running the multiply at
 /// unbounded precision, then re-finalising the sum under the caller's
 /// context — so the precision-bounded product never loses digits that
@@ -58,10 +60,11 @@ pub fn Decimal::fma(
   if exact.flags.invalid_operation {
     ctx.raise_invalid_operation()
   }
-  Decimal::add(product, addend, ctx)
+  product.add(addend, ctx)
 }
 
-///| Multiply two finite Decimals: coefficients multiply, exponents add. The
+///|
+/// Multiply two finite Decimals: coefficients multiply, exponents add. The
 /// result sign is the XOR of operand signs even when the coefficient is zero
 /// (so `-0 * +5 = -0`, per GDA's "sign of zero result is XOR of operand signs"
 /// rule).
@@ -70,34 +73,40 @@ pub fn Decimal::fma(
 /// `0 * anything = 0` — we skip the call and synthesize the zero directly,
 /// saving a heap allocation for the BigInt result.
 fn multiply_finite(a : Decimal, b : Decimal) -> Decimal {
+  let neg = xor_sign(a, b)
+  let exp = a.exponent + b.exponent
   if a.coefficient.is_zero() || b.coefficient.is_zero() {
-    return {
-      class: Finite,
-      negative: a.negative != b.negative,
-      coefficient: 0N,
-      exponent: a.exponent + b.exponent,
-    }
+    return finite_zero(exp, neg)
   }
-  // Small-int fast path: if both fit Int64 and their product also fits, do
-  // the multiplication primitively. Saves the BigInt result allocation.
-  match (fits_int64(a.coefficient), fits_int64(b.coefficient)) {
-    (Some(ai), Some(bi)) =>
-      match checked_mul_i64(ai, bi) {
-        Some(p) =>
-          return {
-            class: Finite,
-            negative: a.negative != b.negative,
-            coefficient: BigInt::from_int64(p),
-            exponent: a.exponent + b.exponent,
-          }
-        None => ()
-      }
-    _ => ()
+  // Small-int fast path; falls through to the BigInt multiply on overflow.
+  match try_multiply_finite_small(a, b, neg, exp) {
+    Some(d) => return d
+    None => ()
   }
   {
     class: Finite,
-    negative: a.negative != b.negative,
+    negative: neg,
     coefficient: a.coefficient * b.coefficient,
-    exponent: a.exponent + b.exponent,
+    exponent: exp,
   }
+}
+
+///|
+/// Attempt the product in `Int64`, returning `None` if either coefficient or
+/// the product overflows. Mirrors `try_add_finite_small`.
+fn try_multiply_finite_small(
+  a : Decimal,
+  b : Decimal,
+  neg : Bool,
+  exp : Int,
+) -> Decimal? {
+  guard fits_int64(a.coefficient) is Some(ai) else { return None }
+  guard fits_int64(b.coefficient) is Some(bi) else { return None }
+  guard checked_mul_i64(ai, bi) is Some(p) else { return None }
+  Some({
+    class: Finite,
+    negative: neg,
+    coefficient: BigInt::from_int64(p),
+    exponent: exp,
+  })
 }

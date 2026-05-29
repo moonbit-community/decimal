@@ -2,7 +2,8 @@
 // Result finalisation and precision rounding.
 // ---------------------------------------------------------------------------
 
-///| Finalise a `Decimal` result under the active context: round to
+///|
+/// Finalise a `Decimal` result under the active context: round to
 /// `precision`, then enforce the exponent range. Non-finite results pass
 /// through unchanged — NaN and Infinity have no representation to round and
 /// no exponent to clamp.
@@ -37,7 +38,8 @@ pub fn Decimal::finalize(self : Decimal, ctx : Context) -> Decimal {
   }
 }
 
-///| Apply the exponent-range rules to an already-rounded finite. Three
+///|
+/// Apply the exponent-range rules to an already-rounded finite. Three
 /// stages:
 ///
 /// * Overflow (GDA §9.5.1) — non-zero result with `adjusted > e_max` goes
@@ -58,7 +60,7 @@ fn check_range(d : Decimal, pre_adj : Int, ctx : Context) -> Decimal {
     return d
   }
   if d.coefficient.is_zero() {
-    let etiny = ctx.e_min - ctx.precision + 1
+    let etiny = ctx.etiny()
     if d.exponent < etiny {
       ctx.raise_clamped()
       return { ..d, exponent: etiny }
@@ -98,16 +100,8 @@ fn check_range(d : Decimal, pre_adj : Int, ctx : Context) -> Decimal {
   }
 }
 
-///| GDA §9.5.2 subnormal / underflow. A finite non-zero result whose
-/// adjusted exponent sits below `e_min` is "tiny" — representable only
-/// at the etiny floor, possibly losing additional digits in the process.
-///
-/// If the operand's exponent is already at or above `etiny`, no re-
-/// rounding is needed; the result is just flagged `Subnormal`. If the
-/// exponent is below etiny, the coefficient is re-rounded so the
-/// exponent lifts to etiny, and `Underflow` + `Inexact` fire when the
-/// re-rounding discards non-zero digits.
-///| Mark a subnormal result and raise associated flags. `round_finite`
+///|
+/// Mark a subnormal result and raise associated flags. `round_finite`
 /// already pushed the rounding past both the precision and etiny cuts,
 /// so this is purely a flag-raising step — no re-rounding.
 fn apply_subnormal(d : Decimal, ctx : Context) -> Decimal {
@@ -125,27 +119,25 @@ fn apply_subnormal(d : Decimal, ctx : Context) -> Decimal {
   d
 }
 
-///| GDA §9.5.3 clamp. When the result's exponent exceeds `etop`, fold it
+///|
+/// GDA §9.5.3 clamp. When the result's exponent exceeds `etop`, fold it
 /// down to `etop` by multiplying the coefficient by `10^(exp - etop)`, and
 /// raise `clamped`. The numeric value is preserved (trailing zeros land in
 /// the coefficient instead of the exponent), but the resulting coefficient
 /// may exceed `precision` digits — which is fine, since the IEEE-754
 /// formats define the storable digit count to *include* the padding.
 fn apply_clamp(d : Decimal, ctx : Context) -> Decimal {
-  let etop = ctx.e_max - ctx.precision + 1
+  let etop = ctx.etop()
   if d.exponent <= etop {
     return d
   }
   let pad = d.exponent - etop
   ctx.raise_clamped()
-  {
-    ..d,
-    coefficient: scale_up(d.coefficient, pad),
-    exponent: etop,
-  }
+  { ..d, coefficient: scale_up(d.coefficient, pad), exponent: etop }
 }
 
-///| GDA §9.5.1 overflow. The rounding mode picks between `±Infinity` and
+///|
+/// GDA §9.5.1 overflow. The rounding mode picks between `±Infinity` and
 /// the largest finite representable (`(10^precision - 1) × 10^etop`,
 /// `etop = e_max - precision + 1`). `overflow`, `inexact`, and `rounded` all
 /// fire.
@@ -162,7 +154,7 @@ fn apply_overflow(d : Decimal, ctx : Context) -> Decimal {
   if to_inf {
     signed_infinity(d.negative)
   } else {
-    let etop = ctx.e_max - ctx.precision + 1
+    let etop = ctx.etop()
     {
       class: Finite,
       negative: d.negative,
@@ -172,7 +164,8 @@ fn apply_overflow(d : Decimal, ctx : Context) -> Decimal {
   }
 }
 
-///| The finite rounding path. Decides how many digits to drop based on
+///|
+/// The finite rounding path. Decides how many digits to drop based on
 /// *both* the precision cap and the etiny floor — taking the larger of
 /// the two so a single rounding pass produces a result that already
 /// satisfies both constraints, avoiding the double-rounding bias from
@@ -196,7 +189,7 @@ fn round_finite(d : Decimal, ctx : Context) -> Decimal {
   }
   let n = digit_count(d.coefficient)
   let prec_drop = if n > ctx.precision { n - ctx.precision } else { 0 }
-  let etiny = ctx.e_min - ctx.precision + 1
+  let etiny = ctx.etiny()
   let sub_drop = if etiny > d.exponent { etiny - d.exponent } else { 0 }
   let dropped_len = if prec_drop > sub_drop { prec_drop } else { sub_drop }
   if dropped_len == 0 {
@@ -210,29 +203,28 @@ fn round_finite(d : Decimal, ctx : Context) -> Decimal {
   // so we can decide round_decision by hand without materialising any
   // big factor.
   if dropped_len > n {
-    let coef_nonzero = !d.coefficient.is_zero()
+    // The coefficient is non-zero here (zero returns early above), so every
+    // mode that ever rounds away from zero does so, and the discard is inexact.
     let round_up = match ctx.rounding {
-      Down => false
-      Up => coef_nonzero
-      HalfUp => false
-      HalfDown => false
-      HalfEven => false
-      Ceiling => !d.negative && coef_nonzero
-      Floor => d.negative && coef_nonzero
-      ZeroFiveUp => coef_nonzero
+      Up | ZeroFiveUp => true
+      Ceiling => !d.negative
+      Floor => d.negative
+      _ => false
     }
     let candidate : BigInt = if round_up { 1N } else { 0N }
     ctx.raise_rounded()
-    if coef_nonzero {
-      ctx.raise_inexact()
-    }
+    ctx.raise_inexact()
     return { ..d, coefficient: candidate, exponent: etiny }
   }
   let divisor = pow10(dropped_len)
   let kept = d.coefficient / divisor
   let dropped = d.coefficient % divisor
   let round_up = round_decision(
-    dropped, dropped_len, kept, d.negative, ctx.rounding,
+    dropped,
+    dropped_len,
+    kept,
+    d.negative,
+    ctx.rounding,
   )
   let candidate = if round_up { kept + 1N } else { kept }
   // 999 → 1000: candidate gained a digit. Check via digit count rather
@@ -253,10 +245,47 @@ fn round_finite(d : Decimal, ctx : Context) -> Decimal {
   { ..d, coefficient: final_coeff, exponent: new_exp }
 }
 
-///| Decide whether to round the kept coefficient up by one, working entirely
+///|
+/// Decide whether to round the kept coefficient up by one, working entirely
 /// on the BigInt `dropped` value. The "first dropped digit" and "non-zero
 /// remainder" predicates that the rounding modes need can be recovered from
 /// `dropped` and its width `dropped_len` without ever going through a string.
+/// Decide whether to round the kept value up by one, given the rounding `mode`,
+/// the sign, a `half` indicator (`-1` below, `0` exactly at, `+1` above the
+/// halfway point) and whether any non-zero digit was discarded. Shared by the
+/// general rounding path and integer division.
+fn should_round_up(
+  kept : BigInt,
+  negative : Bool,
+  half : Int,
+  dropped_nonzero : Bool,
+  mode : Rounding,
+) -> Bool {
+  match mode {
+    Down => false
+    Up => dropped_nonzero
+    HalfUp => half >= 0
+    HalfDown => half > 0
+    HalfEven =>
+      if half != 0 {
+        half > 0
+      } else {
+        // Exact tie — round so the kept value's last digit is even.
+        (kept % 2N).to_int() != 0
+      }
+    Ceiling => !negative && dropped_nonzero
+    Floor => negative && dropped_nonzero
+    ZeroFiveUp => {
+      let last = (kept % 10N).to_int()
+      (last == 0 || last == 5) && dropped_nonzero
+    }
+  }
+}
+
+///|
+/// Decide rounding from a discarded tail `dropped` of width `dropped_len`,
+/// deriving the half indicator and the non-zero flag, then delegating to
+/// `should_round_up`.
 fn round_decision(
   dropped : BigInt,
   dropped_len : Int,
@@ -276,34 +305,36 @@ fn round_decision(
   let rest = dropped % top_divisor
   let rest_nonzero = !rest.is_zero()
   let dropped_nonzero = first_digit != 0 || rest_nonzero
-  match mode {
-    Down => false
-    Up => dropped_nonzero
-    HalfUp => first_digit >= 5
-    HalfDown =>
-      if first_digit > 5 {
-        true
-      } else if first_digit < 5 {
-        false
-      } else {
-        rest_nonzero
-      }
-    HalfEven =>
-      if first_digit > 5 {
-        true
-      } else if first_digit < 5 {
-        false
-      } else if rest_nonzero {
-        true
-      } else {
-        // Exact tie. Round to make the last kept digit even.
-        (kept % 10N).to_int() % 2 != 0
-      }
-    Ceiling => !negative && dropped_nonzero
-    Floor => negative && dropped_nonzero
-    ZeroFiveUp => {
-      let last = (kept % 10N).to_int()
-      (last == 0 || last == 5) && dropped_nonzero
-    }
+  // half indicator: -1 below halfway, 0 exactly halfway, +1 above.
+  let half = if first_digit > 5 {
+    1
+  } else if first_digit < 5 {
+    -1
+  } else if rest_nonzero {
+    1
+  } else {
+    0
   }
+  should_round_up(kept, negative, half, dropped_nonzero, mode)
+}
+
+///|
+/// Drop the low `drop_len` digits of `coef` under rounding `mode`, returning
+/// `(candidate, kept, dropped)`: the rounded high part, the truncated high
+/// part, and the discarded low part. Callers apply their own flag policy.
+fn round_drop(
+  coef : BigInt,
+  drop_len : Int,
+  negative : Bool,
+  mode : Rounding,
+) -> (BigInt, BigInt, BigInt) {
+  let divisor = pow10(drop_len)
+  let kept = coef / divisor
+  let dropped = coef % divisor
+  let candidate = if round_decision(dropped, drop_len, kept, negative, mode) {
+    kept + 1N
+  } else {
+    kept
+  }
+  (candidate, kept, dropped)
 }

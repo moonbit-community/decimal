@@ -87,15 +87,27 @@ test "finalize ceiling and floor track sign" {
 ///|
 test "finalize down truncates" {
   let ctx = Context::new(precision=2, rounding=Down)
-  assert_eq(Decimal::finalize(Decimal::parse("1.99"), ctx).to_sci_string(), "1.9")
-  assert_eq(Decimal::finalize(Decimal::parse("-1.99"), ctx).to_sci_string(), "-1.9")
+  assert_eq(
+    Decimal::finalize(Decimal::parse("1.99"), ctx).to_sci_string(),
+    "1.9",
+  )
+  assert_eq(
+    Decimal::finalize(Decimal::parse("-1.99"), ctx).to_sci_string(),
+    "-1.9",
+  )
 }
 
 ///|
 test "finalize up moves any discarded non-zero away from zero" {
   let ctx = Context::new(precision=2, rounding=Up)
-  assert_eq(Decimal::finalize(Decimal::parse("1.01"), ctx).to_sci_string(), "1.1")
-  assert_eq(Decimal::finalize(Decimal::parse("-1.01"), ctx).to_sci_string(), "-1.1")
+  assert_eq(
+    Decimal::finalize(Decimal::parse("1.01"), ctx).to_sci_string(),
+    "1.1",
+  )
+  assert_eq(
+    Decimal::finalize(Decimal::parse("-1.01"), ctx).to_sci_string(),
+    "-1.1",
+  )
 }
 
 ///|
@@ -104,7 +116,8 @@ test "finalize overflow to infinity in half-aware modes" {
   // adjusted exponent 6 > 5, so it overflows; HalfUp routes to +Infinity.
   let ctx = Context::new(precision=3, e_max=5, rounding=HalfUp)
   assert_eq(
-    Decimal::finalize(Decimal::parse("1E+6"), ctx).to_sci_string(), "Infinity",
+    Decimal::finalize(Decimal::parse("1E+6"), ctx).to_sci_string(),
+    "Infinity",
   )
   assert_true(ctx.flags.overflow)
   assert_true(ctx.flags.inexact)
@@ -115,7 +128,8 @@ test "finalize overflow to infinity in half-aware modes" {
 test "finalize overflow honours sign for half-aware modes" {
   let ctx = Context::new(precision=3, e_max=5, rounding=HalfEven)
   assert_eq(
-    Decimal::finalize(Decimal::parse("-1E+6"), ctx).to_sci_string(), "-Infinity",
+    Decimal::finalize(Decimal::parse("-1E+6"), ctx).to_sci_string(),
+    "-Infinity",
   )
   assert_true(ctx.flags.overflow)
 }
@@ -125,7 +139,8 @@ test "finalize overflow to largest finite under Down" {
   // Down never invents trailing digits; on overflow it caps at 999E+3.
   let ctx = Context::new(precision=3, e_max=5, rounding=Down)
   assert_eq(
-    Decimal::finalize(Decimal::parse("1E+6"), ctx).to_sci_string(), "9.99E+5",
+    Decimal::finalize(Decimal::parse("1E+6"), ctx).to_sci_string(),
+    "9.99E+5",
   )
   assert_true(ctx.flags.overflow)
 }
@@ -146,7 +161,8 @@ test "finalize overflow under Ceiling and Floor tracks sign" {
   // Floor: mirror.
   let ctx_f = Context::new(precision=3, e_max=5, rounding=Floor)
   assert_eq(
-    Decimal::finalize(Decimal::parse("1E+6"), ctx_f).to_sci_string(), "9.99E+5",
+    Decimal::finalize(Decimal::parse("1E+6"), ctx_f).to_sci_string(),
+    "9.99E+5",
   )
   let ctx_f2 = Context::new(precision=3, e_max=5, rounding=Floor)
   assert_eq(
@@ -163,7 +179,8 @@ test "finalize zero never overflows but its exponent clamps to e_max" {
   // setExponent zero branch); the Overflow flag stays clear.
   let ctx = Context::new(precision=3, e_max=5, rounding=HalfUp)
   assert_eq(
-    Decimal::finalize(Decimal::parse("0E+99"), ctx).to_sci_string(), "0E+5",
+    Decimal::finalize(Decimal::parse("0E+99"), ctx).to_sci_string(),
+    "0E+5",
   )
   assert_false(ctx.flags.overflow)
   assert_true(ctx.flags.clamped)
@@ -174,7 +191,8 @@ test "finalize precision-zero skips overflow check entirely" {
   // Without precision, GDA disables range checks even when e_max is small.
   let ctx = Context::exact()
   assert_eq(
-    Decimal::finalize(Decimal::parse("1E+999"), ctx).to_sci_string(), "1E+999",
+    Decimal::finalize(Decimal::parse("1E+999"), ctx).to_sci_string(),
+    "1E+999",
   )
   assert_false(ctx.flags.overflow)
 }
@@ -186,7 +204,8 @@ test "finalize clamp folds exponent down" {
   // exponent = 3. Numerically still 1E+5, but written as "1.00E+5".
   let ctx = Context::new(precision=3, e_max=5, clamp=true)
   assert_eq(
-    Decimal::finalize(Decimal::parse("1E+5"), ctx).to_sci_string(), "1.00E+5",
+    Decimal::finalize(Decimal::parse("1E+5"), ctx).to_sci_string(),
+    "1.00E+5",
   )
   assert_true(ctx.flags.clamped)
   assert_false(ctx.flags.overflow)
@@ -199,7 +218,8 @@ test "finalize clamp leaves in-range exponents alone" {
   // (exp ≤ 0 && adj ≥ -6), same as basx068.
   let ctx = Context::new(precision=3, e_max=5, clamp=true)
   assert_eq(
-    Decimal::finalize(Decimal::parse("1.23E+2"), ctx).to_sci_string(), "123",
+    Decimal::finalize(Decimal::parse("1.23E+2"), ctx).to_sci_string(),
+    "123",
   )
   assert_false(ctx.flags.clamped)
 }
@@ -210,7 +230,8 @@ test "finalize clamp off leaves exponents above etop alone" {
   // passes through, no padding, no clamped flag.
   let ctx = Context::new(precision=3, e_max=5)
   assert_eq(
-    Decimal::finalize(Decimal::parse("1E+5"), ctx).to_sci_string(), "1E+5",
+    Decimal::finalize(Decimal::parse("1E+5"), ctx).to_sci_string(),
+    "1E+5",
   )
   assert_false(ctx.flags.clamped)
 }
@@ -221,7 +242,8 @@ test "finalize clamp applies to zero too" {
   // the storable exponent range" invariant the IEEE-754 formats need.
   let ctx = Context::new(precision=3, e_max=5, clamp=true)
   assert_eq(
-    Decimal::finalize(Decimal::parse("0E+5"), ctx).to_sci_string(), "0E+3",
+    Decimal::finalize(Decimal::parse("0E+5"), ctx).to_sci_string(),
+    "0E+3",
   )
   assert_true(ctx.flags.clamped)
 }

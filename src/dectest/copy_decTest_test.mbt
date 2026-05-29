@@ -1,4 +1,5 @@
-///| `copy` cases from `copy.decTest`, filtered to those that need
+///|
+/// `copy` cases from `copy.decTest`, filtered to those that need
 /// neither rounding nor a GDA `#` null operand. Copy ops never signal,
 /// so this subset has no condition-dependent skips.
 let copy_subset : String =
@@ -53,7 +54,9 @@ test "copy.decTest subset round-trips through parse + copy + toSci" {
   let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     let buf = StringBuilder::new()
-    buf.write_string("\{failures.length()} of \{cases.length()} cases failed:\n")
+    buf.write_string(
+      "\{failures.length()} of \{cases.length()} cases failed:\n",
+    )
     for f in failures {
       buf.write_string("  ")
       buf.write_string(f)

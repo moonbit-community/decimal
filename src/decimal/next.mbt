@@ -8,37 +8,30 @@
 // nextUp / nextDown.
 // ---------------------------------------------------------------------------
 
-///| GDA `next-plus`: smallest representable value greater than `self`.
+///|
+/// GDA `next-plus`: smallest representable value greater than `self`.
 pub fn Decimal::next_plus(self : Decimal, ctx : Context) -> Decimal {
   match self.class {
     SNaN => quiet_snan(self, ctx)
     QNaN => self
-    Infinity =>
-      if self.negative {
-        largest_finite(true, ctx)
-      } else {
-        self
-      }
+    Infinity => if self.negative { largest_finite(true, ctx) } else { self }
     Finite => next_step(self, ctx, true)
   }
 }
 
-///| GDA `next-minus`: largest representable value less than `self`.
+///|
+/// GDA `next-minus`: largest representable value less than `self`.
 pub fn Decimal::next_minus(self : Decimal, ctx : Context) -> Decimal {
   match self.class {
     SNaN => quiet_snan(self, ctx)
     QNaN => self
-    Infinity =>
-      if self.negative {
-        self
-      } else {
-        largest_finite(false, ctx)
-      }
+    Infinity => if self.negative { self } else { largest_finite(false, ctx) }
     Finite => next_step(self, ctx, false)
   }
 }
 
-///| GDA `next-toward`: walk `self` one ULP toward `other`. When the two
+///|
+/// GDA `next-toward`: walk `self` one ULP toward `other`. When the two
 /// operands compare equal numerically, return `self` (with `other`'s sign
 /// in the equal-zero case, per GDA's sign-of-zero rule for next-toward).
 pub fn Decimal::next_toward(
@@ -52,8 +45,9 @@ pub fn Decimal::next_toward(
   }
   let cmp = compare_numeric_int(self, other)
   if cmp == 0 {
-    // Numerically equal — return `self` (sign of self preserved).
-    return self
+    // Numerically equal — the value is unchanged but takes `other`'s sign, so
+    // `nextToward(0.00, -0.0000)` yields `-0.00`, not `+0.00`.
+    return { ..self, negative: other.negative }
   }
   if cmp < 0 {
     Decimal::next_plus(self, ctx)
@@ -62,9 +56,10 @@ pub fn Decimal::next_toward(
   }
 }
 
-///| The largest finite representable: `(10^precision - 1) × 10^etop`.
+///|
+/// The largest finite representable: `(10^precision - 1) × 10^etop`.
 fn largest_finite(negative : Bool, ctx : Context) -> Decimal {
-  let etop = ctx.e_max - ctx.precision + 1
+  let etop = ctx.etop()
   {
     class: Finite,
     negative,
@@ -73,13 +68,15 @@ fn largest_finite(negative : Bool, ctx : Context) -> Decimal {
   }
 }
 
-///| Smallest positive subnormal: `1 × 10^etiny`. The next step above zero.
+///|
+/// Smallest positive subnormal: `1 × 10^etiny`. The next step above zero.
 fn smallest_subnormal(negative : Bool, ctx : Context) -> Decimal {
-  let etiny = ctx.e_min - ctx.precision + 1
+  let etiny = ctx.etiny()
   { class: Finite, negative, coefficient: 1N, exponent: etiny }
 }
 
-///| Unified step: `step_up == true` walks toward +∞ (next-plus), `false`
+///|
+/// Unified step: `step_up == true` walks toward +∞ (next-plus), `false`
 /// walks toward -∞ (next-minus). Routes through the sign-flipped helpers
 /// so the directional logic lives in one place.
 fn next_step(x : Decimal, ctx : Context, step_up : Bool) -> Decimal {
@@ -109,34 +106,23 @@ fn next_step(x : Decimal, ctx : Context, step_up : Bool) -> Decimal {
     step_magnitude_down(x.coefficient, x.exponent, ctx)
   }
   match stepped {
-    StepResult::Overflow =>
-      if x.negative {
-        // -big stepping further down → -Inf
-        ctx.raise_overflow()
-        ctx.raise_inexact()
-        ctx.raise_rounded()
-        signed_infinity(true)
-      } else {
-        ctx.raise_overflow()
-        ctx.raise_inexact()
-        ctx.raise_rounded()
-        signed_infinity(false)
-      }
-    StepResult::Zero =>
-      // Magnitude stepped to zero — the result is signed zero at etiny on
-      // the opposite side. For next-plus(-tiny) → -0; for next-minus(tiny) → +0.
-      {
-        class: Finite,
-        negative: x.negative,
-        coefficient: 0N,
-        exponent: ctx.e_min - ctx.precision + 1,
-      }
+    StepResult::Overflow => {
+      // Stepping past the largest representable lands on a signed Infinity.
+      ctx.raise_overflow()
+      ctx.raise_inexact()
+      ctx.raise_rounded()
+      signed_infinity(x.negative)
+    }
+    // Magnitude stepped to zero — a signed zero at etiny on the opposite side
+    // (next-plus(-tiny) → -0; next-minus(tiny) → +0).
+    StepResult::Zero => finite_zero(ctx.etiny(), x.negative)
     StepResult::Value(coef, exp) =>
       { class: Finite, negative: x.negative, coefficient: coef, exponent: exp }
   }
 }
 
-///| Outcome of a magnitude step: a concrete next value, or the "we went
+///|
+/// Outcome of a magnitude step: a concrete next value, or the "we went
 /// past the largest representable" / "we went past zero" boundary.
 priv enum StepResult {
   Value(BigInt, Int)
@@ -144,23 +130,24 @@ priv enum StepResult {
   Zero
 }
 
-///| Step the magnitude `coef × 10^exp` up by 1 ULP under the active
+///|
+/// Step the magnitude `coef × 10^exp` up by 1 ULP under the active
 /// precision / exponent range. The input is assumed positive and non-zero.
 ///
 /// Over-precision inputs first round Ceiling-style (round toward larger
 /// magnitude); if the rounding moved the value, that's already the
 /// next-up. Otherwise the rounded result has its low digit incremented.
 fn step_magnitude_up(coef : BigInt, exp : Int, ctx : Context) -> StepResult {
-  let etop = ctx.e_max - ctx.precision + 1
-  let etiny = ctx.e_min - ctx.precision + 1
-  let adj = exp + digit_count(coef) - 1
+  let etop = ctx.etop()
+  let etiny = ctx.etiny()
+  let n = digit_count(coef)
+  let adj = exp + n - 1
   // Below-tininess: smallest representable above zero.
   if adj < etiny {
     return StepResult::Value(1N, etiny)
   }
   // Over-precision: Ceiling-style round, returning early if rounding
   // actually moved the value upward.
-  let n = digit_count(coef)
   let (c0, e0) = if n > ctx.precision {
     let drop = n - ctx.precision
     let divisor = pow10(drop)
@@ -197,7 +184,8 @@ fn step_magnitude_up(coef : BigInt, exp : Int, ctx : Context) -> StepResult {
   StepResult::Value(new_coef, e)
 }
 
-///| Step the magnitude `coef × 10^exp` down by 1 ULP. Symmetric to
+///|
+/// Step the magnitude `coef × 10^exp` down by 1 ULP. Symmetric to
 /// `step_magnitude_up`; the boundary case is the precision-floor crossing
 /// (10^(p-1) → 10^p - 1 at exp - 1).
 ///
@@ -205,12 +193,12 @@ fn step_magnitude_up(coef : BigInt, exp : Int, ctx : Context) -> StepResult {
 /// the truncated value is strictly less than the original, so that *is*
 /// the next-down.
 fn step_magnitude_down(coef : BigInt, exp : Int, ctx : Context) -> StepResult {
-  let etiny = ctx.e_min - ctx.precision + 1
-  let adj = exp + digit_count(coef) - 1
+  let etiny = ctx.etiny()
+  let n = digit_count(coef)
+  let adj = exp + n - 1
   if adj < etiny {
     return StepResult::Zero
   }
-  let n = digit_count(coef)
   let (c0, e0) = if n > ctx.precision {
     let drop = n - ctx.precision
     let divisor = pow10(drop)
@@ -237,7 +225,8 @@ fn step_magnitude_down(coef : BigInt, exp : Int, ctx : Context) -> StepResult {
   StepResult::Value(new_coef, e)
 }
 
-///| Pad the coefficient with trailing zeros (lowering the exponent) so it
+///|
+/// Pad the coefficient with trailing zeros (lowering the exponent) so it
 /// reaches `precision` digits — but never fall below `etiny`. Inputs whose
 /// natural digit count already exceeds precision are returned as-is; the
 /// boundary handling in `step_magnitude_up` / `step_magnitude_down` deals

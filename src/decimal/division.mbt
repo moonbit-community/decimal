@@ -7,7 +7,8 @@
 // won't ship until rounding lands).
 // ---------------------------------------------------------------------------
 
-///| GDA `divide`: true division with precision-driven rounding. The result
+///|
+/// GDA `divide`: true division with precision-driven rounding. The result
 /// has `precision` digits (before final rounding) and an exponent chosen so
 /// that the value is `(a / b)` to within half a ULP under the active
 /// rounding mode.
@@ -45,7 +46,7 @@ pub fn Decimal::divide(
       // the exponent has no defined meaning so we settle for 0.
       let exp = if ctx.precision > 0 {
         ctx.raise_clamped()
-        ctx.e_min - ctx.precision + 1
+        ctx.etiny()
       } else {
         0
       }
@@ -67,7 +68,8 @@ pub fn Decimal::divide(
   }
 }
 
-///| GDA `divide-integer`: truncated integer quotient `trunc(a / b)`.
+///|
+/// GDA `divide-integer`: truncated integer quotient `trunc(a / b)`.
 ///
 /// * Special values follow the usual NaN / Infinity propagation rules.
 /// * `0 / 0` and `Infinity / Infinity` collapse to NaN (`Invalid_operation`
@@ -115,7 +117,8 @@ pub fn Decimal::divide_int(
   }
 }
 
-///| GDA `remainder`: `a - divide_int(a, b) * b`.
+///|
+/// GDA `remainder`: `a - divide_int(a, b) * b`.
 ///
 /// The result carries `a`'s sign (and exponent `min(a.exp, b.exp)` via the
 /// underlying subtract). Special cases:

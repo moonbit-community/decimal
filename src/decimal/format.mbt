@@ -1,4 +1,5 @@
-///| Convert a `Decimal` to its GDA canonical *to-scientific-string* form.
+///|
+/// Convert a `Decimal` to its GDA canonical *to-scientific-string* form.
 ///
 /// Algorithm follows §10.3 of the General Decimal Arithmetic specification:
 ///
@@ -18,7 +19,8 @@ pub fn Decimal::to_sci_string(self : Decimal) -> String {
   }
 }
 
-///| `coefficient.to_string()` for non-zero payloads, empty otherwise.
+///|
+/// `coefficient.to_string()` for non-zero payloads, empty otherwise.
 fn nan_payload_string(payload : BigInt) -> String {
   if payload.is_zero() {
     ""
@@ -27,7 +29,8 @@ fn nan_payload_string(payload : BigInt) -> String {
   }
 }
 
-///| Render the magnitude of a finite decimal (without leading sign).
+///|
+/// Render the magnitude of a finite decimal (without leading sign).
 fn finite_to_sci(coefficient : BigInt, exponent : Int) -> String {
   let coeff = coefficient.to_string()
   let n = coeff.length()
@@ -39,13 +42,13 @@ fn finite_to_sci(coefficient : BigInt, exponent : Int) -> String {
   }
 }
 
-///| Plain notation: `exponent <= 0` and `adjusted >= -6`.
+///|
+/// Plain notation: `exponent <= 0` and `adjusted >= -6`.
 fn plain_form(coeff : String, n : Int, exponent : Int) -> String {
-  if exponent == 0 {
-    return coeff
-  }
   let neg_exp = -exponent
-  if neg_exp < n {
+  if exponent == 0 {
+    coeff
+  } else if neg_exp < n {
     // Decimal point falls inside the coefficient digits.
     let split = n - neg_exp
     coeff[:split].to_owned() + "." + coeff[split:].to_owned()
@@ -55,7 +58,8 @@ fn plain_form(coeff : String, n : Int, exponent : Int) -> String {
   }
 }
 
-///| Scientific notation: `d[.ddd]E±n`. Exponent always carries an explicit
+///|
+/// Scientific notation: `d[.ddd]E±n`. Exponent always carries an explicit
 /// sign per GDA.
 fn sci_form(coeff : String, n : Int, adjusted : Int) -> String {
   let mantissa = if n == 1 {
@@ -64,6 +68,5 @@ fn sci_form(coeff : String, n : Int, adjusted : Int) -> String {
     coeff[:1].to_owned() + "." + coeff[1:].to_owned()
   }
   let exp_sign = if adjusted >= 0 { "+" } else { "-" }
-  let abs_adj = if adjusted >= 0 { adjusted } else { -adjusted }
-  mantissa + "E" + exp_sign + abs_adj.to_string()
+  mantissa + "E" + exp_sign + adjusted.abs().to_string()
 }

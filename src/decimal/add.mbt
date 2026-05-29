@@ -7,7 +7,8 @@
 // will add rounding-to-precision on top.
 // ---------------------------------------------------------------------------
 
-///| GDA `add`: arithmetic addition.
+///|
+/// GDA `add`: arithmetic addition.
 ///
 /// * sNaN in either operand: result is the sNaN with class quietened to QNaN.
 ///   sNaN at position 0 wins over sNaN at position 1 (and over any QNaN).
@@ -40,10 +41,12 @@ pub fn Decimal::add(self : Decimal, other : Decimal, ctx : Context) -> Decimal {
   }
 }
 
-///| GDA `subtract`. Special values handled directly (so sNaN is reported
-/// from the right operand without being quietened en route); finite /
-/// infinity cases delegate to `add` after a *bit-level* sign flip on the
-/// second operand.
+///|
+/// GDA `subtract`. NaN operands are intercepted first so the right operand's
+/// NaN is reported with its sign and payload intact (the bit-level flip below
+/// would otherwise toggle a NaN's sign bit); everything else — finite and
+/// infinity — is resolved by `add` after a *bit-level* sign flip on the second
+/// operand.
 ///
 /// The flip is intentionally bit-level (not `Decimal::minus`) because GDA's
 /// subtract zero-sign rule differs from add's: `subtract(-0, 0) = -0`, which
@@ -61,7 +64,8 @@ pub fn Decimal::subtract(
   }
 }
 
-///| Add two finite Decimals: align to the smaller exponent, combine the
+///|
+/// Add two finite Decimals: align to the smaller exponent, combine the
 /// signed coefficients, and report the result in the same convention.
 ///
 /// Several short-circuits avoid materialising the alignment factor:
@@ -126,11 +130,18 @@ fn add_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
   }
   let (a_scaled, b_scaled, result_exp) = align(a, b)
   let (sum, neg) = signed_add(a_scaled, a.negative, b_scaled, b.negative)
-  let final_neg = cancellation_sign(sum, a.negative, b.negative, ctx.rounding, neg)
+  let final_neg = cancellation_sign(
+    sum,
+    a.negative,
+    b.negative,
+    ctx.rounding,
+    neg,
+  )
   { class: Finite, negative: final_neg, coefficient: sum, exponent: result_exp }
 }
 
-///| Attempt the add in Int64. Returns `None` if either coefficient or any
+///|
+/// Attempt the add in Int64. Returns `None` if either coefficient or any
 /// intermediate overflows. Caller falls back to the BigInt path on `None`.
 fn try_add_finite_small(a : Decimal, b : Decimal, ctx : Context) -> Decimal? {
   let a64 = fits_int64(a.coefficient)
@@ -161,12 +172,13 @@ fn try_add_finite_small(a : Decimal, b : Decimal, ctx : Context) -> Decimal? {
   } else {
     (0L, false)
   }
-  let final_neg = if sum == 0L {
-    // Same Floor-mode -0 rule as the BigInt path's cancellation_sign.
-    a.negative != b.negative && ctx.rounding == Floor
-  } else {
-    neg
-  }
+  let final_neg = cancellation_neg(
+    sum == 0L,
+    a.negative,
+    b.negative,
+    ctx.rounding,
+    neg,
+  )
   Some({
     class: Finite,
     negative: final_neg,
@@ -175,7 +187,8 @@ fn try_add_finite_small(a : Decimal, b : Decimal, ctx : Context) -> Decimal? {
   })
 }
 
-///| GDA sign-of-zero rule for additive cancellation. When opposite-sign
+///|
+/// GDA sign-of-zero rule for additive cancellation. When opposite-sign
 /// operands cancel to exactly zero (`a + -a`), the result is `+0` under
 /// every rounding mode except `Floor`, which yields `-0`. Same-sign
 /// operations and non-zero results keep the sign `signed_add` reports.
@@ -184,16 +197,32 @@ fn cancellation_sign(
   a_neg : Bool,
   b_neg : Bool,
   rounding : Rounding,
-  default : Bool,
+  computed_sign : Bool,
 ) -> Bool {
-  if sum.is_zero() && a_neg != b_neg {
+  cancellation_neg(sum.is_zero(), a_neg, b_neg, rounding, computed_sign)
+}
+
+///|
+/// GDA sign-of-zero rule for additive cancellation, on a precomputed
+/// is-zero flag: opposite-sign operands cancelling to zero yield `+0` under
+/// every mode except `Floor` (which gives `-0`); otherwise the computed sign
+/// passes through. Shared by the Int64 fast path and the BigInt path.
+fn cancellation_neg(
+  is_zero : Bool,
+  a_neg : Bool,
+  b_neg : Bool,
+  rounding : Rounding,
+  computed_sign : Bool,
+) -> Bool {
+  if is_zero && a_neg != b_neg {
     rounding == Floor
   } else {
-    default
+    computed_sign
   }
 }
 
-///| Fast path for `non_zero + zero` (and `zero + zero` when signs match).
+///|
+/// Fast path for `non_zero + zero` (and `zero + zero` when signs match).
 ///
 /// Without precision, GDA's "result exponent = min(a.exp, b.exp)" rule needs
 /// the non-zero operand scaled up to the smaller exponent so trailing-zero
@@ -202,11 +231,7 @@ fn cancellation_sign(
 /// more than `precision` digits, regardless of the exponent gap. That keeps
 /// `add(0, 9E+999)`-style cases from allocating a 1000-digit BigInt only to
 /// throw most of it away in `round_finite`.
-fn align_zero_add(
-  non_zero : Decimal,
-  zero : Decimal,
-  ctx : Context,
-) -> Decimal {
+fn align_zero_add(non_zero : Decimal, zero : Decimal, ctx : Context) -> Decimal {
   let shift = non_zero.exponent - zero.exponent
   if shift <= 0 {
     return non_zero
@@ -243,7 +268,8 @@ fn align_zero_add(
   }
 }
 
-///| Whether the rounding mode is "half-aware" — its decision depends on
+///|
+/// Whether the rounding mode is "half-aware" — its decision depends on
 /// whether the discarded portion exceeds half a ULP, with sub-half-ULP
 /// discards never crossing a kept-digit boundary. Below-the-noise short-
 /// circuits are safe here regardless of operand signs.

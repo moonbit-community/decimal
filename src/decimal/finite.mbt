@@ -1,4 +1,44 @@
-///| Multiply `n` by `10^shift` in `Int64`, returning `None` on overflow.
+///|
+/// Convert a non-negative `BigInt` magnitude to a signed `Int`, or `None` if it
+/// does not fit the `Int` range. Used to read an integer-valued operand.
+fn bigint_to_int(magnitude : BigInt, negative : Bool) -> Int? {
+  match fits_int64(magnitude) {
+    Some(v) =>
+      if v.compare(2147483647L) <= 0 {
+        Some(if negative { -v.to_int() } else { v.to_int() })
+      } else {
+        None
+      }
+    None => None
+  }
+}
+
+///|
+/// Strip trailing factors of ten from `coef` (raising `exp` to compensate),
+/// continuing while the coefficient is non-zero, its last digit is `0`, and
+/// `keep` accepts the current exponent. Returns the reduced `(coef, exp)`.
+/// Shared by `reduce`, `trim`, and the exact-divide normalisation, which differ
+/// only in their `keep` predicate.
+fn strip_trailing_zeros(
+  coef : BigInt,
+  exp : Int,
+  keep : (Int) -> Bool,
+) -> (BigInt, Int) {
+  for c = coef, e = exp {
+    if c.is_zero() || !keep(e) {
+      break (c, e)
+    }
+    let q = c / 10N
+    if q * 10N == c {
+      continue q, e + 1
+    } else {
+      break (c, e)
+    }
+  }
+}
+
+///|
+/// Multiply `n` by `10^shift` in `Int64`, returning `None` on overflow.
 /// `shift == 0` is the identity short-circuit; `shift >= 19` always
 /// overflows since `10^19 > Int64.MAX`.
 fn scale_up_i64(n : Int64, shift : Int) -> Int64? {
@@ -11,7 +51,8 @@ fn scale_up_i64(n : Int64, shift : Int) -> Int64? {
   }
 }
 
-///| Multiply `coeff` by `10^shift`. Shift must be non-negative. Hot-path
+///|
+/// Multiply `coeff` by `10^shift`. Shift must be non-negative. Hot-path
 /// shifts (`< 33`) land in the `pow10_table` cache and avoid a fresh
 /// allocation.
 ///
@@ -26,6 +67,7 @@ fn scale_up(coeff : BigInt, shift : Int) -> BigInt {
   }
 }
 
+///|
 fn min_exponent(a : Decimal, b : Decimal) -> Int {
   if a.exponent <= b.exponent {
     a.exponent
@@ -34,7 +76,8 @@ fn min_exponent(a : Decimal, b : Decimal) -> Int {
   }
 }
 
-///| Align two finite Decimals to a shared exponent — the smaller of the two —
+///|
+/// Align two finite Decimals to a shared exponent — the smaller of the two —
 /// returning the scaled magnitudes and that shared exponent.
 ///
 /// This is the shape additive ops (add, subtract, numeric-compare) all need:
@@ -52,15 +95,18 @@ fn align(a : Decimal, b : Decimal) -> (BigInt, BigInt, Int) {
   (a_scaled, b_scaled, result_exp)
 }
 
+///|
 fn adjusted_exponent(d : Decimal) -> Int {
-  d.exponent + digit_count(d.coefficient) - 1
+  adjusted_exponent_parts(d.coefficient, d.exponent)
 }
 
+///|
 fn adjusted_exponent_parts(coeff : BigInt, exponent : Int) -> Int {
   exponent + digit_count(coeff) - 1
 }
 
-///| Add two non-negative magnitudes carrying signs separately, returning the
+///|
+/// Add two non-negative magnitudes carrying signs separately, returning the
 /// magnitude and sign of the result.
 fn signed_add(
   a : BigInt,
@@ -84,7 +130,8 @@ fn signed_add(
   }
 }
 
-///| Bring `a` and `b` to a representation where `an / bn` (BigInt integer
+///|
+/// Bring `a` and `b` to a representation where `an / bn` (BigInt integer
 /// division) is the truncated integer quotient of the abstract values.
 ///
 /// Value(a) / Value(b) = (a_coeff / b_coeff) * 10^(a_exp - b_exp). To get an

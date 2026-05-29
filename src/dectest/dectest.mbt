@@ -1,4 +1,5 @@
-///| A single test case parsed from a `.decTest` line.
+///|
+/// A single test case parsed from a `.decTest` line.
 ///
 /// A `.decTest` line has the shape `<id> <op> <operand>... -> <result> [<conditions>...]`.
 /// Directive lines (`name: value`) and comments (`-- ...`) are skipped during
@@ -23,7 +24,8 @@ pub(all) struct TestCase {
   clamp : Bool
 }
 
-///| Parse the full text of a `.decTest` source into test cases. Skips blank
+///|
+/// Parse the full text of a `.decTest` source into test cases. Skips blank
 /// lines and comment lines (`--` to end of line). The `precision`,
 /// `rounding`, `maxExponent`, `minExponent`, and `clamp` directives are
 /// tracked across the file so each emitted `TestCase` reports the context
@@ -95,15 +97,18 @@ pub fn parse_dectest(text : String) -> Array[TestCase] {
   cases
 }
 
-///| Split a directive line `key: value` into its two parts (trimmed).
+///|
+/// Split a directive line `key: value` into its two parts (trimmed).
 fn parse_directive(line : String) -> (String, String)? {
   match line.find(":") {
-    Some(i) => Some((line[:i].trim().to_owned(), line[i + 1:].trim().to_owned()))
+    Some(i) =>
+      Some((line[:i].trim().to_owned(), line[i + 1:].trim().to_owned()))
     None => None
   }
 }
 
-///| Map a GDA rounding-mode name onto our `Rounding` enum. Unknown modes
+///|
+/// Map a GDA rounding-mode name onto our `Rounding` enum. Unknown modes
 /// return `None` and the directive is silently ignored (rounding stays
 /// where it was).
 fn parse_rounding_name(name : String) -> Rounding? {
@@ -120,7 +125,8 @@ fn parse_rounding_name(name : String) -> Rounding? {
   }
 }
 
-///| Drop a trailing `-- ...` comment, if any.
+///|
+/// Drop a trailing `-- ...` comment, if any.
 fn strip_dectest_comment(line : String) -> String {
   match line.find("--") {
     Some(i) => line[:i].to_owned()
@@ -128,7 +134,8 @@ fn strip_dectest_comment(line : String) -> String {
   }
 }
 
-///| Parse a single non-empty, comment-stripped line. Returns `None` for
+///|
+/// Parse a single non-empty, comment-stripped line. Returns `None` for
 /// directive lines (no `->`) and structurally malformed lines.
 fn parse_dectest_line(line : String) -> TestCase? {
   let arrow = line.find("->")
@@ -162,7 +169,8 @@ fn parse_dectest_line(line : String) -> TestCase? {
   })
 }
 
-///| Whitespace-tokenize a side of a `.decTest` line. Single- and double-quoted
+///|
+/// Whitespace-tokenize a side of a `.decTest` line. Single- and double-quoted
 /// tokens have their surrounding quotes stripped (the quotes are documented in
 /// the spec as making it possible to embed leading/trailing whitespace in
 /// operands and results).
@@ -199,7 +207,8 @@ fn tokenize_dectest(s : String) -> Array[String] {
   tokens
 }
 
-///| Per-case diagnostic raised by `compute` / `unary` to signal arity
+///|
+/// Per-case diagnostic raised by `compute` / `unary` to signal arity
 /// mismatches and parse failures. The handler at the top of the runner
 /// formats it into a failure line.
 priv suberror RunnerError {
@@ -213,7 +222,8 @@ impl Show for RunnerError with fn to_string(self) {
   }
 }
 
-///| Outcome of running a single test case.
+///|
+/// Outcome of running a single test case.
 priv enum CaseOutcome {
   /// Op was recognised and produced the expected value.
   Pass
@@ -224,7 +234,8 @@ priv enum CaseOutcome {
   Skip
 }
 
-///| Run every recognised case in `cases`, returning the list of failures and
+///|
+/// Run every recognised case in `cases`, returning the list of failures and
 /// the count of skipped cases (for diagnostics — runners that have full op
 /// coverage should expect zero skips).
 pub fn run_cases(cases : Array[TestCase]) -> (Array[String], Int) {
@@ -240,13 +251,14 @@ pub fn run_cases(cases : Array[TestCase]) -> (Array[String], Int) {
   (failures, skipped)
 }
 
-///| Dispatch one case, compare the rendered result against expected.
+///|
+/// Dispatch one case, compare the rendered result against expected.
 /// Flag validation is plumbed through `compute` so a future strict-mode
 /// can opt into it via `run_cases_with_flags`, but the default
 /// `run_cases` ignores raised flags to keep the per-op packages green
 /// while the flag-raising audit catches up to the runner's strictness.
 fn run_one(case : TestCase) -> CaseOutcome {
-  let actual = try compute(case) catch {
+  let actual = compute(case) catch {
     msg => return Fail("\{case.id}: \{case.op}: \{msg}")
   }
   match actual {
@@ -262,11 +274,10 @@ fn run_one(case : TestCase) -> CaseOutcome {
   }
 }
 
-///| Strict variant: validates both the rendered string and the condition
+///|
+/// Strict variant: validates both the rendered string and the condition
 /// flags. Used by per-op packages that want to gate on flag accuracy.
-pub fn run_cases_with_flags(
-  cases : Array[TestCase],
-) -> (Array[String], Int) {
+pub fn run_cases_with_flags(cases : Array[TestCase]) -> (Array[String], Int) {
   let failures = Array::new()
   let mut skipped = 0
   for case in cases {
@@ -279,9 +290,10 @@ pub fn run_cases_with_flags(
   (failures, skipped)
 }
 
-///| Strict run_one that fails on either rendered-result or flag mismatch.
+///|
+/// Strict run_one that fails on either rendered-result or flag mismatch.
 fn run_one_strict(case : TestCase) -> CaseOutcome {
-  let actual = try compute(case) catch {
+  let actual = compute(case) catch {
     msg => return Fail("\{case.id}: \{case.op}: \{msg}")
   }
   match actual {
@@ -303,7 +315,8 @@ fn run_one_strict(case : TestCase) -> CaseOutcome {
   }
 }
 
-///| Verify the runtime-raised `Flags` match the expected `conditions`
+///|
+/// Verify the runtime-raised `Flags` match the expected `conditions`
 /// list from the test case. Returns the empty string on a match, or a
 /// human-readable diff like `+Inexact -Subnormal` otherwise.
 ///
@@ -323,6 +336,7 @@ fn compare_flags(actual : Flags, expected : Array[String]) -> String {
     ("Division_impossible", actual.division_impossible),
     ("Division_undefined", actual.division_undefined),
     ("Insufficient_storage", actual.insufficient_storage),
+    ("Invalid_context", actual.invalid_context),
   ]
   let buf = StringBuilder::new()
   let mut sep = ""
@@ -340,7 +354,8 @@ fn compare_flags(actual : Flags, expected : Array[String]) -> String {
   buf.to_string()
 }
 
-///| Case-insensitive lookup in a condition list.
+///|
+/// Case-insensitive lookup in a condition list.
 fn condition_present(conditions : Array[String], name : String) -> Bool {
   for c in conditions {
     if ascii_eq_ci(c, name) {
@@ -350,7 +365,8 @@ fn condition_present(conditions : Array[String], name : String) -> Bool {
   false
 }
 
-///| Compute the rendered result and condition flags for `case`. Returns
+///|
+/// Compute the rendered result and condition flags for `case`. Returns
 /// `None` for ops we do not yet handle; raises a diagnostic string for
 /// parse failures or arity mismatches.
 fn compute(case : TestCase) -> (String, Flags)? raise RunnerError {
@@ -453,7 +469,8 @@ fn compute(case : TestCase) -> (String, Flags)? raise RunnerError {
   }
 }
 
-///| Build a Context from a TestCase's directives.
+///|
+/// Build a Context from a TestCase's directives.
 fn ctx_for(case : TestCase) -> Context {
   Context::new(
     precision=case.precision,
@@ -464,7 +481,8 @@ fn ctx_for(case : TestCase) -> Context {
   )
 }
 
-///| Apply a context-aware ternary op (`(Decimal, Decimal, Decimal, Context)
+///|
+/// Apply a context-aware ternary op (`(Decimal, Decimal, Decimal, Context)
 /// -> Decimal`) to the three operands. Used by `fma`.
 fn ternary_ctx(
   case : TestCase,
@@ -473,20 +491,21 @@ fn ternary_ctx(
   if case.operands.length() != 3 {
     raise RunnerError("expects 3 operands, got \{case.operands.length()}")
   }
-  let a = try Decimal::parse(case.operands[0]) catch {
+  let a = Decimal::parse(case.operands[0]) catch {
     e => raise RunnerError("parse error in operand 0: \{e}")
   }
-  let b = try Decimal::parse(case.operands[1]) catch {
+  let b = Decimal::parse(case.operands[1]) catch {
     e => raise RunnerError("parse error in operand 1: \{e}")
   }
-  let c = try Decimal::parse(case.operands[2]) catch {
+  let c = Decimal::parse(case.operands[2]) catch {
     e => raise RunnerError("parse error in operand 2: \{e}")
   }
   let ctx = ctx_for(case)
   (op(a, b, c, ctx).to_sci_string(), ctx.flags)
 }
 
-///| Apply a context-aware unary op that returns a raw `String` (rather
+///|
+/// Apply a context-aware unary op that returns a raw `String` (rather
 /// than a `Decimal` rendered via `to_sci_string`). Used by `class`, whose
 /// result is a category label like `+Normal`.
 fn unary_ctx_string(
@@ -496,14 +515,15 @@ fn unary_ctx_string(
   if case.operands.length() != 1 {
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
-  let parsed = try Decimal::parse(case.operands[0]) catch {
+  let parsed = Decimal::parse(case.operands[0]) catch {
     e => raise RunnerError("parse error: \{e}")
   }
   let ctx = ctx_for(case)
   (op(parsed, ctx), ctx.flags)
 }
 
-///| Apply a context-aware unary op to the single operand.
+///|
+/// Apply a context-aware unary op to the single operand.
 fn unary_ctx(
   case : TestCase,
   op : (Decimal, Context) -> Decimal,
@@ -511,14 +531,15 @@ fn unary_ctx(
   if case.operands.length() != 1 {
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
-  let parsed = try Decimal::parse(case.operands[0]) catch {
+  let parsed = Decimal::parse(case.operands[0]) catch {
     e => raise RunnerError("parse error: \{e}")
   }
   let ctx = ctx_for(case)
   (op(parsed, ctx).to_sci_string(), ctx.flags)
 }
 
-///| Bit-level unary op (`copy` family). Per GDA these ops never quieten
+///|
+/// Bit-level unary op (`copy` family). Per GDA these ops never quieten
 /// or signal on sNaN — the value passes through unchanged — so the
 /// dispatcher reports empty flags without inspecting the operand.
 fn unary_bitlevel(
@@ -528,13 +549,14 @@ fn unary_bitlevel(
   if case.operands.length() != 1 {
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
-  let parsed = try Decimal::parse(case.operands[0]) catch {
+  let parsed = Decimal::parse(case.operands[0]) catch {
     e => raise RunnerError("parse error: \{e}")
   }
   (op(parsed).to_sci_string(), Flags::new())
 }
 
-///| Bit-level binary op (`copySign`). Same as `unary_bitlevel` shape.
+///|
+/// Bit-level binary op (`copySign`). Same as `unary_bitlevel` shape.
 fn binary_bitlevel(
   case : TestCase,
   op : (Decimal, Decimal) -> Decimal,
@@ -542,29 +564,31 @@ fn binary_bitlevel(
   if case.operands.length() != 2 {
     raise RunnerError("expects 2 operands, got \{case.operands.length()}")
   }
-  let lhs = try Decimal::parse(case.operands[0]) catch {
+  let lhs = Decimal::parse(case.operands[0]) catch {
     e => raise RunnerError("parse error in operand 0: \{e}")
   }
-  let rhs = try Decimal::parse(case.operands[1]) catch {
+  let rhs = Decimal::parse(case.operands[1]) catch {
     e => raise RunnerError("parse error in operand 1: \{e}")
   }
   (op(lhs, rhs).to_sci_string(), Flags::new())
 }
 
-///| Pure rendering: parse the operand and emit its `to_sci_string`. No
+///|
+/// Pure rendering: parse the operand and emit its `to_sci_string`. No
 /// flag-raising — `toSci` is a pure render op (per GDA), sNaN inputs
 /// pass through as `sNaN` without `Invalid_operation`.
 fn unary_render(case : TestCase) -> (String, Flags) raise RunnerError {
   if case.operands.length() != 1 {
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
-  let parsed = try Decimal::parse(case.operands[0]) catch {
+  let parsed = Decimal::parse(case.operands[0]) catch {
     e => raise RunnerError("parse error: \{e}")
   }
   (parsed.to_sci_string(), Flags::new())
 }
 
-///| Apply a unary `Decimal -> Decimal` operator. The op signatures don't
+///|
+/// Apply a unary `Decimal -> Decimal` operator. The op signatures don't
 /// take a Context, but we still need to raise `Invalid_operation` for
 /// sNaN inputs (plus/minus/abs all quieten sNaN silently); the runner
 /// inspects the operand and reports the flag externally so per-op packages
@@ -576,7 +600,7 @@ fn unary(
   if case.operands.length() != 1 {
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
-  let parsed = try Decimal::parse(case.operands[0]) catch {
+  let parsed = Decimal::parse(case.operands[0]) catch {
     e => raise RunnerError("parse error: \{e}")
   }
   let flags = Flags::new()
@@ -586,7 +610,8 @@ fn unary(
   (op(parsed).to_sci_string(), flags)
 }
 
-///| Apply a context-aware binary op.
+///|
+/// Apply a context-aware binary op.
 fn binary_ctx(
   case : TestCase,
   op : (Decimal, Decimal, Context) -> Decimal,
@@ -594,17 +619,18 @@ fn binary_ctx(
   if case.operands.length() != 2 {
     raise RunnerError("expects 2 operands, got \{case.operands.length()}")
   }
-  let lhs = try Decimal::parse(case.operands[0]) catch {
+  let lhs = Decimal::parse(case.operands[0]) catch {
     e => raise RunnerError("parse error in operand 0: \{e}")
   }
-  let rhs = try Decimal::parse(case.operands[1]) catch {
+  let rhs = Decimal::parse(case.operands[1]) catch {
     e => raise RunnerError("parse error in operand 1: \{e}")
   }
   let ctx = ctx_for(case)
   (op(lhs, rhs, ctx).to_sci_string(), ctx.flags)
 }
 
-///| Apply a context-less binary op (e.g. `compare_total`). Reported flags
+///|
+/// Apply a context-less binary op (e.g. `compare_total`). Reported flags
 /// are empty.
 fn binary(
   case : TestCase,
@@ -613,10 +639,10 @@ fn binary(
   if case.operands.length() != 2 {
     raise RunnerError("expects 2 operands, got \{case.operands.length()}")
   }
-  let lhs = try Decimal::parse(case.operands[0]) catch {
+  let lhs = Decimal::parse(case.operands[0]) catch {
     e => raise RunnerError("parse error in operand 0: \{e}")
   }
-  let rhs = try Decimal::parse(case.operands[1]) catch {
+  let rhs = Decimal::parse(case.operands[1]) catch {
     e => raise RunnerError("parse error in operand 1: \{e}")
   }
   (op(lhs, rhs).to_sci_string(), Flags::new())
@@ -634,7 +660,8 @@ fn format_operands(operands : Array[String]) -> String {
   buf.to_string()
 }
 
-///| Lowercase the ASCII letters of a string. Directives in `.decTest` files
+///|
+/// Lowercase the ASCII letters of a string. Directives in `.decTest` files
 /// are conventionally lowercase but the spec allows any case, so we
 /// normalise before matching.
 fn ascii_lowercase(s : String) -> String {
@@ -653,7 +680,8 @@ fn ascii_lowercase(s : String) -> String {
   buf.to_string()
 }
 
-///| ASCII case-insensitive equality.
+///|
+/// ASCII case-insensitive equality.
 fn ascii_eq_ci(a : String, b : String) -> Bool {
   if a.length() != b.length() {
     return false
@@ -681,7 +709,8 @@ fn ascii_eq_ci(a : String, b : String) -> Bool {
   true
 }
 
-///| Decode a single UTF-16 code unit at `i` into a `Char`. Mirrors the helper
+///|
+/// Decode a single UTF-16 code unit at `i` into a `Char`. Mirrors the helper
 /// in the `decimal` package; both packages keep their own private copy since
 /// the inputs they process — decimal grammar and dectest format — are
 /// ASCII-only and don't justify exporting the helper.

@@ -1,4 +1,5 @@
-///| Errors raised by `Decimal::parse`.
+///|
+/// Errors raised by `Decimal::parse`.
 pub(all) suberror ParseError {
   /// Input was empty.
   Empty
@@ -23,7 +24,8 @@ pub impl Show for ParseError with fn to_string(self) {
   }
 }
 
-///| Parse a decimal literal, following the General Decimal Arithmetic grammar:
+///|
+/// Parse a decimal literal, following the General Decimal Arithmetic grammar:
 ///
 /// ```text
 /// numeric-string  ::= [sign] numeric-value
@@ -65,12 +67,13 @@ pub fn Decimal::parse(input : String) -> Decimal raise ParseError {
   match char_at(input, i) {
     'i' | 'I' => parse_infinity(input, i, negative)
     'n' | 'N' => parse_nan(input, i, negative, signaling=false)
-    's' | 'S' => parse_snan(input, i, negative)
+    's' | 'S' => parse_nan(input, i, negative, signaling=true)
     _ => parse_finite(input, i, negative)
   }
 }
 
-///| Parse "Inf" or "Infinity", case-insensitive, expecting the cursor to point
+///|
+/// Parse "Inf" or "Infinity", case-insensitive, expecting the cursor to point
 /// at the leading 'i'.
 fn parse_infinity(
   input : String,
@@ -93,18 +96,20 @@ fn parse_infinity(
   { class: Infinity, negative, coefficient: 0N, exponent: 0 }
 }
 
-///| Parse "NaN" with optional decimal payload.
+///|
+/// Parse "NaN" with optional decimal payload.
 fn parse_nan(
   input : String,
   start : Int,
   negative : Bool,
   signaling~ : Bool,
 ) -> Decimal raise ParseError {
+  let kw = if signaling { "snan" } else { "nan" }
   let n = input.length()
-  if !match_ci(input, start, "nan") {
+  if !match_ci(input, start, kw) {
     raise BadKeyword(position=start)
   }
-  let mut i = start + 3
+  let mut i = start + kw.length()
   let payload_buf = StringBuilder::new()
   let payload_len = consume_digits(input, i, payload_buf)
   i = i + payload_len
@@ -116,36 +121,20 @@ fn parse_nan(
   } else {
     BigInt::from_string(payload_buf.to_string())
   }
-  { class: if signaling { SNaN } else { QNaN }, negative, coefficient: payload, exponent: 0 }
+  {
+    class: if signaling {
+      SNaN
+    } else {
+      QNaN
+    },
+    negative,
+    coefficient: payload,
+    exponent: 0,
+  }
 }
 
-///| Parse "sNaN" with optional decimal payload.
-fn parse_snan(
-  input : String,
-  start : Int,
-  negative : Bool,
-) -> Decimal raise ParseError {
-  // sNaN = leading 's' + "NaN"
-  if !match_ci(input, start, "snan") {
-    raise BadKeyword(position=start)
-  }
-  let n = input.length()
-  let mut i = start + 4
-  let payload_buf = StringBuilder::new()
-  let payload_len = consume_digits(input, i, payload_buf)
-  i = i + payload_len
-  if i != n {
-    raise TrailingGarbage(position=i)
-  }
-  let payload = if payload_len == 0 {
-    0N
-  } else {
-    BigInt::from_string(payload_buf.to_string())
-  }
-  { class: SNaN, negative, coefficient: payload, exponent: 0 }
-}
-
-///| Parse the finite-number branch of the grammar starting at `start`.
+///|
+/// Parse the finite-number branch of the grammar starting at `start`.
 fn parse_finite(
   input : String,
   start : Int,
@@ -203,7 +192,8 @@ fn parse_finite(
   { class: Finite, negative, coefficient, exponent: exp - frac_digits }
 }
 
-///| Consume a run of ASCII digits starting at `start`, appending each to
+///|
+/// Consume a run of ASCII digits starting at `start`, appending each to
 /// `buf`. Returns the number of digits consumed.
 fn consume_digits(input : String, start : Int, buf : StringBuilder) -> Int {
   let n = input.length()
@@ -220,7 +210,8 @@ fn is_digit(c : Char) -> Bool {
   c >= '0' && c <= '9'
 }
 
-///| ASCII case-insensitive prefix match: does `input[start..]` start with
+///|
+/// ASCII case-insensitive prefix match: does `input[start..]` start with
 /// `word`? `word` is assumed to be lowercase ASCII.
 fn match_ci(input : String, start : Int, word : String) -> Bool {
   let n = input.length()
@@ -228,20 +219,17 @@ fn match_ci(input : String, start : Int, word : String) -> Bool {
   if start + w > n {
     return false
   }
-  let mut k = 0
-  while k < w {
-    let a = char_at(input, start + k)
-    let b = char_at(word, k)
-    let a_lower = if a >= 'A' && a <= 'Z' {
-      (a.to_int() + 32).unsafe_to_char()
-    } else {
-      a
+  // `word` is a lowercase literal, so lower-case the input char in Int space
+  // and compare codes directly.
+  for k = 0 {
+    if k >= w {
+      break true
     }
-    if a_lower != b {
-      return false
+    let a = char_at(input, start + k).to_int()
+    let a_lower = if a >= 0x41 && a <= 0x5A { a + 32 } else { a }
+    if a_lower != char_at(word, k).to_int() {
+      break false
     }
-    k = k + 1
+    continue k + 1
   }
-  true
 }
-

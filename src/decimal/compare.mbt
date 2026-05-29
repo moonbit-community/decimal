@@ -6,7 +6,8 @@
 // family.
 // ---------------------------------------------------------------------------
 
-///| GDA `compare`: numeric comparison returning `-1`, `0`, or `1` as a
+///|
+/// GDA `compare`: numeric comparison returning `-1`, `0`, or `1` as a
 /// Decimal. Distinct from `compare-total` in that NaN operands propagate
 /// (compare-total wraps NaN into the total order) and values that are
 /// numerically equal but differ in scale (e.g. `1` vs `1.0`) return `0`.
@@ -28,21 +29,32 @@ pub fn Decimal::compare(
   Decimal::of_int(compare_numeric_int(self, other))
 }
 
-///| Signed-numeric comparison for non-NaN operands. Returns the same
+///|
+/// Signed-numeric comparison for non-NaN operands. Returns the same
 /// `-1` / `0` / `+1` shape as `compare_total_int`, but follows the
 /// "value-only, scale-agnostic" rule of `compare`.
+/// `-1` for a negative sign, `+1` for positive — the comparison value of a
+/// sign bit.
+fn sign_to_cmp(negative : Bool) -> Int {
+  if negative {
+    -1
+  } else {
+    1
+  }
+}
+
+///|
+/// Signed-numeric comparison for non-NaN operands.
 fn compare_numeric_int(a : Decimal, b : Decimal) -> Int {
   match (a.class, b.class) {
     (Infinity, Infinity) =>
       if a.negative == b.negative {
         0
-      } else if a.negative {
-        -1
       } else {
-        1
+        sign_to_cmp(a.negative)
       }
-    (Infinity, Finite) => if a.negative { -1 } else { 1 }
-    (Finite, Infinity) => if b.negative { 1 } else { -1 }
+    (Infinity, Finite) => sign_to_cmp(a.negative)
+    (Finite, Infinity) => -sign_to_cmp(b.negative)
     (Finite, Finite) => {
       if a.coefficient.is_zero() && b.coefficient.is_zero() {
         return 0
@@ -51,7 +63,10 @@ fn compare_numeric_int(a : Decimal, b : Decimal) -> Int {
         return if a.negative { -1 } else { 1 }
       }
       let mag = compare_magnitudes(
-        a.coefficient, a.exponent, b.coefficient, b.exponent,
+        a.coefficient,
+        a.exponent,
+        b.coefficient,
+        b.exponent,
       )
       if a.negative {
         -mag
@@ -63,7 +78,8 @@ fn compare_numeric_int(a : Decimal, b : Decimal) -> Int {
   }
 }
 
-///| GDA `compare-signal`: numerically compare like `compare`, but signal
+///|
+/// GDA `compare-signal`: numerically compare like `compare`, but signal
 /// `Invalid_operation` on *any* NaN operand — quiet NaNs are treated as
 /// signaling.
 pub fn Decimal::compare_signal(
@@ -79,7 +95,8 @@ pub fn Decimal::compare_signal(
   Decimal::compare(self, other, ctx)
 }
 
-///| GDA `max`: numeric maximum.
+///|
+/// GDA `max`: numeric maximum.
 ///
 /// Picks the larger operand; on a numerical tie GDA's sign / exponent
 /// rule applies (positive over negative; if same sign, larger exponent
@@ -89,24 +106,18 @@ pub fn Decimal::compare_signal(
 /// and `max(qNaN, x) = x` (with x re-finalised). A signaling NaN still
 /// signals and quietens. Both qNaN: canonical NaN returned (the left
 /// operand here).
-pub fn Decimal::max(
-  self : Decimal,
-  other : Decimal,
-  ctx : Context,
-) -> Decimal {
+pub fn Decimal::max(self : Decimal, other : Decimal, ctx : Context) -> Decimal {
   max_min_choose(self, other, ctx, true, false)
 }
 
-///| GDA `min`: numeric minimum. Mirrors `max`'s sign / exponent tiebreak.
-pub fn Decimal::min(
-  self : Decimal,
-  other : Decimal,
-  ctx : Context,
-) -> Decimal {
+///|
+/// GDA `min`: numeric minimum. Mirrors `max`'s sign / exponent tiebreak.
+pub fn Decimal::min(self : Decimal, other : Decimal, ctx : Context) -> Decimal {
   max_min_choose(self, other, ctx, false, false)
 }
 
-///| GDA `max-magnitude`: compare by absolute value, returning the operand
+///|
+/// GDA `max-magnitude`: compare by absolute value, returning the operand
 /// whose magnitude is larger. Sign of the returned operand is preserved.
 /// On a magnitude tie the same sign / exponent rule as `max` applies.
 pub fn Decimal::max_magnitude(
@@ -117,7 +128,8 @@ pub fn Decimal::max_magnitude(
   max_min_choose(self, other, ctx, true, true)
 }
 
-///| GDA `min-magnitude`: compare by absolute value, returning the operand
+///|
+/// GDA `min-magnitude`: compare by absolute value, returning the operand
 /// whose magnitude is smaller.
 pub fn Decimal::min_magnitude(
   self : Decimal,
@@ -127,9 +139,10 @@ pub fn Decimal::min_magnitude(
   max_min_choose(self, other, ctx, false, true)
 }
 
-///| Shared backbone for max / min / max-magnitude / min-magnitude.
+///|
+/// Shared backbone for max / min / max-magnitude / min-magnitude.
 ///
-/// NaN routing follows decNumber's `decCompareOp(COMPMAX/COMPMIN)`:
+/// NaN routing for max / min:
 /// * Any sNaN → signal `Invalid_operation`, return it quietened.
 /// * Exactly one qNaN → return the other operand (finalised under ctx).
 /// * Both qNaN → return `self` as the canonical NaN (no signal).
@@ -167,42 +180,33 @@ fn max_min_choose(
   } else {
     compare_numeric_int(a, b)
   }
-  let mut pick_a = if cmp > 0 {
-    1
-  } else if cmp < 0 {
-    -1
-  } else {
-    // Numerical tie — GDA / decNumber §decCompareOp tiebreak.
-    if a.negative != b.negative {
-      if a.negative {
-        -1
-      } else {
-        1
-      }
-    } else if a.negative {
-      // Both negative: smaller exponent wins for max, larger for min.
-      if a.exponent < b.exponent {
-        1
-      } else {
-        -1
-      }
+  // `pick_max` is +1 to choose `a`, -1 to choose `b`, under the `max`
+  // orientation. On a numerical tie GDA breaks by sign, then by exponent
+  // (whichever lies further from zero in the chosen direction).
+  let pick_max = if cmp != 0 {
+    cmp
+  } else if a.negative != b.negative {
+    sign_to_cmp(a.negative)
+  } else if a.negative {
+    // Both negative: the smaller exponent is the larger magnitude.
+    if a.exponent < b.exponent {
+      1
     } else {
-      // Both positive: larger exponent wins for max, smaller for min.
-      if a.exponent > b.exponent {
-        1
-      } else {
-        -1
-      }
+      -1
     }
+    // Both positive: the larger exponent is the larger value.
+  } else if a.exponent > b.exponent {
+    1
+  } else {
+    -1
   }
-  if !is_max {
-    pick_a = -pick_a
-  }
-  let choice = if pick_a > 0 { a } else { b }
+  let pick = if is_max { pick_max } else { -pick_max }
+  let choice = if pick > 0 { a } else { b }
   choice.finalize(ctx)
 }
 
-///| GDA `compare-total`: total ordering across every Decimal value,
+///|
+/// GDA `compare-total`: total ordering across every Decimal value,
 /// including NaNs. Returns `-1`, `0`, or `1` as a `Decimal`.
 ///
 /// Ordering, from smallest to largest:
@@ -220,14 +224,16 @@ pub fn Decimal::compare_total(self : Decimal, other : Decimal) -> Decimal {
   Decimal::of_int(compare_total_int(self, other))
 }
 
-///| GDA `compare-total-magnitude`: `compare-total` applied to `|self|` and
+///|
+/// GDA `compare-total-magnitude`: `compare-total` applied to `|self|` and
 /// `|other|`. Sign-stripping happens via `copy_abs`, which clears the sign
 /// bit even on NaN.
 pub fn Decimal::compare_total_mag(self : Decimal, other : Decimal) -> Decimal {
   Decimal::compare_total(Decimal::copy_abs(self), Decimal::copy_abs(other))
 }
 
-///| GDA `same-quantum`: returns `1` if `self` and `other` have the same
+///|
+/// GDA `same-quantum`: returns `1` if `self` and `other` have the same
 /// exponent, `0` otherwise. Finites compare exponents directly; two
 /// infinities count as the same quantum; any two NaNs (sign-agnostic, both
 /// QNaN and SNaN) count as the same; mismatched classes return `0`.
@@ -245,7 +251,8 @@ pub fn Decimal::same_quantum(self : Decimal, other : Decimal) -> Decimal {
   }
 }
 
-///| Return -1 / 0 / 1 for the abstract total order, before wrapping in a
+///|
+/// Return -1 / 0 / 1 for the abstract total order, before wrapping in a
 /// `Decimal` at the public boundary.
 fn compare_total_int(a : Decimal, b : Decimal) -> Int {
   // 1. Different signs: negative < positive.
@@ -276,7 +283,8 @@ fn compare_total_int(a : Decimal, b : Decimal) -> Int {
   }
 }
 
-///| Class-rank for the positive-side total order. Finite is lowest, then
+///|
+/// Class-rank for the positive-side total order. Finite is lowest, then
 /// Infinity, then SNaN, then QNaN. The negative side mirrors this in
 /// `compare_total_int`.
 fn class_rank(c : Class) -> Int {
@@ -288,12 +296,16 @@ fn class_rank(c : Class) -> Int {
   }
 }
 
-///| Compare two finite Decimals (same sign) in the total order: numerical
+///|
+/// Compare two finite Decimals (same sign) in the total order: numerical
 /// magnitude first; on a tie, smaller exponent sorts first regardless of
 /// sign (per GDA, the rule applies to both positive and negative chains).
 fn compare_finite_total(a : Decimal, b : Decimal) -> Int {
   let mag_cmp = compare_magnitudes(
-    a.coefficient, a.exponent, b.coefficient, b.exponent,
+    a.coefficient,
+    a.exponent,
+    b.coefficient,
+    b.exponent,
   )
   let value_cmp = if a.negative { -mag_cmp } else { mag_cmp }
   if value_cmp != 0 {
@@ -317,7 +329,8 @@ fn compare_finite_total(a : Decimal, b : Decimal) -> Int {
   }
 }
 
-///| Compare the magnitudes of two finite coefficients carrying separate
+///|
+/// Compare the magnitudes of two finite coefficients carrying separate
 /// exponents. Adjusted-exponent fast path avoids materialising
 /// scaled-up-by-billion BigInts when the magnitudes differ by orders.
 fn compare_magnitudes(
@@ -348,12 +361,8 @@ fn compare_magnitudes(
   if a_exp == b_exp {
     a_coeff.compare(b_coeff)
   } else if a_exp > b_exp {
-    (a_coeff * BigInt::pow(10N, BigInt::from_int(a_exp - b_exp))).compare(
-      b_coeff,
-    )
+    (a_coeff * pow10(a_exp - b_exp)).compare(b_coeff)
   } else {
-    a_coeff.compare(
-      b_coeff * BigInt::pow(10N, BigInt::from_int(b_exp - a_exp)),
-    )
+    a_coeff.compare(b_coeff * pow10(b_exp - a_exp))
   }
 }

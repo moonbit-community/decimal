@@ -1,0 +1,149 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "dzmingli/decimal/decimal"
+
+import {
+  "moonbitlang/core/bigint",
+}
+
+// Values
+
+// Errors
+pub(all) suberror ParseError {
+  Empty
+  ExpectedDigit(position~ : Int)
+  InvalidExponent(position~ : Int)
+  TrailingGarbage(position~ : Int)
+  BadKeyword(position~ : Int)
+} derive(Eq)
+pub impl Show for ParseError
+
+// Types and methods
+pub(all) enum Class {
+  Finite
+  Infinity
+  QNaN
+  SNaN
+} derive(Eq)
+pub impl Show for Class
+
+pub(all) struct Context {
+  precision : Int
+  rounding : Rounding
+  e_min : Int
+  e_max : Int
+  clamp : Bool
+  flags : Flags
+}
+pub fn Context::decimal128() -> Self
+pub fn Context::decimal32() -> Self
+pub fn Context::decimal64() -> Self
+pub fn Context::exact() -> Self
+pub fn Context::new(precision? : Int, rounding? : Rounding, e_min? : Int, e_max? : Int, clamp? : Bool) -> Self
+
+pub(all) struct Decimal {
+  class : Class
+  negative : Bool
+  coefficient : @bigint.BigInt
+  exponent : Int
+} derive(Eq)
+pub fn Decimal::abs(Self) -> Self
+pub fn Decimal::add(Self, Self, Context) -> Self
+pub fn Decimal::canonical(Self) -> Self
+pub fn Decimal::compare(Self, Self, Context) -> Self
+pub fn Decimal::compare_signal(Self, Self, Context) -> Self
+pub fn Decimal::compare_total(Self, Self) -> Self
+pub fn Decimal::compare_total_mag(Self, Self) -> Self
+pub fn Decimal::copy(Self) -> Self
+pub fn Decimal::copy_abs(Self) -> Self
+pub fn Decimal::copy_negate(Self) -> Self
+pub fn Decimal::copy_sign(Self, Self) -> Self
+pub fn Decimal::divide(Self, Self, Context) -> Self
+pub fn Decimal::divide_int(Self, Self, Context) -> Self
+pub fn Decimal::exp(Self, Context) -> Self
+pub fn Decimal::finalize(Self, Context) -> Self
+pub fn Decimal::finite(@bigint.BigInt, Int, negative? : Bool) -> Self
+pub fn Decimal::fma(Self, Self, Self, Context) -> Self
+pub fn Decimal::infinity() -> Self
+pub fn Decimal::is_canonical(Self) -> Bool
+pub fn Decimal::is_finite(Self) -> Bool
+pub fn Decimal::is_infinite(Self) -> Bool
+pub fn Decimal::is_nan(Self) -> Bool
+pub fn Decimal::is_normal(Self, Context) -> Bool
+pub fn Decimal::is_signaling(Self) -> Bool
+pub fn Decimal::is_subnormal(Self, Context) -> Bool
+pub fn Decimal::is_zero(Self) -> Bool
+pub fn Decimal::ln(Self, Context) -> Self
+pub fn Decimal::log10(Self, Context) -> Self
+pub fn Decimal::logical_and(Self, Self, Context) -> Self
+pub fn Decimal::logical_invert(Self, Context) -> Self
+pub fn Decimal::logical_or(Self, Self, Context) -> Self
+pub fn Decimal::logical_xor(Self, Self, Context) -> Self
+pub fn Decimal::max(Self, Self, Context) -> Self
+pub fn Decimal::max_magnitude(Self, Self, Context) -> Self
+pub fn Decimal::min(Self, Self, Context) -> Self
+pub fn Decimal::min_magnitude(Self, Self, Context) -> Self
+pub fn Decimal::minus(Self) -> Self
+pub fn Decimal::multiply(Self, Self, Context) -> Self
+pub fn Decimal::nan(payload? : @bigint.BigInt, negative? : Bool) -> Self
+pub fn Decimal::neg_infinity() -> Self
+pub fn Decimal::next_minus(Self, Context) -> Self
+pub fn Decimal::next_plus(Self, Context) -> Self
+pub fn Decimal::next_toward(Self, Self, Context) -> Self
+pub fn Decimal::number_class(Self, Context) -> String
+pub fn Decimal::of_bigint(@bigint.BigInt) -> Self
+pub fn Decimal::of_int(Int) -> Self
+pub fn Decimal::one() -> Self
+pub fn Decimal::parse(String) -> Self raise ParseError
+pub fn Decimal::plus(Self) -> Self
+pub fn Decimal::power(Self, Self, Context) -> Self
+pub fn Decimal::quantize(Self, Self, Context) -> Self
+pub fn Decimal::reduce(Self, Context) -> Self
+pub fn Decimal::remainder(Self, Self, Context) -> Self
+pub fn Decimal::rescale(Self, Self, Context) -> Self
+pub fn Decimal::rotate(Self, Self, Context) -> Self
+pub fn Decimal::same_quantum(Self, Self) -> Self
+pub fn Decimal::scaleb(Self, Self, Context) -> Self
+pub fn Decimal::shift(Self, Self, Context) -> Self
+pub fn Decimal::snan(payload? : @bigint.BigInt, negative? : Bool) -> Self
+pub fn Decimal::sqrt(Self, Context) -> Self
+pub fn Decimal::subtract(Self, Self, Context) -> Self
+pub fn Decimal::to_integral_exact(Self, Context) -> Self
+pub fn Decimal::to_integral_value(Self, Context) -> Self
+pub fn Decimal::to_sci_string(Self) -> String
+pub fn Decimal::trim(Self, Context) -> Self
+pub fn Decimal::zero() -> Self
+pub impl Show for Decimal
+
+pub(all) struct Flags {
+  mut inexact : Bool
+  mut rounded : Bool
+  mut invalid_operation : Bool
+  mut division_by_zero : Bool
+  mut overflow : Bool
+  mut underflow : Bool
+  mut subnormal : Bool
+  mut clamped : Bool
+  mut conversion_syntax : Bool
+  mut division_impossible : Bool
+  mut division_undefined : Bool
+  mut insufficient_storage : Bool
+  mut invalid_context : Bool
+}
+pub fn Flags::new() -> Self
+
+pub(all) enum Rounding {
+  HalfUp
+  HalfEven
+  HalfDown
+  Up
+  Down
+  Ceiling
+  Floor
+  ZeroFiveUp
+} derive(Eq)
+pub impl Show for Rounding
+
+// Type aliases
+
+// Traits
+

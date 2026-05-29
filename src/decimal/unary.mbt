@@ -1,4 +1,5 @@
-///| GDA `minus`: equivalent to `subtract('0', N)`. Concretely:
+///|
+/// GDA `minus`: equivalent to `subtract('0', N)`. Concretely:
 ///
 /// * Finite non-zero: flip the sign bit, coefficient and exponent unchanged.
 /// * Finite zero: result is `+0` with the same exponent (the GDA addition rule
@@ -22,7 +23,8 @@ pub fn Decimal::minus(self : Decimal) -> Decimal {
   }
 }
 
-///| GDA `plus`: equivalent to `add('0', N)`. Differs from `minus` only on
+///|
+/// GDA `plus`: equivalent to `add('0', N)`. Differs from `minus` only on
 /// finite non-zero and Infinity (where it preserves the sign instead of
 /// flipping). Zero is canonicalized to `+0`, QNaN propagates unchanged, and
 /// sNaN is silently quietened.
@@ -40,7 +42,8 @@ pub fn Decimal::plus(self : Decimal) -> Decimal {
   }
 }
 
-///| GDA `abs`: `minus` if the operand's sign bit is set, `plus` otherwise.
+///|
+/// GDA `abs`: `minus` if the operand's sign bit is set, `plus` otherwise.
 /// Note that for NaN inputs the sign bit is *not* cleared — NaN propagation
 /// wins over the "absolute value" intuition, so e.g. `abs(-NaN22) = -NaN22`.
 pub fn Decimal::abs(self : Decimal) -> Decimal {

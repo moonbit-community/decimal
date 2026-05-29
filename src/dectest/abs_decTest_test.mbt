@@ -1,4 +1,5 @@
-///| `abs` cases from `abs.decTest`, filtered to those that need
+///|
+/// `abs` cases from `abs.decTest`, filtered to those that need
 /// neither rounding nor a GDA `#` null operand. `Invalid_operation`
 /// raised for sNaN inputs is dropped until a `Context` is wired up.
 let abs_subset : String =
@@ -67,7 +68,9 @@ test "abs.decTest absx subset round-trips through parse + abs + toSci" {
   let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     let buf = StringBuilder::new()
-    buf.write_string("\{failures.length()} of \{cases.length()} cases failed:\n")
+    buf.write_string(
+      "\{failures.length()} of \{cases.length()} cases failed:\n",
+    )
     for f in failures {
       buf.write_string("  ")
       buf.write_string(f)

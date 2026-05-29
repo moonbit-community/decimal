@@ -1,0 +1,45 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "dzmingli/decimal/dectest"
+
+import {
+  "dzmingli/decimal/decimal",
+}
+
+// Values
+pub fn parse_dectest(String) -> Array[TestCase]
+
+pub fn run_cases(Array[TestCase]) -> (Array[String], Int)
+
+pub fn run_cases_with_flags(Array[TestCase]) -> (Array[String], Int)
+
+// Errors
+
+// Types and methods
+pub(all) struct TestCase {
+  id : String
+  op : String
+  operands : Array[String]
+  expected : String
+  conditions : Array[String]
+  precision : Int
+  rounding : @decimal.Rounding
+  max_exponent : Int
+  min_exponent : Int
+  clamp : Bool
+}
+
+// Type aliases
+pub using @decimal {type Class}
+
+pub using @decimal {type Context}
+
+pub using @decimal {type Decimal}
+
+pub using @decimal {type Flags}
+
+pub using @decimal {type ParseError}
+
+pub using @decimal {type Rounding}
+
+// Traits
+

@@ -8,34 +8,38 @@
 // needing a separate "integer bit-string" type.
 // ---------------------------------------------------------------------------
 
-///| GDA `logical-and`: digit-wise AND of two bit-string Decimals.
+///|
+/// GDA `logical-and`: digit-wise AND of two bit-string Decimals.
 pub fn Decimal::logical_and(
   self : Decimal,
   other : Decimal,
   ctx : Context,
 ) -> Decimal {
-  logical_binary(self, other, ctx, fn(a, b) { if a == 1 && b == 1 { 1 } else { 0 } })
+  logical_binary(self, other, ctx, (a, b) => a & b)
 }
 
-///| GDA `logical-or`: digit-wise OR.
+///|
+/// GDA `logical-or`: digit-wise OR.
 pub fn Decimal::logical_or(
   self : Decimal,
   other : Decimal,
   ctx : Context,
 ) -> Decimal {
-  logical_binary(self, other, ctx, fn(a, b) { if a == 1 || b == 1 { 1 } else { 0 } })
+  logical_binary(self, other, ctx, (a, b) => a | b)
 }
 
-///| GDA `logical-xor`: digit-wise XOR.
+///|
+/// GDA `logical-xor`: digit-wise XOR.
 pub fn Decimal::logical_xor(
   self : Decimal,
   other : Decimal,
   ctx : Context,
 ) -> Decimal {
-  logical_binary(self, other, ctx, fn(a, b) { if a != b { 1 } else { 0 } })
+  logical_binary(self, other, ctx, (a, b) => a ^ b)
 }
 
-///| GDA `logical-invert`: digit-wise NOT, width set by `ctx.precision`
+///|
+/// GDA `logical-invert`: digit-wise NOT, width set by `ctx.precision`
 /// (or the operand's natural width when precision is 0). Unlike the binary
 /// ops, invert *needs* the operand to be left-padded to the full precision
 /// width — otherwise `invert(10)` at precision 9 would render as `01`
@@ -51,12 +55,7 @@ pub fn Decimal::logical_invert(self : Decimal, ctx : Context) -> Decimal {
       // Pad on the left to precision width so the inverted result has the
       // expected leading-1s for short inputs (per GDA's invert semantics).
       let padded = if ctx.precision > 0 && s.length() < ctx.precision {
-        let buf = StringBuilder::new()
-        for _ in 0..<(ctx.precision - s.length()) {
-          buf.write_char('0')
-        }
-        buf.write_string(s)
-        buf.to_string()
+        "0".repeat(ctx.precision - s.length()) + s
       } else {
         s
       }
@@ -74,7 +73,8 @@ pub fn Decimal::logical_invert(self : Decimal, ctx : Context) -> Decimal {
   }
 }
 
-///| Shared body for AND / OR / XOR: validate, align widths, apply `op`
+///|
+/// Shared body for AND / OR / XOR: validate, align widths, apply `op`
 /// per-digit, build the result.
 fn logical_binary(
   a : Decimal,
@@ -108,13 +108,15 @@ fn logical_binary(
   }
 }
 
-///| The operand must be a finite, non-negative, exponent-0 Decimal. Any
+///|
+/// The operand must be a finite, non-negative, exponent-0 Decimal. Any
 /// other class / sign / exponent yields `Invalid_operation` per GDA.
 fn valid_logical_operand(d : Decimal) -> Bool {
   d.class is Finite && !d.negative && d.exponent == 0
 }
 
-///| Stringify the operand's coefficient and truncate to the rightmost
+///|
+/// Stringify the operand's coefficient and truncate to the rightmost
 /// `ctx.precision` digits (or leave as-is when precision is 0). Returns
 /// `None` if any digit is outside `{0, 1}` — the caller raises
 /// `Invalid_operation` in that case.
@@ -132,7 +134,8 @@ fn logical_digits(d : Decimal, ctx : Context) -> String? {
   Some(s)
 }
 
-///| GDA `rotate`: cyclically rotate the digits of `self` (treated as a
+///|
+/// GDA `rotate`: cyclically rotate the digits of `self` (treated as a
 /// precision-width unsigned integer) by `other` positions — left for
 /// positive, right for negative. The first operand may carry any decimal
 /// digit (unlike the logical ops); only the second has the integer-in-
@@ -145,7 +148,8 @@ pub fn Decimal::rotate(
   rotate_or_shift(self, other, ctx, true)
 }
 
-///| GDA `shift`: shift the digits of `self` (precision-width) by `other`
+///|
+/// GDA `shift`: shift the digits of `self` (precision-width) by `other`
 /// positions; positions shifted past either end are discarded, vacated
 /// positions are filled with zeros.
 pub fn Decimal::shift(
@@ -156,7 +160,8 @@ pub fn Decimal::shift(
   rotate_or_shift(self, other, ctx, false)
 }
 
-///| Shared body. NaN/Inf routing comes first (Infinity in the first
+///|
+/// Shared body. NaN/Inf routing comes first (Infinity in the first
 /// operand passes through; an Infinity rhs is `Invalid_operation`); for
 /// finite/finite, the body lays the first operand's coefficient out as a
 /// precision-width digit string and dispatches to the cyclic or non-cyclic
@@ -190,28 +195,24 @@ fn rotate_or_shift(
     s = s[s.length() - width:].to_owned()
   }
   if s.length() < width {
-    let pad = StringBuilder::new()
-    for _ in 0..<(width - s.length()) {
-      pad.write_char('0')
-    }
-    pad.write_string(s)
-    s = pad.to_string()
+    s = "0".repeat(width - s.length()) + s
   }
   let moved = if is_rotate {
     rotate_digits(s, shift, width)
   } else {
     shift_digits(s, shift, width)
   }
-  let mut start = 0
-  while start < moved.length() - 1 && moved[start].to_int() == 0x30 {
-    start = start + 1
+  // `from_string` normalizes leading zeros, so feed the moved digits straight in.
+  {
+    class: Finite,
+    negative: a.negative,
+    coefficient: BigInt::from_string(moved),
+    exponent: a.exponent,
   }
-  let trimmed = if start == 0 { moved } else { moved[start:].to_owned() }
-  let coef = BigInt::from_string(trimmed)
-  { class: Finite, negative: a.negative, coefficient: coef, exponent: a.exponent }
 }
 
-///| `b` must be a finite non-fractional integer (exponent 0) whose
+///|
+/// `b` must be a finite non-fractional integer (exponent 0) whose
 /// magnitude does not exceed `ctx.precision`. Returns the signed shift
 /// amount in `Some`, or `None` to signal `Invalid_operation`.
 fn shift_amount(b : Decimal, ctx : Context) -> Int? {
@@ -234,7 +235,8 @@ fn shift_amount(b : Decimal, ctx : Context) -> Int? {
   }
 }
 
-///| Cyclically rotate `s` by `shift` positions — positive shift moves the
+///|
+/// Cyclically rotate `s` by `shift` positions — positive shift moves the
 /// leftmost digits past the right edge; negative shift goes the other way.
 fn rotate_digits(s : String, shift : Int, width : Int) -> String {
   // Normalise shift into `[0, width)`.
@@ -252,49 +254,37 @@ fn rotate_digits(s : String, shift : Int, width : Int) -> String {
   buf.to_string()
 }
 
-///| Non-cyclic shift. Positive shift moves digits left (off the left
+///|
+/// Non-cyclic shift. Positive shift moves digits left (off the left
 /// edge); negative shift moves them right (off the right edge). Vacated
 /// positions are filled with `'0'`.
 fn shift_digits(s : String, shift : Int, width : Int) -> String {
   if shift >= width || shift <= -width {
-    let buf = StringBuilder::new()
-    for _ in 0..<width {
-      buf.write_char('0')
-    }
-    return buf.to_string()
+    return "0".repeat(width)
   }
   if shift == 0 {
     return s
   }
   if shift > 0 {
     // Left shift: take s[shift:] then pad shift zeros on the right.
-    let buf = StringBuilder::new()
-    buf.write_string(s[shift:].to_owned())
-    for _ in 0..<shift {
-      buf.write_char('0')
-    }
-    buf.to_string()
+    s[shift:].to_owned() + "0".repeat(shift)
   } else {
     // Right shift: pad |shift| zeros on the left, take s[:width - |shift|].
     let abs = -shift
-    let buf = StringBuilder::new()
-    for _ in 0..<abs {
-      buf.write_char('0')
-    }
-    buf.write_string(s[:width - abs].to_owned())
-    buf.to_string()
+    "0".repeat(abs) + s[:width - abs].to_owned()
   }
 }
 
-///| Drop leading zeros from a bit-string, then build a finite Decimal
+///|
+/// Drop leading zeros from a bit-string, then build a finite Decimal
 /// with the resulting coefficient at exponent 0. An all-zero bit-string
 /// yields `0`.
 fn build_logical_result(s : String) -> Decimal {
-  let mut start = 0
-  while start < s.length() - 1 && s[start].to_int() == 0x30 {
-    start = start + 1
+  // `from_string` normalizes leading zeros (and all-zero -> 0).
+  {
+    class: Finite,
+    negative: false,
+    coefficient: BigInt::from_string(s),
+    exponent: 0,
   }
-  let trimmed = if start == 0 { s } else { s[start:].to_owned() }
-  let coef = BigInt::from_string(trimmed)
-  { class: Finite, negative: false, coefficient: coef, exponent: 0 }
 }

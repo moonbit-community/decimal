@@ -1,4 +1,5 @@
-///| `minus` cases from `minus.decTest`, filtered to those that do not need
+///|
+/// `minus` cases from `minus.decTest`, filtered to those that do not need
 /// rounding and that have a concrete operand (GDA's `#` "null operand" tests
 /// don't fit our `Decimal::minus` signature). The `Invalid_operation` flag
 /// that GDA prescribes for sNaN inputs is silently dropped — the runner
@@ -92,7 +93,9 @@ test "minus.decTest minx subset round-trips through parse + minus + toSci" {
   let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     let buf = StringBuilder::new()
-    buf.write_string("\{failures.length()} of \{cases.length()} cases failed:\n")
+    buf.write_string(
+      "\{failures.length()} of \{cases.length()} cases failed:\n",
+    )
     for f in failures {
       buf.write_string("  ")
       buf.write_string(f)

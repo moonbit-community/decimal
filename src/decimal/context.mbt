@@ -4,7 +4,8 @@
 // This file introduces the arithmetic context shared by arithmetic operations.
 // ---------------------------------------------------------------------------
 
-///| GDA rounding modes for finite-result finalisation.
+///|
+/// GDA rounding modes for finite-result finalisation.
 pub(all) enum Rounding {
   /// Round to nearest; on tie, round away from zero.
   HalfUp
@@ -40,7 +41,8 @@ pub impl Show for Rounding with fn to_string(self) {
   }
 }
 
-///| GDA status flags accumulated by Context-aware ops. All flags are set
+///|
+/// GDA status flags accumulated by Context-aware ops. All flags are set
 /// additively (never cleared by an op); a sequence of ops reports whether
 /// any of them triggered the signal.
 pub(all) struct Flags {
@@ -63,13 +65,20 @@ pub(all) struct Flags {
   /// Raised by `0 / 0` and Infinity-arithmetic special cases where the
   /// result has no defined value.
   mut division_undefined : Bool
-  /// Reserved — `apd` raises this for context-internal allocation
-  /// failures. We keep the slot for GDA-tag compatibility but don't yet
-  /// emit it from any op.
+  /// Reserved for context-internal allocation failures. Kept for GDA-tag
+  /// compatibility but not yet emitted by any op.
   mut insufficient_storage : Bool
+  /// Raised by the arbitrary-precision mathematical functions (`exp`, `ln`,
+  /// `log10`, `power`) when the active context is unsuitable for them —
+  /// `precision`, `e_max`, or `e_min` exceeds the `MAX_MATH` bound, or a
+  /// `power` integer exponent is out of range. Per GDA these
+  /// operations must refuse (returning NaN) rather than attempt a
+  /// computation that cannot converge in bounded work.
+  mut invalid_context : Bool
 }
 
-///| A fresh `Flags` with every signal cleared.
+///|
+/// A fresh `Flags` with every signal cleared.
 pub fn Flags::new() -> Flags {
   {
     inexact: false,
@@ -84,10 +93,12 @@ pub fn Flags::new() -> Flags {
     division_impossible: false,
     division_undefined: false,
     insufficient_storage: false,
+    invalid_context: false,
   }
 }
 
-///| Arithmetic context — precision, rounding mode, exponent range, and
+///|
+/// Arithmetic context — precision, rounding mode, exponent range, and
 /// accumulated flags. Ops take a `Context` (with a no-precision default),
 /// produce a result that has been rounded / clamped to fit, and side-channel
 /// signals into the context's flags.
@@ -109,41 +120,52 @@ pub(all) struct Context {
   flags : Flags
 }
 
-///| Build a Context. Defaults: no precision cap, half-to-even rounding,
+///|
+/// Build a Context. Defaults: no precision cap, half-to-even rounding,
 /// near-`Int.max` exponent range (effectively unbounded for dectest's range),
 /// no clamp.
 pub fn Context::new(
-  precision~ : Int = 0,
-  rounding~ : Rounding = HalfEven,
-  e_min~ : Int = -999_999_999,
-  e_max~ : Int = 999_999_999,
-  clamp~ : Bool = false,
+  precision? : Int = 0,
+  rounding? : Rounding = HalfEven,
+  e_min? : Int = -999_999_999,
+  e_max? : Int = 999_999_999,
+  clamp? : Bool = false,
 ) -> Context {
   { precision, rounding, e_min, e_max, clamp, flags: Flags::new() }
 }
 
-///| Convenience: a context that performs no rounding and lets every result
+///|
+/// Convenience: a context that performs no rounding and lets every result
 /// pass through exactly. Mostly useful as a sentinel for "give me exact
 /// arithmetic" callers.
 pub fn Context::exact() -> Context {
   Context::new()
 }
 
-///| IEEE-754 `decimal32` preset: precision 7, `Emax = 96`, `Emin = -95`,
-/// `clamp = true`, rounding half-even. Matches decNumber's
-/// `DEC_INIT_DECIMAL32`.
-pub fn Context::decimal32() -> Context {
-  Context::new(
-    precision=7,
-    rounding=HalfEven,
-    e_max=96,
-    e_min=-95,
-    clamp=true,
-  )
+///|
+/// The smallest exponent of a representable (subnormal) value: `e_min -
+/// precision + 1`. Coefficients below this floor round to zero.
+fn Context::etiny(self : Context) -> Int {
+  self.e_min - self.precision + 1
 }
 
-///| IEEE-754 `decimal64` preset: precision 16, `Emax = 384`,
-/// `Emin = -383`, `clamp = true`. Matches `DEC_INIT_DECIMAL64`.
+///|
+/// The largest exponent a finite result may carry before clamping: `e_max -
+/// precision + 1`. Above it, trailing zeros are folded into the coefficient.
+fn Context::etop(self : Context) -> Int {
+  self.e_max - self.precision + 1
+}
+
+///|
+/// IEEE-754 `decimal32` preset: precision 7, `Emax = 96`, `Emin = -95`,
+/// `clamp = true`, rounding half-even.
+pub fn Context::decimal32() -> Context {
+  Context::new(precision=7, rounding=HalfEven, e_max=96, e_min=-95, clamp=true)
+}
+
+///|
+/// IEEE-754 `decimal64` preset: precision 16, `Emax = 384`,
+/// `Emin = -383`, `clamp = true`.
 pub fn Context::decimal64() -> Context {
   Context::new(
     precision=16,
@@ -154,8 +176,9 @@ pub fn Context::decimal64() -> Context {
   )
 }
 
-///| IEEE-754 `decimal128` preset: precision 34, `Emax = 6144`,
-/// `Emin = -6143`, `clamp = true`. Matches `DEC_INIT_DECIMAL128`.
+///|
+/// IEEE-754 `decimal128` preset: precision 34, `Emax = 6144`,
+/// `Emin = -6143`, `clamp = true`.
 pub fn Context::decimal128() -> Context {
   Context::new(
     precision=34,
@@ -166,44 +189,59 @@ pub fn Context::decimal128() -> Context {
   )
 }
 
-///| Raise status flags on the context. Flags are additive and never clear an
+///|
+/// Raise status flags on the context. Flags are additive and never clear an
 /// existing signal; these helpers make the side-channel explicit at call sites.
 fn Context::raise_inexact(self : Context) -> Unit {
   self.flags.inexact = true
 }
 
+///|
 fn Context::raise_rounded(self : Context) -> Unit {
   self.flags.rounded = true
 }
 
+///|
 fn Context::raise_invalid_operation(self : Context) -> Unit {
   self.flags.invalid_operation = true
 }
 
+///|
 fn Context::raise_division_by_zero(self : Context) -> Unit {
   self.flags.division_by_zero = true
 }
 
+///|
 fn Context::raise_overflow(self : Context) -> Unit {
   self.flags.overflow = true
 }
 
+///|
 fn Context::raise_underflow(self : Context) -> Unit {
   self.flags.underflow = true
 }
 
+///|
 fn Context::raise_subnormal(self : Context) -> Unit {
   self.flags.subnormal = true
 }
 
+///|
 fn Context::raise_clamped(self : Context) -> Unit {
   self.flags.clamped = true
 }
 
+///|
 fn Context::raise_division_undefined(self : Context) -> Unit {
   self.flags.division_undefined = true
 }
 
+///|
 fn Context::raise_division_impossible(self : Context) -> Unit {
   self.flags.division_impossible = true
+}
+
+///|
+fn Context::raise_invalid_context(self : Context) -> Unit {
+  self.flags.invalid_context = true
 }

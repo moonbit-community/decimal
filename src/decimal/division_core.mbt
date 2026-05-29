@@ -1,4 +1,5 @@
-///| Truncated integer division for finite non-zero divisor.
+///|
+/// Truncated integer division for finite non-zero divisor.
 ///
 /// Short-circuits via the adjusted exponents: if `|a| < |b|` the integer
 /// quotient is zero, and we return before scaling — important when the
@@ -6,15 +7,11 @@
 /// quotient digit count is implausibly large we surface `NaN` (GDA's
 /// `Division_impossible`) instead of attempting an intractable BigInt op.
 fn divide_int_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
+  let neg = xor_sign(a, b)
   let adj_a = adjusted_exponent(a)
   let adj_b = adjusted_exponent(b)
   if adj_a < adj_b {
-    return {
-      class: Finite,
-      negative: a.negative != b.negative,
-      coefficient: 0N,
-      exponent: 0,
-    }
+    return finite_zero(0, neg)
   }
   // Bail out before align_for_int_div on intractable inputs. Use a fixed
   // 100_000-digit cap rather than the precision cap — `adj_a - adj_b + 1`
@@ -26,7 +23,10 @@ fn divide_int_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
     return Decimal::nan()
   }
   let (an, bn) = align_for_int_div(
-    a.coefficient, a.exponent, b.coefficient, b.exponent,
+    a.coefficient,
+    a.exponent,
+    b.coefficient,
+    b.exponent,
   )
   let quotient = an / bn
   // Tight Division_impossible check using the actual quotient digit count.
@@ -34,25 +34,19 @@ fn divide_int_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
     ctx.raise_division_impossible()
     return Decimal::nan()
   }
-  {
-    class: Finite,
-    negative: a.negative != b.negative,
-    coefficient: quotient,
-    exponent: 0,
-  }
+  { class: Finite, negative: neg, coefficient: quotient, exponent: 0 }
 }
 
-///| True finite division with precision-driven rounding. Follows apd's `Quo`
-/// algorithm:
+///|
+/// True finite division with precision-driven rounding:
 ///
 /// 1. Adjust dividend and divisor so the dividend's coefficient has the
 ///    same digit count as the divisor and is ≥ it (so the quotient will be
 ///    at least one digit).
 /// 2. Pre-multiply the dividend by `10^(precision - 1)` so the integer
 ///    `quo_rem` yields exactly `precision` quotient digits.
-/// 3. Decide rounding from the remainder via `2·rem vs divisor` (apd's
-///    `half` indicator: `-1` below half, `0` exactly half, `+1` above
-///    half).
+/// 3. Decide rounding from the remainder via `2·rem vs divisor` (the
+///    half indicator: `-1` below half, `0` exactly half, `+1` above half).
 ///
 /// The final exponent recomposes the three sources of scale:
 /// `(a.exp - b.exp) - adj_coeffs - adj_exp10`, where `adj_coeffs` is the
@@ -70,18 +64,16 @@ fn divide_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
   // precision to stop at for a repeating decimal.
   if ctx.precision == 0 {
     let (an, bn) = align_for_int_div(
-      a.coefficient, a.exponent, b.coefficient, b.exponent,
+      a.coefficient,
+      a.exponent,
+      b.coefficient,
+      b.exponent,
     )
     let rem = an % bn
     if !rem.is_zero() {
       return invalid_nan(ctx)
     }
-    return {
-      class: Finite,
-      negative: neg,
-      coefficient: an / bn,
-      exponent: 0,
-    }
+    return { class: Finite, negative: neg, coefficient: an / bn, exponent: 0 }
   }
   let mut dividend = a.coefficient
   let mut divisor = b.coefficient
@@ -105,13 +97,9 @@ fn divide_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
   // the subnormal range, cap the pre-multiplier so the algorithm rounds
   // directly to etiny — avoiding the double-rounding bias from doing one
   // pass at precision and another at etiny.
-  let etiny = ctx.e_min - ctx.precision + 1
+  let etiny = ctx.etiny()
   let exp_budget = shift_exp - adj_coeffs - etiny
-  let adj_exp10 = if exp_budget < ctx.precision - 1 {
-    if exp_budget < 0 { 0 } else { exp_budget }
-  } else {
-    ctx.precision - 1
-  }
+  let adj_exp10 = clamp(exp_budget, 0, ctx.precision - 1)
   if adj_exp10 > 0 {
     dividend = dividend * pow10(adj_exp10)
   }
@@ -147,7 +135,8 @@ fn divide_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
   { class: Finite, negative: neg, coefficient: quot, exponent: final_exp }
 }
 
-///| Strip trailing zeros from `coef` while raising the exponent, but not
+///|
+/// Strip trailing zeros from `coef` while raising the exponent, but not
 /// past `target_exp`. Used by divide to normalise exact results down to
 /// the `ideal_exp = a.exp - b.exp` GDA convention.
 fn strip_trailing_zeros_to(
@@ -155,20 +144,11 @@ fn strip_trailing_zeros_to(
   exp : Int,
   target_exp : Int,
 ) -> (BigInt, Int) {
-  let mut c = coef
-  let mut e = exp
-  while e < target_exp && !c.is_zero() {
-    let quot = c / 10N
-    if quot * 10N != c {
-      break
-    }
-    c = quot
-    e = e + 1
-  }
-  (c, e)
+  strip_trailing_zeros(coef, exp, e => e < target_exp)
 }
 
-///| Decide whether the precision-truncated quotient should round up by
+///|
+/// Decide whether the precision-truncated quotient should round up by
 /// one. `cmp` is `(2·rem).compare(divisor)`: `-1` if the remainder is less
 /// than half the divisor, `0` if exactly half, `+1` if more than half.
 ///
@@ -180,29 +160,13 @@ fn decide_div_round(
   cmp : Int,
   mode : Rounding,
 ) -> Bool {
-  match mode {
-    Down => false
-    Up => true
-    HalfUp => cmp >= 0
-    HalfDown => cmp > 0
-    HalfEven =>
-      if cmp > 0 {
-        true
-      } else if cmp < 0 {
-        false
-      } else {
-        (quot % 2N).to_int() != 0
-      }
-    Ceiling => !negative
-    Floor => negative
-    ZeroFiveUp => {
-      let last = (quot % 10N).to_int()
-      last == 0 || last == 5
-    }
-  }
+  // Called only when the remainder is non-zero, so the discard is non-zero and
+  // `cmp` (2·rem vs divisor) is the half indicator.
+  should_round_up(quot, negative, cmp, true, mode)
 }
 
-///| Exact finite remainder: `a - divide_int_finite(a, b) * b`, with the final
+///|
+/// Exact finite remainder: `a - divide_int_finite(a, b) * b`, with the final
 /// subtract performed under the caller context so precision rules apply only
 /// at the public result boundary.
 fn remainder_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
