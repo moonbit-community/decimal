@@ -1,6 +1,0 @@
-{
-  "import": [
-    "dzmingli/decimal/decimal",
-    "moonbitlang/core/string"
-  ]
-}
