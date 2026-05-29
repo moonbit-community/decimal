@@ -240,28 +240,120 @@ pub fn run_cases(cases : Array[TestCase]) -> (Array[String], Int) {
   (failures, skipped)
 }
 
-///| Dispatch one case to its handler based on `op`. Compares the rendered
-/// result against `expected`.
+///| Dispatch one case, compare the rendered result against expected.
+/// Flag validation is plumbed through `compute` so a future strict-mode
+/// can opt into it via `run_cases_with_flags`, but the default
+/// `run_cases` ignores raised flags to keep the per-op packages green
+/// while the flag-raising audit catches up to the runner's strictness.
 fn run_one(case : TestCase) -> CaseOutcome {
   let actual = try compute(case) catch {
     msg => return Fail("\{case.id}: \{case.op}: \{msg}")
   }
   match actual {
     None => Skip
-    Some(s) =>
-      if s == case.expected {
-        Pass
-      } else {
-        Fail(
+    Some((s, _flags)) => {
+      if s != case.expected {
+        return Fail(
           "\{case.id}: \{case.op}(\{format_operands(case.operands)}) = \{s}, expected \{case.expected}",
         )
       }
+      Pass
+    }
   }
 }
 
-///| Compute the result string for `case`. Returns `None` for ops we do not yet
-/// handle. Raises a diagnostic string for parse failures or arity mismatches.
-fn compute(case : TestCase) -> String? raise RunnerError {
+///| Strict variant: validates both the rendered string and the condition
+/// flags. Used by per-op packages that want to gate on flag accuracy.
+pub fn run_cases_with_flags(
+  cases : Array[TestCase],
+) -> (Array[String], Int) {
+  let failures = Array::new()
+  let mut skipped = 0
+  for case in cases {
+    match run_one_strict(case) {
+      Pass => ()
+      Fail(msg) => failures.push(msg)
+      Skip => skipped = skipped + 1
+    }
+  }
+  (failures, skipped)
+}
+
+///| Strict run_one that fails on either rendered-result or flag mismatch.
+fn run_one_strict(case : TestCase) -> CaseOutcome {
+  let actual = try compute(case) catch {
+    msg => return Fail("\{case.id}: \{case.op}: \{msg}")
+  }
+  match actual {
+    None => Skip
+    Some((s, flags)) => {
+      if s != case.expected {
+        return Fail(
+          "\{case.id}: \{case.op}(\{format_operands(case.operands)}) = \{s}, expected \{case.expected}",
+        )
+      }
+      let flag_diff = compare_flags(flags, case.conditions)
+      if flag_diff != "" {
+        return Fail(
+          "\{case.id}: \{case.op}(\{format_operands(case.operands)}) flag mismatch: \{flag_diff}",
+        )
+      }
+      Pass
+    }
+  }
+}
+
+///| Verify the runtime-raised `Flags` match the expected `conditions`
+/// list from the test case. Returns the empty string on a match, or a
+/// human-readable diff like `+Inexact -Subnormal` otherwise.
+///
+/// Condition strings are matched case-insensitively (GDA writes them in
+/// `Mixed_case`, but some files use lowercase).
+fn compare_flags(actual : Flags, expected : Array[String]) -> String {
+  let pairs : Array[(String, Bool)] = [
+    ("Inexact", actual.inexact),
+    ("Rounded", actual.rounded),
+    ("Subnormal", actual.subnormal),
+    ("Underflow", actual.underflow),
+    ("Overflow", actual.overflow),
+    ("Clamped", actual.clamped),
+    ("Invalid_operation", actual.invalid_operation),
+    ("Division_by_zero", actual.division_by_zero),
+    ("Conversion_syntax", actual.conversion_syntax),
+    ("Division_impossible", actual.division_impossible),
+    ("Division_undefined", actual.division_undefined),
+    ("Insufficient_storage", actual.insufficient_storage),
+  ]
+  let buf = StringBuilder::new()
+  let mut sep = ""
+  for pair in pairs {
+    let (name, raised) = pair
+    let want = condition_present(expected, name)
+    if raised && !want {
+      buf.write_string(sep + "+" + name)
+      sep = " "
+    } else if want && !raised {
+      buf.write_string(sep + "-" + name)
+      sep = " "
+    }
+  }
+  buf.to_string()
+}
+
+///| Case-insensitive lookup in a condition list.
+fn condition_present(conditions : Array[String], name : String) -> Bool {
+  for c in conditions {
+    if ascii_eq_ci(c, name) {
+      return true
+    }
+  }
+  false
+}
+
+///| Compute the rendered result and condition flags for `case`. Returns
+/// `None` for ops we do not yet handle; raises a diagnostic string for
+/// parse failures or arity mismatches.
+fn compute(case : TestCase) -> (String, Flags)? raise RunnerError {
   if ascii_eq_ci(case.op, "tosci") {
     Some(unary(case, fn(d) { d }))
   } else if ascii_eq_ci(case.op, "minus") {
@@ -355,12 +447,23 @@ fn compute(case : TestCase) -> String? raise RunnerError {
   }
 }
 
+///| Build a Context from a TestCase's directives.
+fn ctx_for(case : TestCase) -> Context {
+  Context::new(
+    precision=case.precision,
+    rounding=case.rounding,
+    e_max=case.max_exponent,
+    e_min=case.min_exponent,
+    clamp=case.clamp,
+  )
+}
+
 ///| Apply a context-aware ternary op (`(Decimal, Decimal, Decimal, Context)
 /// -> Decimal`) to the three operands. Used by `fma`.
 fn ternary_ctx(
   case : TestCase,
   op : (Decimal, Decimal, Decimal, Context) -> Decimal,
-) -> String raise RunnerError {
+) -> (String, Flags) raise RunnerError {
   if case.operands.length() != 3 {
     raise RunnerError("expects 3 operands, got \{case.operands.length()}")
   }
@@ -373,14 +476,8 @@ fn ternary_ctx(
   let c = try Decimal::parse(case.operands[2]) catch {
     e => raise RunnerError("parse error in operand 2: \{e}")
   }
-  let ctx = Context::new(
-    precision=case.precision,
-    rounding=case.rounding,
-    e_max=case.max_exponent,
-    e_min=case.min_exponent,
-    clamp=case.clamp,
-  )
-  op(a, b, c, ctx).to_sci_string()
+  let ctx = ctx_for(case)
+  (op(a, b, c, ctx).to_sci_string(), ctx.flags)
 }
 
 ///| Apply a context-aware unary op that returns a raw `String` (rather
@@ -389,65 +486,54 @@ fn ternary_ctx(
 fn unary_ctx_string(
   case : TestCase,
   op : (Decimal, Context) -> String,
-) -> String raise RunnerError {
+) -> (String, Flags) raise RunnerError {
   if case.operands.length() != 1 {
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
   let parsed = try Decimal::parse(case.operands[0]) catch {
     e => raise RunnerError("parse error: \{e}")
   }
-  let ctx = Context::new(
-    precision=case.precision,
-    rounding=case.rounding,
-    e_max=case.max_exponent,
-    e_min=case.min_exponent,
-    clamp=case.clamp,
-  )
-  op(parsed, ctx)
+  let ctx = ctx_for(case)
+  (op(parsed, ctx), ctx.flags)
 }
 
-///| Apply a context-aware unary op to the single operand. Mirrors `unary`
-/// but threads the test case's precision / rounding / exponent-range
-/// directives through `Context::new`.
+///| Apply a context-aware unary op to the single operand.
 fn unary_ctx(
   case : TestCase,
   op : (Decimal, Context) -> Decimal,
-) -> String raise RunnerError {
+) -> (String, Flags) raise RunnerError {
   if case.operands.length() != 1 {
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
   let parsed = try Decimal::parse(case.operands[0]) catch {
     e => raise RunnerError("parse error: \{e}")
   }
-  let ctx = Context::new(
-    precision=case.precision,
-    rounding=case.rounding,
-    e_max=case.max_exponent,
-    e_min=case.min_exponent,
-    clamp=case.clamp,
-  )
-  op(parsed, ctx).to_sci_string()
+  let ctx = ctx_for(case)
+  (op(parsed, ctx).to_sci_string(), ctx.flags)
 }
 
-///| Apply a unary `Decimal -> Decimal` operator to the single operand and
-/// render the result via `to_sci_string`.
-fn unary(case : TestCase, op : (Decimal) -> Decimal) -> String raise RunnerError {
+///| Apply a unary `Decimal -> Decimal` operator. The op doesn't take a
+/// Context so the reported flags are empty; ops that need to raise flags
+/// (e.g. sNaN handling in `minus` / `plus` / `abs`) would have to switch
+/// to `unary_ctx`. For now this matches the existing API surface.
+fn unary(
+  case : TestCase,
+  op : (Decimal) -> Decimal,
+) -> (String, Flags) raise RunnerError {
   if case.operands.length() != 1 {
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
   let parsed = try Decimal::parse(case.operands[0]) catch {
     e => raise RunnerError("parse error: \{e}")
   }
-  op(parsed).to_sci_string()
+  (op(parsed).to_sci_string(), Flags::new())
 }
 
-///| Apply a context-aware binary op (`(Decimal, Decimal, Context) -> Decimal`)
-/// using a Context built from the test case's active precision and rounding
-/// directives.
+///| Apply a context-aware binary op.
 fn binary_ctx(
   case : TestCase,
   op : (Decimal, Decimal, Context) -> Decimal,
-) -> String raise RunnerError {
+) -> (String, Flags) raise RunnerError {
   if case.operands.length() != 2 {
     raise RunnerError("expects 2 operands, got \{case.operands.length()}")
   }
@@ -457,22 +543,16 @@ fn binary_ctx(
   let rhs = try Decimal::parse(case.operands[1]) catch {
     e => raise RunnerError("parse error in operand 1: \{e}")
   }
-  let ctx = Context::new(
-    precision=case.precision,
-    rounding=case.rounding,
-    e_max=case.max_exponent,
-    e_min=case.min_exponent,
-    clamp=case.clamp,
-  )
-  op(lhs, rhs, ctx).to_sci_string()
+  let ctx = ctx_for(case)
+  (op(lhs, rhs, ctx).to_sci_string(), ctx.flags)
 }
 
-///| Apply a binary `Decimal, Decimal -> Decimal` operator to the two operands
-/// and render the result via `to_sci_string`.
+///| Apply a context-less binary op (e.g. `compare_total`). Reported flags
+/// are empty.
 fn binary(
   case : TestCase,
   op : (Decimal, Decimal) -> Decimal,
-) -> String raise RunnerError {
+) -> (String, Flags) raise RunnerError {
   if case.operands.length() != 2 {
     raise RunnerError("expects 2 operands, got \{case.operands.length()}")
   }
@@ -482,7 +562,7 @@ fn binary(
   let rhs = try Decimal::parse(case.operands[1]) catch {
     e => raise RunnerError("parse error in operand 1: \{e}")
   }
-  op(lhs, rhs).to_sci_string()
+  (op(lhs, rhs).to_sci_string(), Flags::new())
 }
 
 ///|

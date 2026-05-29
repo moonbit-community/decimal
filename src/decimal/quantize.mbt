@@ -60,7 +60,11 @@ fn quantize_finite(a : Decimal, target_exp : Int, ctx : Context) -> Decimal {
     dropped, diff, kept, a.negative, ctx.rounding,
   )
   let candidate = if round_up { kept + 1N } else { kept }
-  ctx.raise_rounded()
+  // Only raise Rounded when actual rounding happened — zero input with
+  // zero dropped digits is just an exponent shift, not a round.
+  if !dropped.is_zero() || candidate != kept {
+    ctx.raise_rounded()
+  }
   if !dropped.is_zero() {
     ctx.raise_inexact()
   }
