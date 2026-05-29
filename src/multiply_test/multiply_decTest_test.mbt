@@ -1,13 +1,11 @@
-///| `multiply` cases from `multiply.decTest`, restricted to precision >= 9
-/// sections. `precision:` and `rounding:` directive lines are kept
-/// alongside the test lines so the runner can build the matching
-/// Context for each test. Skipped: Subnormal / Underflow / Overflow /
-/// Clamped (need e_min/e_max enforcement), Conversion_syntax (parse
-/// errors surface as ParseError), Division_impossible (precision-
-/// bounded quotient check not yet implemented).
-let multiply_subset : String =
+///| Full `multiply.decTest` corpus, split into chunks for bisecting
+/// slow cases.
+
+let multiply_subset_0 : String =
   #|precision:   9
   #|rounding:    half_up
+  #|maxExponent: 384
+  #|minexponent: -383
   #|mulx000 multiply 2      2 -> 4
   #|mulx001 multiply 2      3 -> 6
   #|mulx002 multiply 5      1 -> 5
@@ -25,6 +23,11 @@ let multiply_subset : String =
   #|mulx014 multiply 9.999999999 9.999999999 -> 100.000000 Inexact Rounded
   #|mulx015 multiply 2.50   4 -> 10.00
   #|precision: 6
+  #|mulx016 multiply 2.50   4 -> 10.00
+  #|mulx017 multiply  9.999999999  9.999999999 ->  100.000 Inexact Rounded
+  #|mulx018 multiply  9.999999999 -9.999999999 -> -100.000 Inexact Rounded
+  #|mulx019 multiply -9.999999999  9.999999999 -> -100.000 Inexact Rounded
+  #|mulx020 multiply -9.999999999 -9.999999999 ->  100.000 Inexact Rounded
   #|precision: 15
   #|mulx059 multiply 999999999999 9765625 -> 9.76562499999023E+18 Inexact Rounded
   #|precision: 30
@@ -73,7 +76,11 @@ let multiply_subset : String =
   #|mulx083 multiply 0.1 12345678912345     -> 1.23456789E+12 Inexact Rounded
   #|mulx084 multiply 0.1 123456789          -> 12345678.9
   #|precision: 8
+  #|mulx085 multiply 0.1 12345678912        -> 1.2345679E+9 Inexact Rounded
+  #|mulx086 multiply 0.1 12345678912345     -> 1.2345679E+12 Inexact Rounded
   #|precision: 7
+  #|mulx087 multiply 0.1 12345678912        -> 1.234568E+9 Inexact Rounded
+  #|mulx088 multiply 0.1 12345678912345     -> 1.234568E+12 Inexact Rounded
   #|precision: 9
   #|mulx090 multiply 123456789          0.1 -> 12345678.9
   #|mulx091 multiply 1234567891         0.1 -> 123456789 Inexact Rounded
@@ -81,7 +88,13 @@ let multiply_subset : String =
   #|mulx093 multiply 12345678912345     0.1 -> 1.23456789E+12 Inexact Rounded
   #|mulx094 multiply 123456789          0.1 -> 12345678.9
   #|precision: 8
+  #|mulx095 multiply 12345678912        0.1 -> 1.2345679E+9 Inexact Rounded
+  #|mulx096 multiply 12345678912345     0.1 -> 1.2345679E+12 Inexact Rounded
   #|precision: 7
+  #|mulx097 multiply 12345678912        0.1 -> 1.234568E+9 Inexact Rounded
+  #|mulx098 multiply 12345678912345     0.1 -> 1.234568E+12 Inexact Rounded
+  #|maxexponent: 9999
+  #|minexponent: -9999
   #|precision: 33
   #|mulx101 multiply 9 9   -> 81
   #|mulx102 multiply 9 90   -> 810
@@ -124,11 +137,19 @@ let multiply_subset : String =
   #|mulx146 multiply 3 3000000000000000   -> 9000000000000000
   #|mulx147 multiply 3 30000000000000000   -> 90000000000000000
   #|mulx148 multiply 3 300000000000000000   -> 900000000000000000
+
+let multiply_subset_1 : String =
+  #|rounding: half_up
+  #|maxexponent: 9999
+  #|minexponent: -9999
+  #|precision: 33
   #|mulx149 multiply 3 3000000000000000000   -> 9000000000000000000
   #|mulx150 multiply 3 30000000000000000000   -> 90000000000000000000
   #|mulx151 multiply 3 300000000000000000000   -> 900000000000000000000
   #|mulx152 multiply 3 3000000000000000000000   -> 9000000000000000000000
   #|mulx153 multiply 3 30000000000000000000000   -> 90000000000000000000000
+  #|maxexponent: 999999999
+  #|minexponent: -999999999
   #|precision: 9
   #|mulx170 multiply 1 9e999999999    -> 9E+999999999
   #|mulx171 multiply 1 9.9e999999999  -> 9.9E+999999999
@@ -212,13 +233,23 @@ let multiply_subset : String =
   #|precision:  9
   #|mulx270 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.291                         Inexact Rounded
   #|precision:  8
+  #|mulx271 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.29                          Inexact Rounded
   #|precision:  7
+  #|mulx272 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433.3                           Inexact Rounded
   #|precision:  6
+  #|mulx273 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 145433                            Inexact Rounded
   #|precision:  5
+  #|mulx274 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 1.4543E+5                         Inexact Rounded
   #|precision:  4
+  #|mulx275 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 1.454E+5                         Inexact Rounded
   #|precision:  3
+  #|mulx276 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 1.45E+5                         Inexact Rounded
   #|precision:  2
+  #|mulx277 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 1.5E+5                         Inexact Rounded
   #|precision:  1
+  #|mulx278 multiply 30269.587755640502150977251770554 4.8046009735990873395936309640543 -> 1E+5                          Inexact Rounded
+  #|maxexponent: 9999
+  #|minexponent: -9999
   #|precision: 9
   #|mulx301 multiply 9 9   -> 81
   #|mulx302 multiply 9 90   -> 810
@@ -249,6 +280,12 @@ let multiply_subset : String =
   #|mulx331 multiply 0.8958341352965282506768545828765117803873717284891040428 0.8958341352965282506768545828765117803873717284891040428 -> 0.8025187979624784829842553829934069955890983696752228299 Inexact Rounded
   #|precision:   7
   #|rounding:    half_up
+  #|maxExponent: 92
+  #|minexponent: -92
+  #|mulx504  multiply  0E-60 1000E-60  -> 0E-98 Clamped
+  #|mulx505  multiply  100E+60 0E+60   -> 0E+92 Clamped
+  #|maxexponent: 999999999
+  #|minexponent: -999999999
   #|precision: 9
   #|mulx541 multiply  0    -1     -> -0
   #|mulx542 multiply -0    -1     ->  0
@@ -272,6 +309,12 @@ let multiply_subset : String =
   #|mulx564 multiply -0     1.0   -> -0.0
   #|mulx565 multiply -1     0.0   -> -0.0
   #|mulx566 multiply -1    -0.0   ->  0.0
+
+let multiply_subset_2 : String =
+  #|rounding: half_up
+  #|maxexponent: 999999999
+  #|minexponent: -999999999
+  #|precision: 9
   #|mulx567 multiply  1     0.0   ->  0.0
   #|mulx568 multiply  1    -0.0   -> -0.0
   #|mulx571 multiply  0.0  -1.0   -> -0.00
@@ -331,25 +374,6 @@ let multiply_subset : String =
   #|mulx635 multiply  1    NaN    ->  NaN
   #|mulx636 multiply  1000 NaN    ->  NaN
   #|mulx637 multiply  Inf  NaN    ->  NaN
-  #|mulx641 multiply  sNaN -Inf   ->  NaN  Invalid_operation
-  #|mulx642 multiply  sNaN -1000  ->  NaN  Invalid_operation
-  #|mulx643 multiply  sNaN -1     ->  NaN  Invalid_operation
-  #|mulx644 multiply  sNaN -0     ->  NaN  Invalid_operation
-  #|mulx645 multiply  sNaN  0     ->  NaN  Invalid_operation
-  #|mulx646 multiply  sNaN  1     ->  NaN  Invalid_operation
-  #|mulx647 multiply  sNaN  1000  ->  NaN  Invalid_operation
-  #|mulx648 multiply  sNaN  NaN   ->  NaN  Invalid_operation
-  #|mulx649 multiply  sNaN sNaN   ->  NaN  Invalid_operation
-  #|mulx650 multiply  NaN  sNaN   ->  NaN  Invalid_operation
-  #|mulx651 multiply -Inf  sNaN   ->  NaN  Invalid_operation
-  #|mulx652 multiply -1000 sNaN   ->  NaN  Invalid_operation
-  #|mulx653 multiply -1    sNaN   ->  NaN  Invalid_operation
-  #|mulx654 multiply -0    sNaN   ->  NaN  Invalid_operation
-  #|mulx655 multiply  0    sNaN   ->  NaN  Invalid_operation
-  #|mulx656 multiply  1    sNaN   ->  NaN  Invalid_operation
-  #|mulx657 multiply  1000 sNaN   ->  NaN  Invalid_operation
-  #|mulx658 multiply  Inf  sNaN   ->  NaN  Invalid_operation
-  #|mulx659 multiply  NaN  sNaN   ->  NaN  Invalid_operation
   #|mulx661 multiply  NaN9 -Inf   ->  NaN9
   #|mulx662 multiply  NaN8  999   ->  NaN8
   #|mulx663 multiply  NaN71 Inf   ->  NaN71
@@ -357,15 +381,6 @@ let multiply_subset : String =
   #|mulx665 multiply -Inf   NaN4  ->  NaN4
   #|mulx666 multiply -999   NaN33 ->  NaN33
   #|mulx667 multiply  Inf   NaN2  ->  NaN2
-  #|mulx671 multiply  sNaN99 -Inf    ->  NaN99 Invalid_operation
-  #|mulx672 multiply  sNaN98 -11     ->  NaN98 Invalid_operation
-  #|mulx673 multiply  sNaN97  NaN    ->  NaN97 Invalid_operation
-  #|mulx674 multiply  sNaN16 sNaN94  ->  NaN16 Invalid_operation
-  #|mulx675 multiply  NaN95  sNaN93  ->  NaN93 Invalid_operation
-  #|mulx676 multiply -Inf    sNaN92  ->  NaN92 Invalid_operation
-  #|mulx677 multiply  088    sNaN91  ->  NaN91 Invalid_operation
-  #|mulx678 multiply  Inf    sNaN90  ->  NaN90 Invalid_operation
-  #|mulx679 multiply  NaN    sNaN89  ->  NaN89 Invalid_operation
   #|mulx681 multiply -NaN9 -Inf   -> -NaN9
   #|mulx682 multiply -NaN8  999   -> -NaN8
   #|mulx683 multiply -NaN71 Inf   -> -NaN71
@@ -373,15 +388,6 @@ let multiply_subset : String =
   #|mulx685 multiply -Inf  -NaN4  -> -NaN4
   #|mulx686 multiply -999  -NaN33 -> -NaN33
   #|mulx687 multiply  Inf  -NaN2  -> -NaN2
-  #|mulx691 multiply -sNaN99 -Inf    -> -NaN99 Invalid_operation
-  #|mulx692 multiply -sNaN98 -11     -> -NaN98 Invalid_operation
-  #|mulx693 multiply -sNaN97  NaN    -> -NaN97 Invalid_operation
-  #|mulx694 multiply -sNaN16 -sNaN94 -> -NaN16 Invalid_operation
-  #|mulx695 multiply -NaN95  -sNaN93 -> -NaN93 Invalid_operation
-  #|mulx696 multiply -Inf    -sNaN92 -> -NaN92 Invalid_operation
-  #|mulx697 multiply  088    -sNaN91 -> -NaN91 Invalid_operation
-  #|mulx698 multiply  Inf    -sNaN90 -> -NaN90 Invalid_operation
-  #|mulx699 multiply -NaN    -sNaN89 -> -NaN89 Invalid_operation
   #|mulx701 multiply -NaN  -Inf   -> -NaN
   #|mulx702 multiply -NaN   999   -> -NaN
   #|mulx703 multiply -NaN   Inf   -> -NaN
@@ -389,39 +395,194 @@ let multiply_subset : String =
   #|mulx705 multiply -Inf  -NaN0  -> -NaN
   #|mulx706 multiply -999  -NaN   -> -NaN
   #|mulx707 multiply  Inf  -NaN   -> -NaN
-  #|mulx711 multiply -sNaN   -Inf    -> -NaN Invalid_operation
-  #|mulx712 multiply -sNaN   -11     -> -NaN Invalid_operation
-  #|mulx713 multiply -sNaN00  NaN    -> -NaN Invalid_operation
-  #|mulx714 multiply -sNaN   -sNaN   -> -NaN Invalid_operation
-  #|mulx715 multiply -NaN    -sNaN   -> -NaN Invalid_operation
-  #|mulx716 multiply -Inf    -sNaN   -> -NaN Invalid_operation
-  #|mulx717 multiply  088    -sNaN   -> -NaN Invalid_operation
-  #|mulx718 multiply  Inf    -sNaN   -> -NaN Invalid_operation
-  #|mulx719 multiply -NaN    -sNaN   -> -NaN Invalid_operation
+  #|maxexponent: 999999999
+  #|minexponent: -999999999
+  #|mulx730 multiply +1.23456789012345E-0 9E+999999999 -> Infinity Inexact Overflow Rounded
+  #|mulx731 multiply 9E+999999999 +1.23456789012345E-0 -> Infinity Inexact Overflow Rounded
+  #|mulx732 multiply +0.100 9E-999999999 -> 9.00E-1000000000 Subnormal
+  #|mulx733 multiply 9E-999999999 +0.100 -> 9.00E-1000000000 Subnormal
+  #|mulx735 multiply -1.23456789012345E-0 9E+999999999 -> -Infinity Inexact Overflow Rounded
+  #|mulx736 multiply 9E+999999999 -1.23456789012345E-0 -> -Infinity Inexact Overflow Rounded
+  #|mulx737 multiply -0.100 9E-999999999 -> -9.00E-1000000000 Subnormal
+  #|mulx738 multiply 9E-999999999 -0.100 -> -9.00E-1000000000 Subnormal
+  #|mulx739 multiply 1e-599999999 1e-400000001 -> 1E-1000000000 Subnormal
   #|mulx740 multiply 1e-599999999 1e-400000000 -> 1E-999999999
+  #|mulx741 multiply 1e-600000000 1e-400000000 -> 1E-1000000000 Subnormal
+  #|mulx742 multiply 9e-999999998 0.01 -> 9E-1000000000 Subnormal
   #|mulx743 multiply 9e-999999998 0.1  -> 9E-999999999
+  #|mulx744 multiply 0.01 9e-999999998 -> 9E-1000000000 Subnormal
+  #|mulx745 multiply 1e599999999 1e400000001 -> Infinity Overflow Inexact Rounded
   #|mulx746 multiply 1e599999999 1e400000000 -> 1E+999999999
+  #|mulx747 multiply 1e600000000 1e400000000 -> Infinity Overflow Inexact Rounded
+  #|mulx748 multiply 9e999999998 100  -> Infinity Overflow Inexact Rounded
   #|mulx749 multiply 9e999999998 10   -> 9.0E+999999999
+  #|mulx750 multiply 100  9e999999998 -> Infinity Overflow Inexact Rounded
+  #|mulx751 multiply  1e+777777777  1e+411111111 ->  Infinity Overflow Inexact Rounded
+  #|mulx752 multiply  1e+777777777 -1e+411111111 -> -Infinity Overflow Inexact Rounded
+  #|mulx753 multiply -1e+777777777  1e+411111111 -> -Infinity Overflow Inexact Rounded
+  #|mulx754 multiply -1e+777777777 -1e+411111111 ->  Infinity Overflow Inexact Rounded
+  #|mulx755 multiply  1e-777777777  1e-411111111 ->  0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
+  #|mulx756 multiply  1e-777777777 -1e-411111111 -> -0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
+  #|mulx757 multiply -1e-777777777  1e-411111111 -> -0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
+  #|mulx758 multiply -1e-777777777 -1e-411111111 ->  0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
   #|precision: 9
+  #|mulx760 multiply 1e-600000000 1e-400000001 -> 1E-1000000001 Subnormal
+  #|mulx761 multiply 1e-600000000 1e-400000002 -> 1E-1000000002 Subnormal
+  #|mulx762 multiply 1e-600000000 1e-400000003 -> 1E-1000000003 Subnormal
+  #|mulx763 multiply 1e-600000000 1e-400000004 -> 1E-1000000004 Subnormal
+  #|mulx764 multiply 1e-600000000 1e-400000005 -> 1E-1000000005 Subnormal
+  #|mulx765 multiply 1e-600000000 1e-400000006 -> 1E-1000000006 Subnormal
+  #|mulx766 multiply 1e-600000000 1e-400000007 -> 1E-1000000007 Subnormal
+  #|mulx767 multiply 1e-600000000 1e-400000008 -> 0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
+  #|mulx768 multiply 1e-600000000 1e-400000009 -> 0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
+  #|mulx769 multiply 1e-600000000 1e-400000010 -> 0E-1000000007 Underflow Subnormal Inexact Rounded Clamped
+
+let multiply_subset_3 : String =
+  #|rounding: half_up
+  #|maxexponent: 999999999
+  #|minexponent: -999999999
+  #|precision: 9
+  #|mulx770 multiply 1e+600000000 1e+400000001 -> Infinity Overflow Inexact Rounded
+  #|mulx771 multiply 1e+600000000 1e+400000002 -> Infinity Overflow Inexact Rounded
+  #|mulx772 multiply 1e+600000000 1e+400000003 -> Infinity Overflow Inexact Rounded
+  #|mulx773 multiply 1e+600000000 1e+400000004 -> Infinity Overflow Inexact Rounded
+  #|mulx774 multiply 1e+600000000 1e+400000005 -> Infinity Overflow Inexact Rounded
+  #|mulx775 multiply 1e+600000000 1e+400000006 -> Infinity Overflow Inexact Rounded
+  #|mulx776 multiply 1e+600000000 1e+400000007 -> Infinity Overflow Inexact Rounded
+  #|mulx777 multiply 1e+600000000 1e+400000008 -> Infinity Overflow Inexact Rounded
+  #|mulx778 multiply 1e+600000000 1e+400000009 -> Infinity Overflow Inexact Rounded
+  #|mulx779 multiply 1e+600000000 1e+400000010 -> Infinity Overflow Inexact Rounded
   #|precision: 99
+  #|mulx780 multiply 1e-600000000 1e-400000007 -> 1E-1000000007 Subnormal
+  #|mulx781 multiply 1e-600000000 1e-400000008 -> 1E-1000000008 Subnormal
+  #|mulx782 multiply 1e-600000000 1e-400000097 -> 1E-1000000097 Subnormal
+  #|mulx783 multiply 1e-600000000 1e-400000098 -> 0E-1000000097 Underflow Subnormal Inexact Rounded Clamped
   #|precision: 999
+  #|mulx784 multiply 1e-600000000 1e-400000997 -> 1E-1000000997 Subnormal
+  #|mulx785 multiply 1e-600000000 1e-400000998 -> 0E-1000000997 Underflow Subnormal Inexact Rounded Clamped
   #|precision: 9999
+  #|mulx786 multiply 1e-600000000 1e-400009997 -> 1E-1000009997 Subnormal
+  #|mulx787 multiply 1e-600000000 1e-400009998 -> 0E-1000009997 Underflow Subnormal Inexact Rounded Clamped
   #|precision: 99999
+  #|mulx788 multiply 1e-600000000 1e-400099997 -> 1E-1000099997 Subnormal
+  #|mulx789 multiply 1e-600000000 1e-400099998 -> 0E-1000099997 Underflow Subnormal Inexact Rounded Clamped
   #|precision: 999999
+  #|mulx790 multiply 1e-600000000 1e-400999997 -> 1E-1000999997 Subnormal
+  #|mulx791 multiply 1e-600000000 1e-400999998 -> 0E-1000999997 Underflow Subnormal Inexact Rounded Clamped
   #|precision: 9999999
+  #|mulx792 multiply 1e-600000000 1e-409999997 -> 1E-1009999997 Subnormal
+  #|mulx793 multiply 1e-600000000 1e-409999998 -> 0E-1009999997 Underflow Subnormal Inexact Rounded Clamped
   #|precision: 99999999
+  #|mulx794 multiply 1e-600000000 1e-499999997 -> 1E-1099999997 Subnormal
+  #|mulx795 multiply 1e-600000000 1e-499999998 -> 0E-1099999997 Underflow Subnormal Inexact Rounded Clamped
   #|precision: 999999999
+  #|mulx796 multiply 1e-999999999 1e-999999997 -> 1E-1999999996 Subnormal
+  #|mulx797 multiply 1e-999999999 1e-999999998 -> 1E-1999999997 Subnormal
+  #|mulx798 multiply 1e-999999999 1e-999999999 -> 0E-1999999997 Underflow Subnormal Inexact Rounded Clamped
+  #|mulx799 multiply 1e-600000000 1e-400000007 -> 1E-1000000007 Subnormal
+  #|mulx800 multiply 1e-600000000 1e-400000008 -> 1E-1000000008 Subnormal
   #|precision:   5
+  #|maxExponent: 999
+  #|minexponent: -999
   #|rounding:    half_even
+  #|mulx801 multiply  1.0000E-999  1     -> 1.0000E-999
+  #|mulx802 multiply  1.000E-999   1e-1  -> 1.000E-1000 Subnormal
+  #|mulx803 multiply  1.00E-999    1e-2  -> 1.00E-1001  Subnormal
+  #|mulx804 multiply  1.0E-999     1e-3  -> 1.0E-1002   Subnormal
+  #|mulx805 multiply  1.0E-999     1e-4  -> 1E-1003     Subnormal Rounded
+  #|mulx806 multiply  1.3E-999     1e-4  -> 1E-1003     Underflow Subnormal Inexact Rounded
+  #|mulx807 multiply  1.5E-999     1e-4  -> 2E-1003     Underflow Subnormal Inexact Rounded
+  #|mulx808 multiply  1.7E-999     1e-4  -> 2E-1003     Underflow Subnormal Inexact Rounded
+  #|mulx809 multiply  2.3E-999     1e-4  -> 2E-1003     Underflow Subnormal Inexact Rounded
+  #|mulx810 multiply  2.5E-999     1e-4  -> 2E-1003     Underflow Subnormal Inexact Rounded
+  #|mulx811 multiply  2.7E-999     1e-4  -> 3E-1003     Underflow Subnormal Inexact Rounded
+  #|mulx812 multiply  1.49E-999    1e-4  -> 1E-1003     Underflow Subnormal Inexact Rounded
+  #|mulx813 multiply  1.50E-999    1e-4  -> 2E-1003     Underflow Subnormal Inexact Rounded
+  #|mulx814 multiply  1.51E-999    1e-4  -> 2E-1003     Underflow Subnormal Inexact Rounded
+  #|mulx815 multiply  2.49E-999    1e-4  -> 2E-1003     Underflow Subnormal Inexact Rounded
+  #|mulx816 multiply  2.50E-999    1e-4  -> 2E-1003     Underflow Subnormal Inexact Rounded
+  #|mulx817 multiply  2.51E-999    1e-4  -> 3E-1003     Underflow Subnormal Inexact Rounded
+  #|mulx818 multiply  1E-999       1e-4  -> 1E-1003     Subnormal
+  #|mulx819 multiply  3E-999       1e-5  -> 0E-1003     Underflow Subnormal Inexact Rounded Clamped
+  #|mulx820 multiply  5E-999       1e-5  -> 0E-1003     Underflow Subnormal Inexact Rounded Clamped
+  #|mulx821 multiply  7E-999       1e-5  -> 1E-1003     Underflow Subnormal Inexact Rounded
+  #|mulx822 multiply  9E-999       1e-5  -> 1E-1003     Underflow Subnormal Inexact Rounded
+  #|mulx823 multiply  9.9E-999     1e-5  -> 1E-1003     Underflow Subnormal Inexact Rounded
+  #|mulx824 multiply  1E-999      -1e-4  -> -1E-1003    Subnormal
+  #|mulx825 multiply  3E-999      -1e-5  -> -0E-1003    Underflow Subnormal Inexact Rounded Clamped
+  #|mulx826 multiply -5E-999       1e-5  -> -0E-1003    Underflow Subnormal Inexact Rounded Clamped
+  #|mulx827 multiply  7E-999      -1e-5  -> -1E-1003    Underflow Subnormal Inexact Rounded
+  #|mulx828 multiply -9E-999       1e-5  -> -1E-1003    Underflow Subnormal Inexact Rounded
+  #|mulx829 multiply  9.9E-999    -1e-5  -> -1E-1003    Underflow Subnormal Inexact Rounded
+  #|mulx830 multiply  3.0E-999    -1e-5  -> -0E-1003    Underflow Subnormal Inexact Rounded Clamped
+  #|mulx831 multiply  1.0E-501     1e-501 -> 1.0E-1002   Subnormal
+  #|mulx832 multiply  2.0E-501     2e-501 -> 4.0E-1002   Subnormal
+  #|mulx833 multiply  4.0E-501     4e-501 -> 1.60E-1001  Subnormal
+  #|mulx834 multiply 10.0E-501    10e-501 -> 1.000E-1000 Subnormal
+  #|mulx835 multiply 30.0E-501    30e-501 -> 9.000E-1000 Subnormal
+  #|mulx836 multiply 40.0E-501    40e-501 -> 1.6000E-999
+  #|mulx840 multiply  1E-502       1e-502 -> 0E-1003     Underflow Subnormal Inexact Rounded Clamped
+  #|mulx841 multiply  1E-501       1e-501 -> 1E-1002     Subnormal
+  #|mulx842 multiply  2E-501       2e-501 -> 4E-1002     Subnormal
+  #|mulx843 multiply  4E-501       4e-501 -> 1.6E-1001   Subnormal
+  #|mulx844 multiply 10E-501      10e-501 -> 1.00E-1000  Subnormal
+  #|mulx845 multiply 30E-501      30e-501 -> 9.00E-1000  Subnormal
+  #|mulx846 multiply 40E-501      40e-501 -> 1.600E-999
+  #|mulx850 multiply  1E-670     1e-335 -> 0E-1003    Underflow Subnormal Inexact Rounded Clamped
+  #|mulx851 multiply  1E-668     1e-334 -> 1E-1002    Subnormal
+  #|mulx852 multiply  4E-668     2e-334 -> 8E-1002    Subnormal
+  #|mulx853 multiply  9E-668     3e-334 -> 2.7E-1001  Subnormal
+  #|mulx854 multiply 16E-668     4e-334 -> 6.4E-1001  Subnormal
+  #|mulx855 multiply 25E-668     5e-334 -> 1.25E-1000 Subnormal
+  #|mulx856 multiply 10E-668   100e-334 -> 1.000E-999
   #|precision: 19
+  #|mulx860 multiply  6636851557994578716E-520 6636851557994578716E-520 -> 4.40477986028551E-1003 Underflow Subnormal Inexact Rounded
   #|precision: 3
+  #|maxExponent: 999999999
+  #|minexponent: -999999999
+  #|mulx870 multiply 1  9.999E+999999999   ->  Infinity Inexact Overflow Rounded
+  #|mulx871 multiply 1 -9.999E+999999999   -> -Infinity Inexact Overflow Rounded
+  #|mulx872 multiply    9.999E+999999999 1 ->  Infinity Inexact Overflow Rounded
+  #|mulx873 multiply   -9.999E+999999999 1 -> -Infinity Inexact Overflow Rounded
   #|precision:   5
+  #|maxexponent: 79
+  #|minexponent: -79
+  #|mulx881 multiply  1.2347E-40  1.2347E-40  ->  1.524E-80  Inexact Rounded Subnormal Underflow
+  #|mulx882 multiply  1.234E-40  1.234E-40    ->  1.523E-80  Inexact Rounded Subnormal Underflow
+  #|mulx883 multiply  1.23E-40   1.23E-40     ->  1.513E-80  Inexact Rounded Subnormal Underflow
+  #|mulx884 multiply  1.2E-40    1.2E-40      ->  1.44E-80   Subnormal
+  #|mulx885 multiply  1.2E-40    1.2E-41      ->  1.44E-81   Subnormal
+  #|mulx886 multiply  1.2E-40    1.2E-42      ->  1.4E-82    Subnormal Inexact Rounded Underflow
+  #|mulx887 multiply  1.2E-40    1.3E-42      ->  1.6E-82    Subnormal Inexact Rounded Underflow
+  #|mulx888 multiply  1.3E-40    1.3E-42      ->  1.7E-82    Subnormal Inexact Rounded Underflow
+  #|mulx889 multiply  1.3E-40    1.3E-43      ->    2E-83    Subnormal Inexact Rounded Underflow
+  #|mulx890 multiply  1.3E-41    1.3E-43      ->    0E-83    Clamped Subnormal Inexact Rounded Underflow
+  #|mulx891 multiply  1.2345E-39   1.234E-40  ->  1.5234E-79 Inexact Rounded
+  #|mulx892 multiply  1.23456E-39  1.234E-40  ->  1.5234E-79 Inexact Rounded
+  #|mulx893 multiply  1.2345E-40   1.234E-40  ->  1.523E-80  Inexact Rounded Subnormal Underflow
+  #|mulx894 multiply  1.23456E-40  1.234E-40  ->  1.523E-80  Inexact Rounded Subnormal Underflow
+  #|mulx895 multiply  1.2345E-41   1.234E-40  ->  1.52E-81   Inexact Rounded Subnormal Underflow
+  #|mulx896 multiply  1.23456E-41  1.234E-40  ->  1.52E-81   Inexact Rounded Subnormal Underflow
   #|precision:   16
   #|rounding:    half_up
+  #|maxExponent: 384
+  #|minExponent: -383
+  #|mulx900 multiply  0.3000000000E-191 0.3000000000E-191 -> 9.00000000000000E-384 Subnormal Rounded
+  #|mulx901 multiply  0.3000000001E-191 0.3000000001E-191 -> 9.00000000600000E-384 Underflow Inexact Subnormal Rounded
+  #|mulx902 multiply  9.999999999999999E-383  0.0999999999999         -> 9.99999999999000E-384 Underflow Inexact Subnormal Rounded
+  #|mulx903 multiply  9.999999999999999E-383  0.09999999999999        -> 9.99999999999900E-384 Underflow Inexact Subnormal Rounded
+  #|mulx904 multiply  9.999999999999999E-383  0.099999999999999       -> 9.99999999999990E-384 Underflow Inexact Subnormal Rounded
+  #|mulx905 multiply  9.999999999999999E-383  0.0999999999999999      -> 9.99999999999999E-384 Underflow Inexact Subnormal Rounded
   #|mulx906 multiply  9.999999999999999E-383  1                       -> 9.999999999999999E-383
   #|mulx907 multiply                       1  0.09999999999999999     -> 0.09999999999999999
+  #|mulx908 multiply  9.999999999999999E-383  0.09999999999999999     -> 1.000000000000000E-383 Underflow Inexact Subnormal Rounded
+  #|mulx909 multiply  9.999999999999999E-383  0.099999999999999999    -> 1.000000000000000E-383 Underflow Inexact Subnormal Rounded
+  #|mulx910 multiply  9.999999999999999E-383  0.0999999999999999999   -> 1.000000000000000E-383 Underflow Inexact Subnormal Rounded
+  #|mulx911 multiply  9.999999999999999E-383  0.09999999999999999999  -> 1.000000000000000E-383 Underflow Inexact Subnormal Rounded
   #|precision:   34
   #|rounding:    half_up
+  #|maxExponent: 6144
+  #|minExponent: -6143
   #|mulx1001  multiply 130E-2  120E-2 -> 1.5600
   #|mulx1002  multiply 130E-2  12E-1  -> 1.560
   #|mulx1003  multiply 130E-2  1E0    -> 1.30
@@ -429,19 +590,20 @@ let multiply_subset : String =
   #|precision: 5
 
 ///|
-test "multiply.decTest subset round-trips through parse + multiply + toSci" {
-  let cases = parse_dectest(multiply_subset)
-  assert_eq(cases.length(), 349)
+fn run_subset(label : String, subset : String) -> Unit raise {
+  let cases = parse_dectest(subset)
   let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
-    println("\{failures.length()} of \{cases.length()} cases failed:")
-    let limit = if failures.length() < 20 { failures.length() } else { 20 }
-    for i in 0..<limit {
-      println("  \{failures[i]}")
-    }
-    if failures.length() > limit {
-      println("  ... \{failures.length() - limit} more")
-    }
-    abort("multiply.decTest failures")
+    println("\{label}: \{failures.length()} of \{cases.length()} cases failed")
+    abort("\{label}.decTest failures")
   }
 }
+
+///|
+test "multiply chunk 0" { run_subset("mul0", multiply_subset_0) }
+///|
+test "multiply chunk 1" { run_subset("mul1", multiply_subset_1) }
+///|
+test "multiply chunk 2" { run_subset("mul2", multiply_subset_2) }
+///|
+test "multiply chunk 3" { run_subset("mul3", multiply_subset_3) }

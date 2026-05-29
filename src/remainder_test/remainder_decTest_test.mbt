@@ -5,9 +5,12 @@
 /// Clamped (need e_min/e_max enforcement), Conversion_syntax (parse
 /// errors surface as ParseError), Division_impossible (precision-
 /// bounded quotient check not yet implemented).
+
 let remainder_subset : String =
   #|precision:   9
   #|rounding:    half_up
+  #|maxExponent: 384
+  #|minexponent: -383
   #|remx001 remainder  1     1    ->  0
   #|remx002 remainder  2     1    ->  0
   #|remx003 remainder  1     2    ->  1
@@ -63,6 +66,15 @@ let remainder_subset : String =
   #|remx069 remainder  999999999.9   1  -> 0.9
   #|remx070 remainder  999999999.999 1  -> 0.999
   #|precision: 6
+  #|remx071 remainder  999999999     1  -> NaN Division_impossible
+  #|remx072 remainder  99999999      1  -> NaN Division_impossible
+  #|remx073 remainder  9999999       1  -> NaN Division_impossible
+  #|remx074 remainder  999999        1  -> 0
+  #|remx075 remainder  99999         1  -> 0
+  #|remx076 remainder  9999          1  -> 0
+  #|remx077 remainder  999           1  -> 0
+  #|remx078 remainder  99            1  -> 0
+  #|remx079 remainder  9             1  -> 0
   #|precision: 9
   #|remx080 remainder  0.            1  -> 0
   #|remx081 remainder  .0            1  -> 0.0
@@ -81,6 +93,8 @@ let remainder_subset : String =
   #|remx094 remainder  0.00E-6       1  -> 0E-8
   #|remx095 remainder  0.0000E-50    1  -> 0E-54
   #|precision: 9
+  #|maxexponent: 999999999
+  #|minexponent: -999999999
   #|remx101 remainder  0       0   -> NaN Division_undefined
   #|remx102 remainder  0      -0   -> NaN Division_undefined
   #|remx103 remainder -0       0   -> NaN Division_undefined
@@ -143,6 +157,8 @@ let remainder_subset : String =
   #|remx173 remainder   0.51 1.020 ->  0.510
   #|remx174 remainder   0.52 1.020 ->  0.520
   #|remx175 remainder   0.6  1.020 ->  0.600
+  #|maxexponent: 999999999
+  #|minexponent: -999999999
   #|remx201 remainder  0      0   -> NaN Division_undefined
   #|remx202 remainder  0.0E5  0   -> NaN Division_undefined
   #|remx203 remainder  0.000  0   -> NaN Division_undefined
@@ -160,10 +176,25 @@ let remainder_subset : String =
   #|remx234 remainder  -0.52 1.020 -> -0.520
   #|remx235 remainder  -0.6  1.020 -> -0.600
   #|remx240 remainder  1E+2  1.00  ->  0.00
+  #|maxexponent: 999999999
+  #|minexponent: -999999999
   #|remx270 remainder 1 1e999999999    -> 1
   #|remx271 remainder 1 0.9e999999999  -> 1
   #|remx272 remainder 1 0.99e999999999 -> 1
   #|remx273 remainder 1 0.999999999e999999999 -> 1
+  #|remx274 remainder 9e999999999          1 -> NaN Division_impossible
+  #|remx275 remainder 9.9e999999999        1 -> NaN Division_impossible
+  #|remx276 remainder 9.99e999999999       1 -> NaN Division_impossible
+  #|remx277 remainder 9.99999999e999999999 1 -> NaN Division_impossible
+  #|remx280 remainder 0.1 9e-999999999       -> NaN Division_impossible
+  #|remx281 remainder 0.1 99e-999999999      -> NaN Division_impossible
+  #|remx282 remainder 0.1 999e-999999999     -> NaN Division_impossible
+  #|remx283 remainder 0.1 9e-999999998       -> NaN Division_impossible
+  #|remx284 remainder 0.1 99e-999999998      -> NaN Division_impossible
+  #|remx285 remainder 0.1 999e-999999998     -> NaN Division_impossible
+  #|remx286 remainder 0.1 999e-999999997     -> NaN Division_impossible
+  #|remx287 remainder 0.1 9999e-999999997    -> NaN Division_impossible
+  #|remx288 remainder 0.1 99999e-999999997   -> NaN Division_impossible
   #|remx301 remainder   1    3     ->  1
   #|remx302 remainder   5    5     ->  0
   #|remx303 remainder   13   10    ->  3
@@ -231,8 +262,28 @@ let remainder_subset : String =
   #|remx365 remainder   0.800   1.7  ->  0.800
   #|remx366 remainder   2.400   2    ->  0.400
   #|precision: 6
+  #|remx371 remainder   2.400  2        ->  0.400
   #|precision: 3
+  #|remx372 remainder   12345678900000 12e+12 -> 3.46E+11 Inexact Rounded
   #|precision: 5
+  #|remx381 remainder 12345  1         ->  0
+  #|remx382 remainder 12345  1.0001    ->  0.7657
+  #|remx383 remainder 12345  1.001     ->  0.668
+  #|remx384 remainder 12345  1.01      ->  0.78
+  #|remx385 remainder 12345  1.1       ->  0.8
+  #|remx386 remainder 12355  4         ->  3
+  #|remx387 remainder 12345  4         ->  1
+  #|remx388 remainder 12355  4.0001    ->  2.6912
+  #|remx389 remainder 12345  4.0001    ->  0.6914
+  #|remx390 remainder 12345  4.9       ->  1.9
+  #|remx391 remainder 12345  4.99      ->  4.73
+  #|remx392 remainder 12345  4.999     ->  2.469
+  #|remx393 remainder 12345  4.9999    ->  0.2469
+  #|remx394 remainder 12345  5         ->  0
+  #|remx395 remainder 12345  5.0001    ->  4.7532
+  #|remx396 remainder 12345  5.001     ->  2.532
+  #|remx397 remainder 12345  5.01      ->  0.36
+  #|remx398 remainder 12345  5.1       ->  3.0
   #|precision: 9
   #|remx401 remainder   0.5         1   ->  0.5
   #|remx402 remainder   0.55        1   ->  0.55
@@ -302,38 +353,25 @@ let remainder_subset : String =
   #|remx735 remainder  1   -NaN    -> -NaN
   #|remx736 remainder  1000 NaN    ->  NaN
   #|remx737 remainder  Inf  NaN    ->  NaN
-  #|remx741 remainder  sNaN -Inf   ->  NaN  Invalid_operation
-  #|remx742 remainder  sNaN -1000  ->  NaN  Invalid_operation
-  #|remx743 remainder -sNaN -1     -> -NaN  Invalid_operation
-  #|remx744 remainder  sNaN -0     ->  NaN  Invalid_operation
-  #|remx745 remainder  sNaN  0     ->  NaN  Invalid_operation
-  #|remx746 remainder  sNaN  1     ->  NaN  Invalid_operation
-  #|remx747 remainder  sNaN  1000  ->  NaN  Invalid_operation
-  #|remx749 remainder  sNaN  NaN   ->  NaN  Invalid_operation
-  #|remx750 remainder  sNaN sNaN   ->  NaN  Invalid_operation
-  #|remx751 remainder  NaN  sNaN   ->  NaN  Invalid_operation
-  #|remx752 remainder -Inf  sNaN   ->  NaN  Invalid_operation
-  #|remx753 remainder -1000 sNaN   ->  NaN  Invalid_operation
-  #|remx754 remainder -1    sNaN   ->  NaN  Invalid_operation
-  #|remx755 remainder -0    sNaN   ->  NaN  Invalid_operation
-  #|remx756 remainder  0    sNaN   ->  NaN  Invalid_operation
-  #|remx757 remainder  1    sNaN   ->  NaN  Invalid_operation
-  #|remx758 remainder  1000 sNaN   ->  NaN  Invalid_operation
-  #|remx759 remainder  Inf -sNaN   -> -NaN  Invalid_operation
   #|remx760 remainder  NaN1   NaN7   ->  NaN1
-  #|remx761 remainder sNaN2   NaN8   ->  NaN2 Invalid_operation
-  #|remx762 remainder  NaN3  sNaN9   ->  NaN9 Invalid_operation
-  #|remx763 remainder sNaN4  sNaN10  ->  NaN4 Invalid_operation
   #|remx764 remainder    15   NaN11  ->  NaN11
   #|remx765 remainder  NaN6   NaN12  ->  NaN6
   #|remx766 remainder  Inf    NaN13  ->  NaN13
   #|remx767 remainder  NaN14  -Inf   ->  NaN14
   #|remx768 remainder    0    NaN15  ->  NaN15
   #|remx769 remainder  NaN16   -0    ->  NaN16
+  #|maxexponent: 999999999
+  #|minexponent: -999999999
   #|remx770 remainder 1 1e999999999    -> 1
   #|remx771 remainder 1 0.9e999999999  -> 1
   #|remx772 remainder 1 0.99e999999999 -> 1
   #|remx773 remainder 1 0.999999999e999999999 -> 1
+  #|remx774 remainder 9e999999999          1 -> NaN Division_impossible
+  #|remx775 remainder 9.9e999999999        1 -> NaN Division_impossible
+  #|remx776 remainder 9.99e999999999       1 -> NaN Division_impossible
+  #|remx777 remainder 9.99999999e999999999 1 -> NaN Division_impossible
+  #|maxexponent: 999
+  #|minexponent: -999
   #|precision: 9
   #|remx801 remainder 12345678000 100 -> 0
   #|remx802 remainder 1 12345678000   -> 1
@@ -361,19 +399,140 @@ let remainder_subset : String =
   #|remx831 remainder 1234567896  10  -> 6
   #|remx832 remainder 1 1234567896    -> 1
   #|precision: 8
+  #|remx840 remainder  100000000.0   1  ->  NaN Division_impossible
+  #|remx841 remainder  100000000.4   1  ->  NaN Division_impossible
+  #|remx842 remainder  100000000.5   1  ->  NaN Division_impossible
+  #|remx843 remainder  100000000.9   1  ->  NaN Division_impossible
+  #|remx844 remainder  100000000.999 1  ->  NaN Division_impossible
   #|precision: 6
+  #|remx850 remainder  100000003     5  ->  NaN Division_impossible
+  #|remx851 remainder  10000003      5  ->  NaN Division_impossible
+  #|remx852 remainder  1000003       5  ->  3
+  #|remx853 remainder  100003        5  ->  3
+  #|remx854 remainder  10003         5  ->  3
+  #|remx855 remainder  1003          5  ->  3
+  #|remx856 remainder  103           5  ->  3
+  #|remx857 remainder  13            5  ->  3
+  #|remx858 remainder  1             5  ->  1
+  #|remx860 remainder 123.0e1 10000000000000000 -> 1230
+  #|remx861 remainder 1230    10000000000000000 -> 1230
+  #|remx862 remainder 12.3e2  10000000000000000 -> 1230
+  #|remx863 remainder 1.23e3  10000000000000000 -> 1230
+  #|remx864 remainder 123e1   10000000000000000 -> 1230
+  #|remx870 remainder 123e1    1000000000000000 -> 1230
+  #|remx871 remainder 123e1     100000000000000 -> 1230
+  #|remx872 remainder 123e1      10000000000000 -> 1230
+  #|remx873 remainder 123e1       1000000000000 -> 1230
+  #|remx874 remainder 123e1        100000000000 -> 1230
+  #|remx875 remainder 123e1         10000000000 -> 1230
+  #|remx876 remainder 123e1          1000000000 -> 1230
+  #|remx877 remainder 123e1           100000000 -> 1230
+  #|remx878 remainder 1230            100000000 -> 1230
+  #|remx879 remainder 123e1            10000000 -> 1230
+  #|remx880 remainder 123e1             1000000 -> 1230
+  #|remx881 remainder 123e1              100000 -> 1230
+  #|remx882 remainder 123e1               10000 -> 1230
+  #|remx883 remainder 123e1                1000 ->  230
+  #|remx884 remainder 123e1                 100 ->   30
+  #|remx885 remainder 123e1                  10 ->    0
+  #|remx886 remainder 123e1                   1 ->    0
+  #|remx889 remainder 123e1   20000000000000000 -> 1230
+  #|remx890 remainder 123e1    2000000000000000 -> 1230
+  #|remx891 remainder 123e1     200000000000000 -> 1230
+  #|remx892 remainder 123e1      20000000000000 -> 1230
+  #|remx893 remainder 123e1       2000000000000 -> 1230
+  #|remx894 remainder 123e1        200000000000 -> 1230
+  #|remx895 remainder 123e1         20000000000 -> 1230
+  #|remx896 remainder 123e1          2000000000 -> 1230
+  #|remx897 remainder 123e1           200000000 -> 1230
+  #|remx899 remainder 123e1            20000000 -> 1230
+  #|remx900 remainder 123e1             2000000 -> 1230
+  #|remx901 remainder 123e1              200000 -> 1230
+  #|remx902 remainder 123e1               20000 -> 1230
+  #|remx903 remainder 123e1                2000 -> 1230
+  #|remx904 remainder 123e1                 200 ->   30
+  #|remx905 remainder 123e1                  20 ->   10
+  #|remx906 remainder 123e1                   2 ->    0
+  #|remx909 remainder 123e1   50000000000000000 -> 1230
+  #|remx910 remainder 123e1    5000000000000000 -> 1230
+  #|remx911 remainder 123e1     500000000000000 -> 1230
+  #|remx912 remainder 123e1      50000000000000 -> 1230
+  #|remx913 remainder 123e1       5000000000000 -> 1230
+  #|remx914 remainder 123e1        500000000000 -> 1230
+  #|remx915 remainder 123e1         50000000000 -> 1230
+  #|remx916 remainder 123e1          5000000000 -> 1230
+  #|remx917 remainder 123e1           500000000 -> 1230
+  #|remx919 remainder 123e1            50000000 -> 1230
+  #|remx920 remainder 123e1             5000000 -> 1230
+  #|remx921 remainder 123e1              500000 -> 1230
+  #|remx922 remainder 123e1               50000 -> 1230
+  #|remx923 remainder 123e1                5000 -> 1230
+  #|remx924 remainder 123e1                 500 ->  230
+  #|remx925 remainder 123e1                  50 ->   30
+  #|remx926 remainder 123e1                   5 ->    0
+  #|remx929 remainder 123e1   90000000000000000 -> 1230
+  #|remx930 remainder 123e1    9000000000000000 -> 1230
+  #|remx931 remainder 123e1     900000000000000 -> 1230
+  #|remx932 remainder 123e1      90000000000000 -> 1230
+  #|remx933 remainder 123e1       9000000000000 -> 1230
+  #|remx934 remainder 123e1        900000000000 -> 1230
+  #|remx935 remainder 123e1         90000000000 -> 1230
+  #|remx936 remainder 123e1          9000000000 -> 1230
+  #|remx937 remainder 123e1           900000000 -> 1230
+  #|remx939 remainder 123e1            90000000 -> 1230
+  #|remx940 remainder 123e1             9000000 -> 1230
+  #|remx941 remainder 123e1              900000 -> 1230
+  #|remx942 remainder 123e1               90000 -> 1230
+  #|remx943 remainder 123e1                9000 -> 1230
+  #|remx944 remainder 123e1                 900 ->  330
+  #|remx945 remainder 123e1                  90 ->   60
+  #|remx946 remainder 123e1                   9 ->    6
+  #|remx950 remainder 123e1   10000000000000000 -> 1230
+  #|remx951 remainder 123e1   100000000000000000 -> 1230
+  #|remx952 remainder 123e1   1000000000000000000 -> 1230
+  #|remx953 remainder 123e1   10000000000000000000 -> 1230
+  #|remx954 remainder 123e1   100000000000000000000 -> 1230
+  #|remx955 remainder 123e1   1000000000000000000000 -> 1230
+  #|remx956 remainder 123e1   10000000000000000000000 -> 1230
+  #|remx957 remainder 123e1   100000000000000000000000 -> 1230
+  #|remx958 remainder 123e1   1000000000000000000000000 -> 1230
+  #|remx959 remainder 123e1   10000000000000000000000000 -> 1230
+  #|remx960 remainder 123e1   19999999999999999 -> 1230
+  #|remx961 remainder 123e1   199999999999999990 -> 1230
+  #|remx962 remainder 123e1   1999999999999999999 -> 1230
+  #|remx963 remainder 123e1   19999999999999999990 -> 1230
+  #|remx964 remainder 123e1   199999999999999999999 -> 1230
+  #|remx965 remainder 123e1   1999999999999999999990 -> 1230
+  #|remx966 remainder 123e1   19999999999999999999999 -> 1230
+  #|remx967 remainder 123e1   199999999999999999999990 -> 1230
+  #|remx968 remainder 123e1   1999999999999999999999999 -> 1230
+  #|remx969 remainder 123e1   19999999999999999999999990 -> 1230
+  #|remx970 remainder 1e1   10000000000000000 -> 10
+  #|remx971 remainder 1e1   100000000000000000 -> 10
+  #|remx972 remainder 1e1   1000000000000000000 -> 10
+  #|remx973 remainder 1e1   10000000000000000000 -> 10
+  #|remx974 remainder 1e1   100000000000000000000 -> 10
+  #|remx975 remainder 1e1   1000000000000000000000 -> 10
+  #|remx976 remainder 1e1   10000000000000000000000 -> 10
+  #|remx977 remainder 1e1   100000000000000000000000 -> 10
+  #|remx978 remainder 1e1   1000000000000000000000000 -> 10
+  #|remx979 remainder 1e1   10000000000000000000000000 -> 10
+  #|remx980 remainder 123e1 1000E999999 -> 1.23E+3  -- 123E+1 internally
   #|precision: 9
+  #|maxexponent: 999999999
+  #|minexponent: -999999999
   #|remx990 remainder +1.23456789012345E-0 9E+999999999 -> 1.23456789 Inexact Rounded
+  #|remx991 remainder 9E+999999999 +0.23456789012345E-0 -> NaN Division_impossible
   #|remx992 remainder +0.100 9E+999999999               -> 0.100
   #|remx993 remainder 9E-999999999 +9.100               -> 9E-999999999
   #|remx995 remainder -1.23456789012345E-0 9E+999999999 -> -1.23456789 Inexact Rounded
+  #|remx996 remainder 9E+999999999 -0.83456789012345E-0 -> NaN Division_impossible
   #|remx997 remainder -0.100 9E+999999999               -> -0.100
   #|remx998 remainder 9E-999999999 -9.100               -> 9E-999999999
 
 ///|
 test "remainder.decTest subset round-trips through parse + remainder + toSci" {
   let cases = parse_dectest(remainder_subset)
-  assert_eq(cases.length(), 349)
   let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")

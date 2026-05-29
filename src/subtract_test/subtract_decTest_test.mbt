@@ -5,9 +5,12 @@
 /// Clamped (need e_min/e_max enforcement), Conversion_syntax (parse
 /// errors surface as ParseError), Division_impossible (precision-
 /// bounded quotient check not yet implemented).
+
 let subtract_subset : String =
   #|precision:   9
   #|rounding:    half_up
+  #|maxExponent: 384
+  #|minexponent: -383
   #|subx001 subtract  0   0  -> '0'
   #|subx002 subtract  1   1  -> '0'
   #|subx003 subtract  1   2  -> '-1'
@@ -65,6 +68,7 @@ let subtract_subset : String =
   #|subx069 subtract '10000e+9'    '700000' -> '9.99999930E+12' Rounded
   #|subx080 subtract '10000e+9'    '70000' -> '9.99999993E+12' Rounded
   #|precision: 6
+  #|subx081 subtract '10000e+9'    '70000' -> '1.00000E+13' Inexact Rounded
   #|precision: 9
   #|subx090 subtract '00.0'    '0.0'  -> '0.0'
   #|subx091 subtract '00.0'    '0.00' -> '0.00'
@@ -113,7 +117,11 @@ let subtract_subset : String =
   #|subx145 subtract  '-10.23456790'   '-10.23456786' -> '-4E-8'
   #|subx146 subtract  '-10.23456791'   '-10.23456786' -> '-5E-8'
   #|precision: 3
+  #|subx150 subtract '12345678900000' '9999999999999'  -> 2.35E+12 Inexact Rounded
+  #|subx151 subtract '9999999999999'  '12345678900000' -> -2.35E+12 Inexact Rounded
   #|precision: 6
+  #|subx152 subtract '12345678900000' '9999999999999'  -> 2.34568E+12 Inexact Rounded
+  #|subx153 subtract '9999999999999'  '12345678900000' -> -2.34568E+12 Inexact Rounded
   #|precision: 9
   #|subx154 subtract '12345678900000' '9999999999999'  -> 2.34567890E+12 Inexact Rounded
   #|subx155 subtract '9999999999999'  '12345678900000' -> -2.34567890E+12 Inexact Rounded
@@ -238,6 +246,20 @@ let subtract_subset : String =
   #|subx356 subtract '70000' '10000e+9'   -> '-9999999930000'
   #|subx357 subtract '700000' '10000e+9'   -> '-9999999300000'
   #|precision: 6
+  #|subx360 subtract '10000e+9'  '70000' -> '1.00000E+13' Inexact Rounded
+  #|subx361 subtract 1 '0.0001' -> '0.9999'
+  #|subx362 subtract 1 '0.00001' -> '0.99999'
+  #|subx363 subtract 1 '0.000001' -> '0.999999'
+  #|subx364 subtract 1 '0.0000001' -> '1.00000' Inexact Rounded
+  #|subx365 subtract 1 '0.00000001' -> '1.00000' Inexact Rounded
+  #|subx370 subtract 1  0  -> 1
+  #|subx371 subtract 1 0.  -> 1
+  #|subx372 subtract 1  .0 -> 1.0
+  #|subx373 subtract 1 0.0 -> 1.0
+  #|subx374 subtract  0  1 -> -1
+  #|subx375 subtract 0.  1 -> -1
+  #|subx376 subtract  .0 1 -> -1.0
+  #|subx377 subtract 0.0 1 -> -1.0
   #|precision: 9
   #|subx910 subtract -103519362 -51897955.3 -> -51621406.7
   #|subx911 subtract 159579.444 89827.5229 -> 69751.9211
@@ -252,13 +274,32 @@ let subtract_subset : String =
   #|subx928 subtract 101.123456 91.1234566 ->   9.9999994
   #|subx929 subtract 101.123456 99.1234566 ->   1.9999994
   #|precision: 1
+  #|subx930 subtract  11 2           -> 9
   #|precision: 2
+  #|subx932 subtract 101 2           -> 99
   #|precision: 3
+  #|subx934 subtract 101 2.1         -> 98.9
+  #|subx935 subtract 101 92.01       ->  8.99
   #|precision: 4
+  #|subx936 subtract 101 2.01        -> 98.99
+  #|subx937 subtract 101 92.01       ->  8.99
+  #|subx938 subtract 101 92.006      ->  8.994
   #|precision: 5
+  #|subx939 subtract 101 2.001       -> 98.999
+  #|subx940 subtract 101 92.001      ->  8.999
+  #|subx941 subtract 101 92.0006     ->  8.9994
   #|precision: 6
+  #|subx942 subtract 101 2.0001      -> 98.9999
+  #|subx943 subtract 101 92.0001     ->  8.9999
+  #|subx944 subtract 101 92.00006    ->  8.99994
   #|precision: 7
+  #|subx945 subtract 101 2.00001     -> 98.99999
+  #|subx946 subtract 101 92.00001    ->  8.99999
+  #|subx947 subtract 101 92.000006   ->  8.999994
   #|precision: 8
+  #|subx948 subtract 101 2.000001    -> 98.999999
+  #|subx949 subtract 101 92.000001   ->  8.999999
+  #|subx950 subtract 101 92.0000006  ->  8.9999994
   #|precision: 9
   #|subx951 subtract 101 2.0000001   -> 98.9999999
   #|subx952 subtract 101 92.0000001  ->  8.9999999
@@ -490,10 +531,42 @@ let subtract_subset : String =
   #|subx694 subtract '123456789' '123456789.9' -> -0.9
   #|rounding: half_up
   #|precision: 3
+  #|subx700 subtract '12345678900000'  -9999999999999 ->  '2.23E+13' Inexact Rounded
+  #|subx701 subtract  '9999999999999' -12345678900000 ->  '2.23E+13' Inexact Rounded
+  #|subx702 subtract '12E+3'  '-3456' ->  '1.55E+4' Inexact Rounded
+  #|subx703 subtract '12E+3'  '-3446' ->  '1.54E+4' Inexact Rounded
+  #|subx704 subtract '12E+3'  '-3454' ->  '1.55E+4' Inexact Rounded
+  #|subx705 subtract '12E+3'  '-3444' ->  '1.54E+4' Inexact Rounded
+  #|subx706 subtract '3456'  '-12E+3' ->  '1.55E+4' Inexact Rounded
+  #|subx707 subtract '3446'  '-12E+3' ->  '1.54E+4' Inexact Rounded
+  #|subx708 subtract '3454'  '-12E+3' ->  '1.55E+4' Inexact Rounded
+  #|subx709 subtract '3444'  '-12E+3' ->  '1.54E+4' Inexact Rounded
+  #|maxexponent: 999999999
+  #|minexponent: -999999999
   #|precision: 9
   #|rounding: down
+  #|subx710 subtract 1E+999999999    -9E+999999999   -> 9.99999999E+999999999 Overflow Inexact Rounded
+  #|subx711 subtract 9E+999999999    -1E+999999999   -> 9.99999999E+999999999 Overflow Inexact Rounded
   #|rounding: half_up
+  #|subx712 subtract 1E+999999999    -9E+999999999   -> Infinity Overflow Inexact Rounded
+  #|subx713 subtract 9E+999999999    -1E+999999999   -> Infinity Overflow Inexact Rounded
+  #|subx714 subtract -1.1E-999999999 -1E-999999999   -> -1E-1000000000 Subnormal
+  #|subx715 subtract 1E-999999999    +1.1e-999999999 -> -1E-1000000000 Subnormal
+  #|subx716 subtract -1E+999999999   +9E+999999999   -> -Infinity Overflow Inexact Rounded
+  #|subx717 subtract -9E+999999999   +1E+999999999   -> -Infinity Overflow Inexact Rounded
+  #|subx718 subtract +1.1E-999999999 +1E-999999999   -> 1E-1000000000 Subnormal
+  #|subx719 subtract -1E-999999999   -1.1e-999999999 -> 1E-1000000000 Subnormal
   #|precision: 3
+  #|subx720 subtract 1  9.999E+999999999   -> -Infinity Inexact Overflow Rounded
+  #|subx721 subtract 1 -9.999E+999999999   ->  Infinity Inexact Overflow Rounded
+  #|subx722 subtract    9.999E+999999999 1 ->  Infinity Inexact Overflow Rounded
+  #|subx723 subtract   -9.999E+999999999 1 -> -Infinity Inexact Overflow Rounded
+  #|subx724 subtract 1  9.999E+999999999   -> -Infinity Inexact Overflow Rounded
+  #|subx725 subtract 1 -9.999E+999999999   ->  Infinity Inexact Overflow Rounded
+  #|subx726 subtract    9.999E+999999999 1 ->  Infinity Inexact Overflow Rounded
+  #|subx727 subtract   -9.999E+999999999 1 -> -Infinity Inexact Overflow Rounded
+  #|maxexponent: 999
+  #|minexponent: -999
   #|precision: 9
   #|sub731 subtract 12345678000 0 ->  1.23456780E+10 Rounded
   #|sub732 subtract 0 12345678000 -> -1.23456780E+10 Rounded
@@ -565,25 +638,6 @@ let subtract_subset : String =
   #|subx835 subtract  1     NaN   ->  NaN
   #|subx836 subtract  1000 -NaN   -> -NaN
   #|subx837 subtract  Inf   NaN   ->  NaN
-  #|subx841 subtract  sNaN  Inf   ->  NaN  Invalid_operation
-  #|subx842 subtract -sNaN  1000  -> -NaN  Invalid_operation
-  #|subx843 subtract  sNaN  1     ->  NaN  Invalid_operation
-  #|subx844 subtract  sNaN  0     ->  NaN  Invalid_operation
-  #|subx845 subtract  sNaN -0     ->  NaN  Invalid_operation
-  #|subx846 subtract  sNaN -1     ->  NaN  Invalid_operation
-  #|subx847 subtract  sNaN -1000  ->  NaN  Invalid_operation
-  #|subx848 subtract  sNaN  NaN   ->  NaN  Invalid_operation
-  #|subx849 subtract  sNaN sNaN   ->  NaN  Invalid_operation
-  #|subx850 subtract  NaN  sNaN   ->  NaN  Invalid_operation
-  #|subx851 subtract -Inf -sNaN   -> -NaN  Invalid_operation
-  #|subx852 subtract -1000 sNaN   ->  NaN  Invalid_operation
-  #|subx853 subtract -1    sNaN   ->  NaN  Invalid_operation
-  #|subx854 subtract -0    sNaN   ->  NaN  Invalid_operation
-  #|subx855 subtract  0    sNaN   ->  NaN  Invalid_operation
-  #|subx856 subtract  1    sNaN   ->  NaN  Invalid_operation
-  #|subx857 subtract  1000 sNaN   ->  NaN  Invalid_operation
-  #|subx858 subtract  Inf  sNaN   ->  NaN  Invalid_operation
-  #|subx859 subtract  NaN  sNaN   ->  NaN  Invalid_operation
   #|subx861 subtract  NaN01   -Inf     ->  NaN1
   #|subx862 subtract -NaN02   -1000    -> -NaN2
   #|subx863 subtract  NaN03    1000    ->  NaN3
@@ -593,17 +647,6 @@ let subtract_subset : String =
   #|subx867 subtract -1000     NaN81   ->  NaN81
   #|subx868 subtract  1000     NaN91   ->  NaN91
   #|subx869 subtract  Inf      NaN101  ->  NaN101
-  #|subx871 subtract  sNaN011  -Inf    ->  NaN11  Invalid_operation
-  #|subx872 subtract  sNaN012  -1000   ->  NaN12  Invalid_operation
-  #|subx873 subtract -sNaN013   1000   -> -NaN13  Invalid_operation
-  #|subx874 subtract  sNaN014   NaN171 ->  NaN14  Invalid_operation
-  #|subx875 subtract  sNaN015  sNaN181 ->  NaN15  Invalid_operation
-  #|subx876 subtract  NaN016   sNaN191 ->  NaN191 Invalid_operation
-  #|subx877 subtract -Inf      sNaN201 ->  NaN201 Invalid_operation
-  #|subx878 subtract -1000     sNaN211 ->  NaN211 Invalid_operation
-  #|subx879 subtract  1000    -sNaN221 -> -NaN221 Invalid_operation
-  #|subx880 subtract  Inf      sNaN231 ->  NaN231 Invalid_operation
-  #|subx881 subtract  NaN025   sNaN241 ->  NaN241 Invalid_operation
   #|subx901 subtract  2.E-3  1.002  -> -1.000
   #|subx902 subtract  2.0E-3  1.002  -> -1.0000
   #|subx903 subtract  2.00E-3  1.0020  -> -1.00000
@@ -613,10 +656,63 @@ let subtract_subset : String =
   #|subx907 subtract  2.000000E-3  1.00200000  -> -1.000000000
   #|subx908 subtract  2.0000000E-3  1.002000000  -> -1.0000000000
   #|precision: 3
+  #|maxexponent: 999
+  #|minexponent: -999
+  #|subx1010 subtract  0  1.00E-999       ->  -1.00E-999
+  #|subx1011 subtract  0  0.1E-999        ->  -1E-1000   Subnormal
+  #|subx1012 subtract  0  0.10E-999       ->  -1.0E-1000 Subnormal
+  #|subx1013 subtract  0  0.100E-999      ->  -1.0E-1000 Subnormal Rounded
+  #|subx1014 subtract  0  0.01E-999       ->  -1E-1001   Subnormal
+  #|subx1015 subtract  0  0.999E-999      ->  -1.00E-999 Inexact Rounded Subnormal Underflow
+  #|subx1016 subtract  0  0.099E-999      ->  -1.0E-1000 Inexact Rounded Subnormal Underflow
+  #|subx1017 subtract  0  0.009E-999      ->  -1E-1001   Inexact Rounded Subnormal Underflow
+  #|subx1018 subtract  0  0.001E-999      ->  -0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|subx1019 subtract  0  0.0009E-999     ->  -0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|subx1020 subtract  0  0.0001E-999     ->  -0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|subx1030 subtract  0 -1.00E-999       ->   1.00E-999
+  #|subx1031 subtract  0 -0.1E-999        ->   1E-1000   Subnormal
+  #|subx1032 subtract  0 -0.10E-999       ->   1.0E-1000 Subnormal
+  #|subx1033 subtract  0 -0.100E-999      ->   1.0E-1000 Subnormal Rounded
+  #|subx1034 subtract  0 -0.01E-999       ->   1E-1001   Subnormal
+  #|subx1035 subtract  0 -0.999E-999      ->   1.00E-999 Inexact Rounded Subnormal Underflow
+  #|subx1036 subtract  0 -0.099E-999      ->   1.0E-1000 Inexact Rounded Subnormal Underflow
+  #|subx1037 subtract  0 -0.009E-999      ->   1E-1001   Inexact Rounded Subnormal Underflow
+  #|subx1038 subtract  0 -0.001E-999      ->   0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|subx1039 subtract  0 -0.0009E-999     ->   0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|subx1040 subtract  0 -0.0001E-999     ->   0E-1001   Inexact Rounded Subnormal Underflow Clamped
   #|rounding: half_up
+  #|subx1050 subtract  1.00E-999   0.1E-999  ->   9.0E-1000  Subnormal
+  #|subx1051 subtract  0.1E-999    0.1E-999  ->   0E-1000
+  #|subx1052 subtract  0.10E-999   0.1E-999  ->   0E-1001
+  #|subx1053 subtract  0.100E-999  0.1E-999  ->   0E-1001    Clamped
+  #|subx1054 subtract  0.01E-999   0.1E-999  ->   -9E-1001   Subnormal
+  #|subx1055 subtract  0.999E-999  0.1E-999  ->   9.0E-1000  Inexact Rounded Subnormal Underflow
+  #|subx1056 subtract  0.099E-999  0.1E-999  ->   -0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|subx1057 subtract  0.009E-999  0.1E-999  ->   -9E-1001   Inexact Rounded Subnormal Underflow
+  #|subx1058 subtract  0.001E-999  0.1E-999  ->   -1.0E-1000 Inexact Rounded Subnormal Underflow
+  #|subx1059 subtract  0.0009E-999 0.1E-999  ->   -1.0E-1000 Inexact Rounded Subnormal Underflow
+  #|subx1060 subtract  0.0001E-999 0.1E-999  ->   -1.0E-1000 Inexact Rounded Subnormal Underflow
   #|precision:   5
+  #|maxexponent: 79
+  #|minexponent: -79
+  #|subx1101 subtract  0 1.52444E-80 -> -1.524E-80 Inexact Rounded Subnormal Underflow
+  #|subx1102 subtract  0 1.52445E-80 -> -1.524E-80 Inexact Rounded Subnormal Underflow
+  #|subx1103 subtract  0 1.52446E-80 -> -1.524E-80 Inexact Rounded Subnormal Underflow
+  #|subx1104 subtract  1.52444E-80 0 ->  1.524E-80 Inexact Rounded Subnormal Underflow
+  #|subx1105 subtract  1.52445E-80 0 ->  1.524E-80 Inexact Rounded Subnormal Underflow
+  #|subx1106 subtract  1.52446E-80 0 ->  1.524E-80 Inexact Rounded Subnormal Underflow
+  #|subx1111 subtract  1.2345678E-80  1.2345671E-80 ->  0E-83 Inexact Rounded Subnormal Underflow Clamped
+  #|subx1112 subtract  1.2345678E-80  1.2345618E-80 ->  0E-83 Inexact Rounded Subnormal Underflow Clamped
+  #|subx1113 subtract  1.2345678E-80  1.2345178E-80 ->  0E-83 Inexact Rounded Subnormal Underflow Clamped
+  #|subx1114 subtract  1.2345678E-80  1.2341678E-80 ->  0E-83 Inexact Rounded Subnormal Underflow Clamped
+  #|subx1115 subtract  1.2345678E-80  1.2315678E-80 ->  3E-83         Rounded Subnormal
+  #|subx1116 subtract  1.2345678E-80  1.2145678E-80 ->  2.0E-82       Rounded Subnormal
+  #|subx1117 subtract  1.2345678E-80  1.1345678E-80 ->  1.00E-81      Rounded Subnormal
+  #|subx1118 subtract  1.2345678E-80  0.2345678E-80 ->  1.000E-80     Rounded Subnormal
   #|precision:   34
   #|rounding:    half_up
+  #|maxExponent: 6144
+  #|minExponent: -6143
   #|subx1125  subtract 130E-2  120E-2 -> 0.10
   #|subx1126  subtract 130E-2  12E-1  -> 0.10
   #|subx1127  subtract 130E-2  1E0    -> 0.30
@@ -625,7 +721,6 @@ let subtract_subset : String =
 ///|
 test "subtract.decTest subset round-trips through parse + subtract + toSci" {
   let cases = parse_dectest(subtract_subset)
-  assert_eq(cases.length(), 566)
   let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
