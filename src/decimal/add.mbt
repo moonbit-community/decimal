@@ -222,11 +222,14 @@ fn align_zero_add(
   // zeros `round_finite` would settle on, with no oversized intermediate.
   if ctx.precision > 0 && n_digits + shift > ctx.precision {
     let pad = ctx.precision - n_digits
+    ctx.raise_rounded()
     if pad <= 0 {
-      // Original coefficient already too long; let round_finite handle it.
+      // Operand already fills (or exceeds) precision — there's no headroom
+      // to materialise extra trailing zeros, so the result is the operand
+      // itself. Rounded still fires because the alignment was bounded by
+      // precision, mirroring what round_finite would have signalled.
       return non_zero
     }
-    ctx.raise_rounded()
     return {
       ..non_zero,
       coefficient: non_zero.coefficient * pow10(pad),

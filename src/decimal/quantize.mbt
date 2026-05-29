@@ -176,7 +176,13 @@ fn to_integral_finite(
   )
   let candidate = if round_up { kept + 1N } else { kept }
   if raise_flags {
-    ctx.raise_rounded()
+    // For to_integral_exact, Rounded fires whenever we entered this branch
+    // (input has fractional part) with a non-zero coefficient — the
+    // representation changed (`1.0 → 1`) even when the dropped digits
+    // were all zero. Zero-coefficient inputs (`0.0 → 0`) don't fire.
+    if !d.coefficient.is_zero() {
+      ctx.raise_rounded()
+    }
     if !dropped.is_zero() {
       ctx.raise_inexact()
     }

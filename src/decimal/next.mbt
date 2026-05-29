@@ -88,7 +88,15 @@ fn next_step(x : Decimal, ctx : Context, step_up : Bool) -> Decimal {
   }
   // Zero special-case: next-plus(±0) = smallest +subnormal;
   // next-minus(±0) = smallest -subnormal. The input's sign is dropped.
+  // Stepping from zero into the subnormal range raises the full underflow
+  // flag set (Underflow + Subnormal + Inexact + Rounded), since the
+  // "math next" of zero is infinitesimally close and our representable
+  // step is necessarily inexact.
   if x.coefficient.is_zero() {
+    ctx.raise_subnormal()
+    ctx.raise_underflow()
+    ctx.raise_inexact()
+    ctx.raise_rounded()
     return smallest_subnormal(!step_up, ctx)
   }
   // Reduce to magnitude work: if the input is positive, "step up" walks

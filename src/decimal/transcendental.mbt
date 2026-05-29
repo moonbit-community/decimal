@@ -145,7 +145,9 @@ pub fn Decimal::ln(self : Decimal, ctx : Context) -> Decimal {
       }
     Finite =>
       if self.coefficient.is_zero() {
-        ctx.raise_division_by_zero()
+        // GDA: ln(0) = -Infinity, no flag raised. (Math-wise this is a
+        // limit, not a "1/0"-style division-by-zero, so unlike some C
+        // libraries' log we don't signal Division_by_zero.)
         signed_infinity(true)
       } else if self.negative {
         invalid_nan(ctx)
@@ -303,7 +305,7 @@ pub fn Decimal::log10(self : Decimal, ctx : Context) -> Decimal {
       }
     Finite =>
       if self.coefficient.is_zero() {
-        ctx.raise_division_by_zero()
+        // GDA: log10(0) = -Infinity, no flag (matches ln(0)).
         signed_infinity(true)
       } else if self.negative {
         invalid_nan(ctx)
