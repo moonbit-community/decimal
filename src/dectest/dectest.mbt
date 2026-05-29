@@ -400,6 +400,10 @@ fn compute(case : TestCase) -> (String, Flags)? raise RunnerError {
     Some(binary(case, Decimal::same_quantum))
   } else if ascii_eq_ci(case.op, "quantize") {
     Some(binary_ctx(case, Decimal::quantize))
+  } else if ascii_eq_ci(case.op, "rescale") {
+    Some(binary_ctx(case, Decimal::rescale))
+  } else if ascii_eq_ci(case.op, "scaleb") {
+    Some(binary_ctx(case, Decimal::scaleb))
   } else if ascii_eq_ci(case.op, "tointegral") {
     Some(unary_ctx(case, Decimal::to_integral_value))
   } else if ascii_eq_ci(case.op, "tointegralx") {

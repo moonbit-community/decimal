@@ -39,6 +39,116 @@ pub fn Decimal::quantize(
   }
 }
 
+///| GDA `rescale`: like `quantize`, but the second operand's *value*
+/// (not its exponent) is the target exponent. `rescale(x, 2) ≡
+/// quantize(x, 1E+2)`. Provided for spec completeness; quantize is the
+/// more general form.
+pub fn Decimal::rescale(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> Decimal {
+  match propagate_nan(self, other, ctx) {
+    Some(d) => return d
+    None => ()
+  }
+  match (self.class, other.class) {
+    (Infinity, Infinity) => self
+    (_, Infinity) | (Infinity, _) => invalid_nan(ctx)
+    (Finite, Finite) => {
+      let target_exp = match integer_value_for_scale(other) {
+        Some(v) => v
+        None => return invalid_nan(ctx)
+      }
+      quantize_finite(self, target_exp, ctx)
+    }
+    _ => abort("Decimal::rescale: unreachable class combination")
+  }
+}
+
+///| GDA `scaleb`: shift the exponent of `self` by `other` (an integer).
+/// Equivalent to multiplying by `10^other`, with the result re-finalised
+/// so overflow / underflow / clamp rules still apply.
+///
+/// `other` must be a finite integer with |value| ≤ `2 · (e_max +
+/// precision)`; out-of-range yields NaN with `Invalid_operation`.
+pub fn Decimal::scaleb(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> Decimal {
+  match propagate_nan(self, other, ctx) {
+    Some(d) => return d
+    None => ()
+  }
+  match (self.class, other.class) {
+    (_, Infinity) => invalid_nan(ctx)
+    (Infinity, Finite) => {
+      match integer_value_for_scale(other) {
+        Some(_) => self
+        None => invalid_nan(ctx)
+      }
+    }
+    (Finite, Finite) => {
+      // scaleb's second operand must be a bare integer — exponent 0 with
+      // no fractional or trailing-zero scaling. `1.00` and `1E+1` are
+      // rejected even though they're numerically integral.
+      if other.exponent != 0 {
+        return invalid_nan(ctx)
+      }
+      let n = match integer_value_for_scale(other) {
+        Some(v) => v
+        None => return invalid_nan(ctx)
+      }
+      let limit = 2 * (ctx.e_max + ctx.precision)
+      let abs_n = if n < 0 { -n } else { n }
+      if abs_n > limit {
+        return invalid_nan(ctx)
+      }
+      let result = { ..self, exponent: self.exponent + n }
+      result.finalize(ctx)
+    }
+    _ => abort("Decimal::scaleb: unreachable class combination")
+  }
+}
+
+///| Return `Some(n)` iff `y` is a finite integer (no fractional part)
+/// fitting in `Int`. Used by `rescale` / `scaleb` to validate the
+/// second-operand integer constraint.
+fn integer_value_for_scale(y : Decimal) -> Int? {
+  if !(y.class is Finite) {
+    return None
+  }
+  if y.exponent >= 0 {
+    let scaled = y.coefficient * pow10(y.exponent)
+    match fits_int64(scaled) {
+      Some(v) =>
+        if v.compare(2147483647L) <= 0 {
+          Some(if y.negative { -v.to_int() } else { v.to_int() })
+        } else {
+          None
+        }
+      None => None
+    }
+  } else {
+    let factor = pow10(-y.exponent)
+    if (y.coefficient % factor).is_zero() {
+      let int_coef = y.coefficient / factor
+      match fits_int64(int_coef) {
+        Some(v) =>
+          if v.compare(2147483647L) <= 0 {
+            Some(if y.negative { -v.to_int() } else { v.to_int() })
+          } else {
+            None
+          }
+        None => None
+      }
+    } else {
+      None
+    }
+  }
+}
+
 ///| Finite-finite quantize body: rescale `a` to `target_exp`.
 fn quantize_finite(a : Decimal, target_exp : Int, ctx : Context) -> Decimal {
   let diff = target_exp - a.exponent
