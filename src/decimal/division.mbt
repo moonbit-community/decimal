@@ -35,19 +35,16 @@ pub fn Decimal::divide(
   let sign = xor_sign(self, other)
   match (self.class, other.class) {
     (Infinity, Infinity) => invalid_nan(ctx)
-    (Infinity, Finite) => {
-      if other.coefficient.is_zero() {
-        // Inf / 0 is Inf (the divisor's zero magnitude is dwarfed). GDA
-        // does not raise division-by-zero for an infinite dividend.
-        ()
-      }
+    (Infinity, Finite) =>
+      // Inf / finite (zero or not) is Inf — no Division_by_zero, since
+      // the dividend's magnitude already dominates.
       signed_infinity(sign)
-    }
     (Finite, Infinity) => finite_zero(0, sign)
     (Finite, Finite) =>
       if other.coefficient.is_zero() {
         if self.coefficient.is_zero() {
-          invalid_nan(ctx)
+          ctx.raise_division_undefined()
+          Decimal::nan()
         } else {
           ctx.raise_division_by_zero()
           signed_infinity(sign)
@@ -84,17 +81,18 @@ pub fn Decimal::divide_int(
   let sign = xor_sign(self, other)
   match (self.class, other.class) {
     (Infinity, Infinity) => invalid_nan(ctx)
-    (Infinity, Finite) => {
-      if other.coefficient.is_zero() {
-        ctx.raise_division_by_zero()
-      }
+    (Infinity, Finite) =>
+      // Inf / finite (zero or not) is just Inf — no Division_by_zero,
+      // since the dividend's magnitude already dominates.
       signed_infinity(sign)
-    }
     (Finite, Infinity) => finite_zero(0, sign)
     (Finite, Finite) =>
       if other.coefficient.is_zero() {
         if self.coefficient.is_zero() {
-          invalid_nan(ctx)
+          // 0 / 0 uses the dedicated Division_undefined signal, distinct
+          // from the catch-all Invalid_operation that Inf/Inf raises.
+          ctx.raise_division_undefined()
+          Decimal::nan()
         } else {
           ctx.raise_division_by_zero()
           signed_infinity(sign)
@@ -129,7 +127,14 @@ pub fn Decimal::remainder(
     (Finite, Infinity) => self
     (Finite, Finite) =>
       if other.coefficient.is_zero() {
-        invalid_nan(ctx)
+        if self.coefficient.is_zero() {
+          // 0 % 0 uses the dedicated Division_undefined signal — same
+          // rule as divide(0, 0) and divide_int(0, 0).
+          ctx.raise_division_undefined()
+          Decimal::nan()
+        } else {
+          invalid_nan(ctx)
+        }
       } else {
         remainder_finite(self, other, ctx)
       }

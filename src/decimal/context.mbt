@@ -199,3 +199,7 @@ fn Context::raise_subnormal(self : Context) -> Unit {
 fn Context::raise_clamped(self : Context) -> Unit {
   self.flags.clamped = true
 }
+
+fn Context::raise_division_undefined(self : Context) -> Unit {
+  self.flags.division_undefined = true
+}
