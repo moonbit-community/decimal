@@ -46,7 +46,7 @@ pub struct Decimal {
   coefficient : @bigint.BigInt
   exponent : Int
 } derive(Eq)
-pub fn Decimal::abs(Self) -> Self
+pub fn Decimal::abs(Self, Context) -> Self
 pub fn Decimal::add(Self, Self, Context) -> Self
 pub fn Decimal::canonical(Self) -> Self
 pub fn Decimal::compare(Self, Self, Context) -> Self
@@ -82,7 +82,7 @@ pub fn Decimal::max(Self, Self, Context) -> Self
 pub fn Decimal::max_magnitude(Self, Self, Context) -> Self
 pub fn Decimal::min(Self, Self, Context) -> Self
 pub fn Decimal::min_magnitude(Self, Self, Context) -> Self
-pub fn Decimal::minus(Self) -> Self
+pub fn Decimal::minus(Self, Context) -> Self
 pub fn Decimal::multiply(Self, Self, Context) -> Self
 pub fn Decimal::nan(payload? : @bigint.BigInt, negative? : Bool) -> Self
 pub fn Decimal::neg_infinity() -> Self
@@ -94,7 +94,7 @@ pub fn Decimal::of_bigint(@bigint.BigInt) -> Self
 pub fn Decimal::of_int(Int) -> Self
 pub fn Decimal::one() -> Self
 pub fn Decimal::parse(String) -> Self raise ParseError
-pub fn Decimal::plus(Self) -> Self
+pub fn Decimal::plus(Self, Context) -> Self
 pub fn Decimal::power(Self, Self, Context) -> Self
 pub fn Decimal::quantize(Self, Self, Context) -> Self
 pub fn Decimal::reduce(Self, Context) -> Self

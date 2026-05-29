@@ -411,11 +411,11 @@ fn compute(case : TestCase) -> (String, Flags)? raise RunnerError {
   if ascii_eq_ci(case.op, "tosci") {
     Some(unary_render(case))
   } else if ascii_eq_ci(case.op, "minus") {
-    Some(unary(case, Decimal::minus))
+    Some(unary_ctx(case, Decimal::minus))
   } else if ascii_eq_ci(case.op, "plus") {
-    Some(unary(case, Decimal::plus))
+    Some(unary_ctx(case, Decimal::plus))
   } else if ascii_eq_ci(case.op, "abs") {
-    Some(unary(case, Decimal::abs))
+    Some(unary_ctx(case, Decimal::abs))
   } else if ascii_eq_ci(case.op, "add") {
     Some(binary_ctx(case, Decimal::add))
   } else if ascii_eq_ci(case.op, "subtract") {

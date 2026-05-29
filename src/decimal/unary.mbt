@@ -1,55 +1,55 @@
 ///|
-/// GDA `minus`: equivalent to `subtract('0', N)`. Concretely:
+/// A `+0` carrying `d`'s exponent. `plus` / `minus` / `abs` are defined as
+/// adding or subtracting this implied zero under the context; giving it the
+/// operand's exponent keeps the ideal (unrounded) exponent unchanged, so the
+/// operations only differ from the identity when rounding actually fires.
+fn zero_like(d : Decimal) -> Decimal {
+  { class: Finite, negative: false, coefficient: 0N, exponent: d.exponent }
+}
+
+///|
+/// GDA `minus`: `subtract('0', N)` applied under the context — negate the
+/// operand and round to precision, raising the usual flags (rounding →
+/// `Inexact` / `Rounded`, plus overflow / subnormal / clamp via `finalize`).
 ///
-/// * Finite non-zero: flip the sign bit, coefficient and exponent unchanged.
-/// * Finite zero: result is `+0` with the same exponent (the GDA addition rule
-///   for two zeros with opposite signs yields `+0` under default rounding).
-/// * Infinity: flip the sign bit.
-/// * QNaN: propagate the operand unchanged (NaN keeps its original sign).
-/// * SNaN: convert to QNaN with the same sign and payload. The
-///   `Invalid_operation` signal that GDA prescribes here is silently dropped
-///   until a `Context` is wired up.
-pub fn Decimal::minus(self : Decimal) -> Decimal {
+/// NaN handling is explicit so the operand's NaN *sign and payload* propagate
+/// unchanged — a NaN is never arithmetically negated — while a signaling NaN
+/// raises `Invalid_operation` (and its payload is truncated to precision).
+pub fn Decimal::minus(self : Decimal, ctx : Context) -> Decimal {
   match self.class {
-    QNaN => self
-    SNaN => { ..self, class: QNaN }
-    Finite =>
-      if self.coefficient.is_zero() {
-        { ..self, negative: false }
-      } else {
-        { ..self, negative: !self.negative }
-      }
-    Infinity => { ..self, negative: !self.negative }
+    SNaN => quiet_snan(self, ctx)
+    QNaN => truncate_nan_payload(self, ctx)
+    _ => Decimal::subtract(zero_like(self), self, ctx)
   }
 }
 
 ///|
-/// GDA `plus`: equivalent to `add('0', N)`. Differs from `minus` only on
-/// finite non-zero and Infinity (where it preserves the sign instead of
-/// flipping). Zero is canonicalized to `+0`, QNaN propagates unchanged, and
-/// sNaN is silently quietened.
-pub fn Decimal::plus(self : Decimal) -> Decimal {
+/// GDA `plus`: `add('0', N)` applied under the context — round the operand to
+/// precision (value and sign preserved) and raise the usual flags. As with
+/// `minus`, a NaN propagates unchanged and a signaling NaN raises
+/// `Invalid_operation`.
+pub fn Decimal::plus(self : Decimal, ctx : Context) -> Decimal {
   match self.class {
-    QNaN => self
-    SNaN => { ..self, class: QNaN }
-    Finite =>
-      if self.coefficient.is_zero() {
-        { ..self, negative: false }
-      } else {
-        self
-      }
-    Infinity => self
+    SNaN => quiet_snan(self, ctx)
+    QNaN => truncate_nan_payload(self, ctx)
+    _ => Decimal::add(zero_like(self), self, ctx)
   }
 }
 
 ///|
-/// GDA `abs`: `minus` if the operand's sign bit is set, `plus` otherwise.
-/// Note that for NaN inputs the sign bit is *not* cleared — NaN propagation
-/// wins over the "absolute value" intuition, so e.g. `abs(-NaN22) = -NaN22`.
-pub fn Decimal::abs(self : Decimal) -> Decimal {
-  if self.negative {
-    Decimal::minus(self)
-  } else {
-    Decimal::plus(self)
+/// GDA `abs`: `|N|` under the context — `minus` when the sign bit is set,
+/// otherwise `plus`. NaN propagation wins over the absolute value, so a NaN's
+/// sign is *not* cleared (e.g. `abs(-NaN22) = -NaN22`); a signaling NaN raises
+/// `Invalid_operation`.
+pub fn Decimal::abs(self : Decimal, ctx : Context) -> Decimal {
+  match self.class {
+    SNaN => quiet_snan(self, ctx)
+    QNaN => truncate_nan_payload(self, ctx)
+    _ =>
+      if self.negative {
+        Decimal::minus(self, ctx)
+      } else {
+        Decimal::plus(self, ctx)
+      }
   }
 }

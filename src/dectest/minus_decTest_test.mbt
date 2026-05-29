@@ -1,10 +1,37 @@
 ///|
-/// `minus` cases from `minus.decTest`, filtered to those that do not need
-/// rounding and that have a concrete operand (GDA's `#` "null operand" tests
-/// don't fit our `Decimal::minus` signature). The `Invalid_operation` flag
-/// that GDA prescribes for sNaN inputs is silently dropped — the runner
-/// compares the result string only until a `Context` carrying flags lands.
+/// Full `minus.decTest` corpus (IBM General Decimal Arithmetic
+/// testcases), embedded verbatim.
 let minus_subset : String =
+  #|------------------------------------------------------------------------
+  #|-- minus.decTest -- decimal negation                                  --
+  #|-- Copyright (c) IBM Corporation, 1981, 2008.  All rights reserved.   --
+  #|------------------------------------------------------------------------
+  #|-- Please see the document "General Decimal Arithmetic Testcases"     --
+  #|-- at http://www2.hursley.ibm.com/decimal for the description of      --
+  #|-- these testcases.                                                   --
+  #|--                                                                    --
+  #|-- These testcases are experimental ('beta' versions), and they       --
+  #|-- may contain errors.  They are offered on an as-is basis.  In       --
+  #|-- particular, achieving the same results as the tests here is not    --
+  #|-- a guarantee that an implementation complies with any Standard      --
+  #|-- or specification.  The tests are not exhaustive.                   --
+  #|--                                                                    --
+  #|-- Please send comments, suggestions, and corrections to the author:  --
+  #|--   Mike Cowlishaw, IBM Fellow                                       --
+  #|--   IBM UK, PO Box 31, Birmingham Road, Warwick CV34 5JL, UK         --
+  #|--   mfc@uk.ibm.com                                                   --
+  #|------------------------------------------------------------------------
+  #|version: 2.59
+  #|
+  #|-- This set of tests primarily tests the existence of the operator.
+  #|-- Subtraction, rounding, and more overflows are tested elsewhere.
+  #|
+  #|extended:    1
+  #|precision:   9
+  #|rounding:    half_up
+  #|maxExponent: 384
+  #|minexponent: -383
+  #|
   #|minx001 minus '1'      -> '-1'
   #|minx002 minus '-1'     -> '1'
   #|minx003 minus '1.00'   -> '-1.00'
@@ -14,6 +41,7 @@ let minus_subset : String =
   #|minx007 minus '00.0'   -> '0.0'
   #|minx008 minus '00.00'  -> '0.00'
   #|minx009 minus '00'     -> '0'
+  #|
   #|minx010 minus '-2'     -> '2'
   #|minx011 minus '2'      -> '-2'
   #|minx012 minus '-2.00'  -> '2.00'
@@ -23,6 +51,8 @@ let minus_subset : String =
   #|minx016 minus '-00.0'  -> '0.0'
   #|minx017 minus '-00.00' -> '0.00'
   #|minx018 minus '-00'    -> '0'
+  #|
+  #|-- "lhs" zeros in plus and minus have exponent = operand
   #|minx020 minus '-0E3'   -> '0E+3'
   #|minx021 minus '-0E2'   -> '0E+2'
   #|minx022 minus '-0E1'   -> '0E+1'
@@ -31,6 +61,7 @@ let minus_subset : String =
   #|minx025 minus '+0E1'   -> '0E+1'
   #|minx026 minus '+0E2'   -> '0E+2'
   #|minx027 minus '+0E3'   -> '0E+3'
+  #|
   #|minx030 minus '-5E3'   -> '5E+3'
   #|minx031 minus '-5E8'   -> '5E+8'
   #|minx032 minus '-5E13'  -> '5E+13'
@@ -39,10 +70,21 @@ let minus_subset : String =
   #|minx035 minus '+5E8'   -> '-5E+8'
   #|minx036 minus '+5E13'  -> '-5E+13'
   #|minx037 minus '+5E18'  -> '-5E+18'
+  #|
   #|minx050 minus '-2000000' -> '2000000'
   #|minx051 minus '2000000'  -> '-2000000'
+  #|precision: 7
   #|minx052 minus '-2000000' -> '2000000'
   #|minx053 minus '2000000'  -> '-2000000'
+  #|precision: 6
+  #|minx054 minus '-2000000' -> '2.00000E+6' Rounded
+  #|minx055 minus '2000000'  -> '-2.00000E+6' Rounded
+  #|precision: 3
+  #|minx056 minus '-2000000' -> '2.00E+6' Rounded
+  #|minx057 minus '2000000'  -> '-2.00E+6' Rounded
+  #|
+  #|-- more fixed, potential LHS swaps/overlays if done by 0 subtract x
+  #|precision: 9
   #|minx060 minus '56267E-10'   -> '-0.0000056267'
   #|minx061 minus '56267E-5'    -> '-0.56267'
   #|minx062 minus '56267E-2'    -> '-562.67'
@@ -67,14 +109,67 @@ let minus_subset : String =
   #|minx090 minus '-56267E+4'   -> '5.6267E+8'
   #|minx091 minus '-56267E+5'   -> '5.6267E+9'
   #|minx092 minus '-56267E+6'   -> '5.6267E+10'
+  #|
+  #|
+  #|-- overflow tests
+  #|maxexponent: 999999999
+  #|minexponent: -999999999
+  #|precision: 3
+  #|minx100 minus 9.999E+999999999  -> -Infinity Inexact Overflow Rounded
+  #|minx101 minus -9.999E+999999999 ->  Infinity Inexact Overflow Rounded
+  #|
+  #|-- subnormals and underflow
+  #|precision: 3
+  #|maxexponent: 999
+  #|minexponent: -999
   #|minx110 minus  1.00E-999        ->  -1.00E-999
+  #|minx111 minus  0.1E-999         ->  -1E-1000   Subnormal
+  #|minx112 minus  0.10E-999        ->  -1.0E-1000 Subnormal
+  #|minx113 minus  0.100E-999       ->  -1.0E-1000 Subnormal Rounded
+  #|minx114 minus  0.01E-999        ->  -1E-1001   Subnormal
+  #|-- next is rounded to Emin
+  #|minx115 minus  0.999E-999       ->  -1.00E-999 Inexact Rounded Subnormal Underflow
+  #|minx116 minus  0.099E-999       ->  -1.0E-1000 Inexact Rounded Subnormal Underflow
+  #|minx117 minus  0.009E-999       ->  -1E-1001   Inexact Rounded Subnormal Underflow
+  #|minx118 minus  0.001E-999       ->  -0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|minx119 minus  0.0009E-999      ->  -0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|minx120 minus  0.0001E-999      ->  -0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|
   #|minx130 minus -1.00E-999        ->   1.00E-999
+  #|minx131 minus -0.1E-999         ->   1E-1000   Subnormal
+  #|minx132 minus -0.10E-999        ->   1.0E-1000 Subnormal
+  #|minx133 minus -0.100E-999       ->   1.0E-1000 Subnormal Rounded
+  #|minx134 minus -0.01E-999        ->   1E-1001   Subnormal
+  #|-- next is rounded to Emin
+  #|minx135 minus -0.999E-999       ->   1.00E-999 Inexact Rounded Subnormal Underflow
+  #|minx136 minus -0.099E-999       ->   1.0E-1000 Inexact Rounded Subnormal Underflow
+  #|minx137 minus -0.009E-999       ->   1E-1001   Inexact Rounded Subnormal Underflow
+  #|minx138 minus -0.001E-999       ->   0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|minx139 minus -0.0009E-999      ->   0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|minx140 minus -0.0001E-999      ->   0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|
+  #|
+  #|-- long operand checks
+  #|maxexponent: 999
+  #|minexponent: -999
+  #|precision: 9
+  #|minx301 minus 12345678000  -> -1.23456780E+10 Rounded
+  #|minx302 minus 1234567800   -> -1.23456780E+9 Rounded
+  #|minx303 minus 1234567890   -> -1.23456789E+9 Rounded
+  #|minx304 minus 1234567891   -> -1.23456789E+9 Inexact Rounded
+  #|minx305 minus 12345678901  -> -1.23456789E+10 Inexact Rounded
+  #|minx306 minus 1234567896   -> -1.23456790E+9 Inexact Rounded
+  #|
+  #|precision: 15
+  #|-- still checking
   #|minx321 minus 12345678000  -> -12345678000
   #|minx322 minus 1234567800   -> -1234567800
   #|minx323 minus 1234567890   -> -1234567890
   #|minx324 minus 1234567891   -> -1234567891
   #|minx325 minus 12345678901  -> -12345678901
   #|minx326 minus 1234567896   -> -1234567896
+  #|
+  #|-- specials
   #|minx420 minus 'Inf'    -> '-Infinity'
   #|minx421 minus '-Inf'   -> 'Infinity'
   #|minx422 minus   NaN    ->  NaN
@@ -85,12 +180,17 @@ let minus_subset : String =
   #|minx427 minus -sNaN    -> -NaN    Invalid_operation
   #|minx428 minus  -NaN255 -> -NaN255
   #|minx429 minus -sNaN256 -> -NaN256 Invalid_operation
+  #|
+  #|-- Null tests
+  #|minx900 minus  # -> NaN Invalid_operation
 
 ///|
 test "minus.decTest minx subset round-trips through parse + minus + toSci" {
   let cases = parse_dectest(minus_subset)
-  assert_eq(cases.length(), 80)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, skipped) = run_cases_with_flags(cases)
+  if skipped > 0 {
+    println("\{skipped} cases skipped (format-encoding / reference-specific)")
+  }
   if failures.length() > 0 {
     let buf = StringBuilder::new()
     buf.write_string(
