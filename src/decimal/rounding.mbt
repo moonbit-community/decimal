@@ -88,6 +88,13 @@ fn check_range(d : Decimal, ctx : Context) -> Decimal {
 /// re-rounding discards non-zero digits.
 fn apply_subnormal(d : Decimal, ctx : Context) -> Decimal {
   ctx.raise_subnormal()
+  // GDA: Underflow fires when a subnormal result is also inexact. The
+  // upstream `round_finite` may already have raised inexact (from the
+  // original precision cut) — if so, Underflow must follow even when the
+  // subnormal re-rounding itself drops only zero digits.
+  if ctx.flags.inexact {
+    ctx.raise_underflow()
+  }
   let etiny = ctx.e_min - ctx.precision + 1
   if d.exponent >= etiny {
     return d
