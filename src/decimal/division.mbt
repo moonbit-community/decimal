@@ -39,7 +39,18 @@ pub fn Decimal::divide(
       // Inf / finite (zero or not) is Inf — no Division_by_zero, since
       // the dividend's magnitude already dominates.
       signed_infinity(sign)
-    (Finite, Infinity) => finite_zero(0, sign)
+    (Finite, Infinity) => {
+      // Per GDA: finite / Inf is ±0 with exponent etiny. Clamped fires
+      // because we're folding to the subnormal floor. With precision==0
+      // the exponent has no defined meaning so we settle for 0.
+      let exp = if ctx.precision > 0 {
+        ctx.raise_clamped()
+        ctx.e_min - ctx.precision + 1
+      } else {
+        0
+      }
+      finite_zero(exp, sign)
+    }
     (Finite, Finite) =>
       if other.coefficient.is_zero() {
         if self.coefficient.is_zero() {

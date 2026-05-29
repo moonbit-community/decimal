@@ -91,7 +91,18 @@ fn divide_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
     dividend = dividend * 10N
     adj_coeffs = adj_coeffs + 1
   }
-  let adj_exp10 = ctx.precision - 1
+  // Pre-multiply by 10^(precision - 1) to give the integer quo_rem a
+  // result with `precision` digits. When the natural result would land in
+  // the subnormal range, cap the pre-multiplier so the algorithm rounds
+  // directly to etiny — avoiding the double-rounding bias from doing one
+  // pass at precision and another at etiny.
+  let etiny = ctx.e_min - ctx.precision + 1
+  let exp_budget = shift_exp - adj_coeffs - etiny
+  let adj_exp10 = if exp_budget < ctx.precision - 1 {
+    if exp_budget < 0 { 0 } else { exp_budget }
+  } else {
+    ctx.precision - 1
+  }
   if adj_exp10 > 0 {
     dividend = dividend * pow10(adj_exp10)
   }
@@ -114,6 +125,15 @@ fn divide_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
     let (s_coef, s_exp) = strip_trailing_zeros_to(quot, final_exp, shift_exp)
     quot = s_coef
     final_exp = s_exp
+    // When the natural quotient had more digits than precision allowed,
+    // the scaling factors compressed those LSDs into the exponent (e.g.
+    // `12345678000 / 1 = 1.23456780E+10` — the two trailing zeros of the
+    // natural value land in the exponent, not the coefficient). That's a
+    // precision-induced rounding even though rem is zero, so Rounded
+    // fires. `final_exp > shift_exp` is the signal.
+    if final_exp > shift_exp {
+      ctx.raise_rounded()
+    }
   }
   { class: Finite, negative: neg, coefficient: quot, exponent: final_exp }
 }
