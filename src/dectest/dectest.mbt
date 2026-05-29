@@ -355,7 +355,7 @@ fn condition_present(conditions : Array[String], name : String) -> Bool {
 /// parse failures or arity mismatches.
 fn compute(case : TestCase) -> (String, Flags)? raise RunnerError {
   if ascii_eq_ci(case.op, "tosci") {
-    Some(unary(case, fn(d) { d }))
+    Some(unary_render(case))
   } else if ascii_eq_ci(case.op, "minus") {
     Some(unary(case, Decimal::minus))
   } else if ascii_eq_ci(case.op, "plus") {
@@ -369,13 +369,13 @@ fn compute(case : TestCase) -> (String, Flags)? raise RunnerError {
   } else if ascii_eq_ci(case.op, "multiply") {
     Some(binary_ctx(case, Decimal::multiply))
   } else if ascii_eq_ci(case.op, "copy") {
-    Some(unary(case, Decimal::copy))
+    Some(unary_bitlevel(case, Decimal::copy))
   } else if ascii_eq_ci(case.op, "copyabs") {
-    Some(unary(case, Decimal::copy_abs))
+    Some(unary_bitlevel(case, Decimal::copy_abs))
   } else if ascii_eq_ci(case.op, "copynegate") {
-    Some(unary(case, Decimal::copy_negate))
+    Some(unary_bitlevel(case, Decimal::copy_negate))
   } else if ascii_eq_ci(case.op, "copysign") {
-    Some(binary(case, Decimal::copy_sign))
+    Some(binary_bitlevel(case, Decimal::copy_sign))
   } else if ascii_eq_ci(case.op, "divide") {
     Some(binary_ctx(case, Decimal::divide))
   } else if ascii_eq_ci(case.op, "divideint") {
@@ -512,11 +512,10 @@ fn unary_ctx(
   (op(parsed, ctx).to_sci_string(), ctx.flags)
 }
 
-///| Apply a unary `Decimal -> Decimal` operator. The op doesn't take a
-/// Context so the reported flags are empty; ops that need to raise flags
-/// (e.g. sNaN handling in `minus` / `plus` / `abs`) would have to switch
-/// to `unary_ctx`. For now this matches the existing API surface.
-fn unary(
+///| Bit-level unary op (`copy` family). Per GDA these ops never quieten
+/// or signal on sNaN — the value passes through unchanged — so the
+/// dispatcher reports empty flags without inspecting the operand.
+fn unary_bitlevel(
   case : TestCase,
   op : (Decimal) -> Decimal,
 ) -> (String, Flags) raise RunnerError {
@@ -527,6 +526,58 @@ fn unary(
     e => raise RunnerError("parse error: \{e}")
   }
   (op(parsed).to_sci_string(), Flags::new())
+}
+
+///| Bit-level binary op (`copySign`). Same as `unary_bitlevel` shape.
+fn binary_bitlevel(
+  case : TestCase,
+  op : (Decimal, Decimal) -> Decimal,
+) -> (String, Flags) raise RunnerError {
+  if case.operands.length() != 2 {
+    raise RunnerError("expects 2 operands, got \{case.operands.length()}")
+  }
+  let lhs = try Decimal::parse(case.operands[0]) catch {
+    e => raise RunnerError("parse error in operand 0: \{e}")
+  }
+  let rhs = try Decimal::parse(case.operands[1]) catch {
+    e => raise RunnerError("parse error in operand 1: \{e}")
+  }
+  (op(lhs, rhs).to_sci_string(), Flags::new())
+}
+
+///| Pure rendering: parse the operand and emit its `to_sci_string`. No
+/// flag-raising — `toSci` is a pure render op (per GDA), sNaN inputs
+/// pass through as `sNaN` without `Invalid_operation`.
+fn unary_render(case : TestCase) -> (String, Flags) raise RunnerError {
+  if case.operands.length() != 1 {
+    raise RunnerError("expects 1 operand, got \{case.operands.length()}")
+  }
+  let parsed = try Decimal::parse(case.operands[0]) catch {
+    e => raise RunnerError("parse error: \{e}")
+  }
+  (parsed.to_sci_string(), Flags::new())
+}
+
+///| Apply a unary `Decimal -> Decimal` operator. The op signatures don't
+/// take a Context, but we still need to raise `Invalid_operation` for
+/// sNaN inputs (plus/minus/abs all quieten sNaN silently); the runner
+/// inspects the operand and reports the flag externally so per-op packages
+/// can still validate it in strict mode.
+fn unary(
+  case : TestCase,
+  op : (Decimal) -> Decimal,
+) -> (String, Flags) raise RunnerError {
+  if case.operands.length() != 1 {
+    raise RunnerError("expects 1 operand, got \{case.operands.length()}")
+  }
+  let parsed = try Decimal::parse(case.operands[0]) catch {
+    e => raise RunnerError("parse error: \{e}")
+  }
+  let flags = Flags::new()
+  if parsed.class is SNaN {
+    flags.invalid_operation = true
+  }
+  (op(parsed).to_sci_string(), flags)
 }
 
 ///| Apply a context-aware binary op.
