@@ -331,7 +331,11 @@ fn run_one_strict(case : TestCase) -> CaseOutcome {
     msg => return Fail("\{case.id}: \{case.op}: \{msg}")
   }
   match actual {
-    None => Skip
+    // An unrecognised op is a coverage hole, not a benign skip: a focused
+    // op-corpus that hits this means the dispatcher is missing the op (or it
+    // regressed). Fail loudly rather than let the case vanish into the skip
+    // count. Intentional skips happen earlier (format-marker / reference).
+    None => Fail("\{case.id}: \{case.op}: operation not handled by runner")
     Some((s, flags)) => {
       if s != case.expected {
         return Fail(
@@ -498,9 +502,30 @@ fn compute(case : TestCase) -> (String, Flags)? raise RunnerError {
     Some(unary_ctx(case, Decimal::log10))
   } else if ascii_eq_ci(case.op, "power") {
     Some(binary_ctx(case, Decimal::power))
+  } else if ascii_eq_ci(case.op, "apply") {
+    Some(unary_apply(case))
   } else {
     None
   }
+}
+
+///|
+/// decTest `apply`: round the single operand to the context (the GDA
+/// "apply" / unary-plus operation). Realised by multiplying by one, which
+/// reuses `multiply`'s full precision rounding and NaN handling rather than
+/// the context-free `Decimal::plus`.
+fn unary_apply(case : TestCase) -> (String, Flags) raise RunnerError {
+  if case.operands.length() != 1 {
+    raise RunnerError("expects 1 operand, got \{case.operands.length()}")
+  }
+  let x = Decimal::parse(case.operands[0]) catch {
+    e => raise RunnerError("parse error: \{e}")
+  }
+  let one = Decimal::parse("1") catch {
+    _ => raise RunnerError("internal: literal 1 failed to parse")
+  }
+  let ctx = ctx_for(case)
+  (x.multiply(one, ctx).to_sci_string(), ctx.flags)
 }
 
 ///|
