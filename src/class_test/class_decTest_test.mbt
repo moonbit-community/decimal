@@ -124,7 +124,7 @@ test "is_normal gates on the lower exponent bound only" {
   }
   // adjusted exponent 20 exceeds e_max, but a finite non-zero value there is
   // still Normal — is_normal imposes no upper bound (only adj >= e_min).
-  assert_true(big.is_normal(ctx))
+  inspect(big.is_normal(ctx), content="true")
   // below e_min the value is subnormal, not normal.
-  assert_false(tiny.is_normal(ctx))
+  inspect(tiny.is_normal(ctx), content="false")
 }

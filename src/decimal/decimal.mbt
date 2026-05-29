@@ -36,7 +36,7 @@ pub impl Show for Class with fn to_string(self) {
 ///
 /// `coefficient` is always non-negative; the sign lives in `negative` so that
 /// `-0`, `-Infinity` and `-NaN` round-trip distinctly.
-pub(all) struct Decimal {
+pub struct Decimal {
   class : Class
   negative : Bool
   coefficient : BigInt

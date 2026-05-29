@@ -106,7 +106,7 @@ pub fn Flags::new() -> Flags {
 /// `precision == 0` means "no precision limit": the op produces an exact
 /// result with as many digits as needed. This is the default so the existing
 /// "exact" arithmetic surface keeps its current behaviour.
-pub(all) struct Context {
+pub struct Context {
   precision : Int
   rounding : Rounding
   e_min : Int
@@ -131,6 +131,12 @@ pub fn Context::new(
   e_max? : Int = 999_999_999,
   clamp? : Bool = false,
 ) -> Context {
+  guard precision >= 0 else {
+    abort("Context::new: precision must be non-negative")
+  }
+  guard e_min <= e_max else {
+    abort("Context::new: e_min must not exceed e_max")
+  }
   { precision, rounding, e_min, e_max, clamp, flags: Flags::new() }
 }
 
