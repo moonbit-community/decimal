@@ -93,7 +93,7 @@ let compare_subset : String =
 test "compare.decTest subset round-trips through parse + compare + toSci" {
   let cases = parse_dectest(compare_subset)
   assert_eq(cases.length(), 80)
-  let (failures, _) = run_cases(cases)
+  let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 30 { failures.length() } else { 30 }

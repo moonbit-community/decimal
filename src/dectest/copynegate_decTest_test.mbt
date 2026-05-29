@@ -50,7 +50,7 @@ let copynegate_subset : String =
 test "copynegate.decTest subset round-trips through parse + copynegate + toSci" {
   let cases = parse_dectest(copynegate_subset)
   assert_eq(cases.length(), 43)
-  let (failures, _) = run_cases(cases)
+  let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     let buf = StringBuilder::new()
     buf.write_string("\{failures.length()} of \{cases.length()} cases failed:\n")

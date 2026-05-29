@@ -424,7 +424,7 @@ let add_subset : String =
 test "add.decTest chunk 3" {
   let cases = parse_dectest(add_subset)
   assert_eq(cases.length(), 405)
-  let (failures, _) = run_cases(cases)
+  let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     println("\{failures.length()} failed:")
     let limit = if failures.length() < 20 { failures.length() } else { 20 }

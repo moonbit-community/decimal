@@ -115,7 +115,7 @@ let divide_subset : String =
 test "divide.decTest subset round-trips through parse + divide + toSci" {
   let cases = parse_dectest(divide_subset)
   assert_eq(cases.length(), 100)
-  let (failures, _) = run_cases(cases)
+  let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 30 { failures.length() } else { 30 }

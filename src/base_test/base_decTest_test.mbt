@@ -399,7 +399,7 @@ test "base.decTest basx subset round-trips through parse + toSci" {
   // Guard against the embedded subset getting silently truncated or the
   // line tokenizer dropping rows — every test should have come through.
   assert_eq(cases.length(), 389)
-  let (failures, _) = run_cases(cases)
+  let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     let buf = StringBuilder::new()
     buf.write_string("\{failures.length()} of \{cases.length()} cases failed:\n")

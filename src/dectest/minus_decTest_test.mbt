@@ -89,7 +89,7 @@ let minus_subset : String =
 test "minus.decTest minx subset round-trips through parse + minus + toSci" {
   let cases = parse_dectest(minus_subset)
   assert_eq(cases.length(), 80)
-  let (failures, _) = run_cases(cases)
+  let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     let buf = StringBuilder::new()
     buf.write_string("\{failures.length()} of \{cases.length()} cases failed:\n")

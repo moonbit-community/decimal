@@ -340,7 +340,7 @@ let samequantum_subset : String =
 test "samequantum.decTest subset round-trips through parse + samequantum + toSci" {
   let cases = parse_dectest(samequantum_subset)
   assert_eq(cases.length(), 333)
-  let (failures, _) = run_cases(cases)
+  let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 20 { failures.length() } else { 20 }

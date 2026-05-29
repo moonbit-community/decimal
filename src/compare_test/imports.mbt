@@ -9,4 +9,4 @@ pub using @decimal {
 }
 
 ///| Re-export the dectest runner's entry points.
-pub using @dectest { type TestCase, parse_dectest, run_cases }
+pub using @dectest { type TestCase, parse_dectest, run_cases, run_cases_with_flags }

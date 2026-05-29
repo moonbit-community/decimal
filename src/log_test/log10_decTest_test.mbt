@@ -41,7 +41,7 @@ let log10_subset : String =
 test "log10.decTest subset" {
   let cases = parse_dectest(log10_subset)
   assert_eq(cases.length(), 30)
-  let (failures, _) = run_cases(cases)
+  let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 30 { failures.length() } else { 30 }

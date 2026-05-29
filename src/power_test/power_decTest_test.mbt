@@ -52,7 +52,7 @@ let power_subset : String =
 test "power.decTest subset" {
   let cases = parse_dectest(power_subset)
   assert_eq(cases.length(), 40)
-  let (failures, _) = run_cases(cases)
+  let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 30 { failures.length() } else { 30 }

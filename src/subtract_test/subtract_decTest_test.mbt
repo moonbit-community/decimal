@@ -626,7 +626,7 @@ let subtract_subset : String =
 test "subtract.decTest subset round-trips through parse + subtract + toSci" {
   let cases = parse_dectest(subtract_subset)
   assert_eq(cases.length(), 566)
-  let (failures, _) = run_cases(cases)
+  let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 20 { failures.length() } else { 20 }

@@ -643,7 +643,7 @@ let comparetotmag_subset : String =
 test "comparetotmag.decTest subset round-trips through parse + comparetotmag + toSci" {
   let cases = parse_dectest(comparetotmag_subset)
   assert_eq(cases.length(), 636)
-  let (failures, _) = run_cases(cases)
+  let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 20 { failures.length() } else { 20 }

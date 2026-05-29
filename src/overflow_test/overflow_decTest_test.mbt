@@ -73,7 +73,7 @@ fn run_overflow_subset(
 ) -> Unit raise {
   let cases = parse_dectest(subset)
   assert_eq(cases.length(), expected)
-  let (failures, _) = run_cases(cases)
+  let (failures, _) = run_cases_with_flags(cases)
   if failures.length() > 0 {
     println("\{label}: \{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 20 { failures.length() } else { 20 }

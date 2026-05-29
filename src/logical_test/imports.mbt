@@ -7,4 +7,4 @@ pub using @decimal {
   type Flags,
 }
 
-pub using @dectest { type TestCase, parse_dectest, run_cases }
+pub using @dectest { type TestCase, parse_dectest, run_cases, run_cases_with_flags }
