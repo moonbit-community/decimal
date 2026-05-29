@@ -107,8 +107,27 @@ pub fn Decimal::scaleb(
       if abs_n > limit {
         return invalid_nan(ctx)
       }
-      let result = { ..self, exponent: self.exponent + n }
-      result.finalize(ctx)
+      // The shifted exponent is computed in 64 bits to avoid `Int` wraparound
+      // for extreme operand/shift combinations. When it lands far outside the
+      // representable band it is clamped to a value that `finalize` treats
+      // identically — anything above e_max overflows the same way, anything
+      // far below etiny underflows to the same zero — so the clamp never
+      // changes the result, only keeps the exponent inside `Int`.
+      let shifted = self.exponent.to_int64() + n.to_int64()
+      let exp = if ctx.precision <= 0 {
+        self.exponent + n
+      } else {
+        let hi = (ctx.e_max + 1).to_int64()
+        let lo = (ctx.etiny() - ctx.precision).to_int64()
+        if shifted > hi {
+          ctx.e_max + 1
+        } else if shifted < lo {
+          ctx.etiny() - ctx.precision
+        } else {
+          shifted.to_int()
+        }
+      }
+      ({ ..self, exponent: exp } : Decimal).finalize(ctx)
     }
     _ => abort("Decimal::scaleb: unreachable class combination")
   }
@@ -116,46 +135,74 @@ pub fn Decimal::scaleb(
 
 ///|
 /// Finite-finite quantize body: rescale `a` to `target_exp`.
+///
+/// Every representability test is decided on exponents and digit *counts*
+/// alone, before any coefficient is built. This is what keeps quantize fast
+/// and bounded even for the deliberately extreme targets the spec admits — a
+/// quantum tens of millions of places away from the value would otherwise
+/// force a power of ten with millions of digits.
+///
+/// The guards, in order:
+/// * The target exponent must lie in `[etiny, e_max]`; outside that band the
+///   requested quantum has no representable value (`Invalid_operation`).
+/// * The (re)scaled coefficient must fit `precision`: padding by `-diff`
+///   digits when lowering the exponent, or rounding away `diff` digits when
+///   raising it. If padding alone would overflow precision, give up now.
+/// * After rounding, a `999…→1000…` carry can still push past precision, and
+///   the result's adjusted exponent must not exceed `e_max`; either is
+///   `Invalid_operation` at the fixed target exponent.
+///
+/// `Subnormal` is raised for an in-range result below `e_min`, but `Underflow`
+/// is suppressed (per IEEE-754, quantize never signals it).
 fn quantize_finite(a : Decimal, target_exp : Int, ctx : Context) -> Decimal {
-  let diff = target_exp - a.exponent
-  if diff == 0 {
-    return check_quantize_precision(a, ctx)
-  }
-  if diff < 0 {
-    // Pad with trailing zeros — moving the exponent down.
-    let pad = -diff
-    let coef = scale_up(a.coefficient, pad)
-    let result = { ..a, coefficient: coef, exponent: target_exp }
-    return check_quantize_precision(result, ctx)
-  }
-  // diff > 0: drop trailing digits under rounding.
-  let (candidate, kept, dropped) = round_drop(
-    a.coefficient,
-    diff,
-    a.negative,
-    ctx.rounding,
-  )
-  // Only raise Rounded when actual rounding happened — zero input with
-  // zero dropped digits is just an exponent shift, not a round.
-  if !dropped.is_zero() || candidate != kept {
-    ctx.raise_rounded()
-  }
-  if !dropped.is_zero() {
-    ctx.raise_inexact()
-  }
-  let result = { ..a, coefficient: candidate, exponent: target_exp }
-  check_quantize_precision(result, ctx)
-}
-
-///|
-/// Quantize must keep the coefficient within precision; any overflow at
-/// this step is `Invalid_operation` (there's no representable value with
-/// the requested exponent at the given precision).
-fn check_quantize_precision(d : Decimal, ctx : Context) -> Decimal {
-  if ctx.precision > 0 && digit_count(d.coefficient) > ctx.precision {
+  let bounded = ctx.precision > 0
+  if bounded && (target_exp < ctx.etiny() || target_exp > ctx.e_max) {
     return invalid_nan(ctx)
   }
-  d
+  // Compute the result coefficient and whether the rescale rounded / lost
+  // digits, short-circuiting the unrepresentable cases to NaN.
+  let (coef, rounded, inexact) = if a.coefficient.is_zero() {
+    (0N, false, false)
+  } else {
+    let diff = target_exp - a.exponent
+    if bounded && digit_count(a.coefficient) - diff > ctx.precision {
+      return invalid_nan(ctx)
+    }
+    if diff <= 0 {
+      // Lower (or equal) target exponent: pad with `-diff` trailing zeros.
+      (scale_up(a.coefficient, -diff), false, false)
+    } else {
+      // Higher target exponent: drop `diff` low digits under rounding.
+      // Raising the exponent always shortens the coefficient, so `Rounded`
+      // fires even when the discarded digits were zero (`-10 → -1E+1`). Only
+      // a non-zero discard changes the value, which is what `Inexact` reports.
+      let (candidate, _, dropped) = round_drop(
+        a.coefficient,
+        diff,
+        a.negative,
+        ctx.rounding,
+      )
+      (candidate, true, !dropped.is_zero())
+    }
+  }
+  let result = { ..a, coefficient: coef, exponent: target_exp }
+  if bounded &&
+    (
+      digit_count(coef) > ctx.precision ||
+      (!coef.is_zero() && adjusted_exponent(result) > ctx.e_max)
+    ) {
+    return invalid_nan(ctx)
+  }
+  if rounded {
+    ctx.raise_rounded()
+  }
+  if inexact {
+    ctx.raise_inexact()
+  }
+  if bounded && !coef.is_zero() && adjusted_exponent(result) < ctx.e_min {
+    ctx.raise_subnormal()
+  }
+  result
 }
 
 ///|
@@ -252,7 +299,18 @@ pub fn Decimal::reduce(self : Decimal, ctx : Context) -> Decimal {
     SNaN => quiet_snan(self, ctx)
     QNaN => self
     Infinity => self
-    Finite => reduce_finite(self).finalize(ctx)
+    Finite =>
+      // Round to the context *first*, then strip trailing zeros. The order
+      // matters for subnormals: rounding can shorten the coefficient to the
+      // digits available at etiny (raising Rounded / Inexact / Subnormal /
+      // Underflow), and only the rounded value's trailing zeros should be
+      // removed — stripping first would change the exponent the subnormal
+      // round depends on. Overflow can finalise to Infinity, which has no
+      // zeros to strip.
+      match self.finalize(ctx) {
+        { class: Finite, .. } as rounded => reduce_finite(rounded)
+        other => other
+      }
   }
 }
 

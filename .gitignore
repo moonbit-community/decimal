@@ -1,2 +1,5 @@
 /_build/
 /.direnv/
+
+# Local Claude Code session artifacts
+.claude/

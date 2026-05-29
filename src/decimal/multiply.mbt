@@ -41,22 +41,45 @@ pub fn Decimal::multiply(
 /// context — so the precision-bounded product never loses digits that
 /// would have been recovered by the subsequent add.
 ///
-/// NaN / Infinity / zero edge cases route through the existing
-/// `Decimal::multiply` and `Decimal::add`, which already implement the
-/// GDA propagation and `0 * Infinity` / `±Infinity + ∓Infinity` rules.
-/// The only subtlety is sNaN in the addend: the exact-context multiply
-/// can't see it, but the subsequent add will signal `Invalid_operation`
-/// and quieten it as required.
+/// NaN propagation runs as a single left-to-right scan over all three
+/// operands: the leftmost *signaling* NaN wins outright (raising
+/// `Invalid_operation`), regardless of position — a signaling addend beats a
+/// quiet multiplicand. With no signaling NaN, a quiet NaN in a multiplicand
+/// propagates (leftmost first). Only once both multiplicands are non-NaN does
+/// the actual `(self * other) + addend` run, where `multiply` signals
+/// `0 * Infinity` and `add` signals `±Infinity + ∓Infinity` and propagates a
+/// quiet-NaN addend.
+///
+/// The product is formed at unbounded precision so the precision-bounded
+/// result never loses digits the subsequent add would have recovered.
 pub fn Decimal::fma(
   self : Decimal,
   other : Decimal,
   addend : Decimal,
   ctx : Context,
 ) -> Decimal {
+  // Leftmost signaling NaN across (self, other, addend) wins.
+  if self.class is SNaN {
+    return quiet_snan(self, ctx)
+  }
+  if other.class is SNaN {
+    return quiet_snan(other, ctx)
+  }
+  if addend.class is SNaN {
+    return quiet_snan(addend, ctx)
+  }
+  // No signaling NaN: a quiet NaN in a multiplicand propagates (leftmost
+  // first), without the 0×∞ check the real multiply would apply.
+  if self.class is QNaN {
+    return truncate_nan_payload(self, ctx)
+  }
+  if other.class is QNaN {
+    return truncate_nan_payload(other, ctx)
+  }
+  // Both multiplicands are non-NaN: form the exact product (which may signal
+  // 0×∞), then add the addend (which handles ∞−∞ and a quiet-NaN addend).
   let exact = Context::exact()
   let product = Decimal::multiply(self, other, exact)
-  // Reflect the exact-context's signals into the caller context — multiply
-  // raises Invalid_operation for 0×∞, and the user ought to see that.
   if exact.flags.invalid_operation {
     ctx.raise_invalid_operation()
   }

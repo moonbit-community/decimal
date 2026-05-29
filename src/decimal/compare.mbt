@@ -157,17 +157,15 @@ fn max_min_choose(
   magnitude : Bool,
 ) -> Decimal {
   if a.class is SNaN {
-    ctx.raise_invalid_operation()
-    return { ..a, class: QNaN }
+    return quiet_snan(a, ctx)
   }
   if b.class is SNaN {
-    ctx.raise_invalid_operation()
-    return { ..b, class: QNaN }
+    return quiet_snan(b, ctx)
   }
   let a_qnan = a.class is QNaN
   let b_qnan = b.class is QNaN
   if a_qnan && b_qnan {
-    return a
+    return truncate_nan_payload(a, ctx)
   }
   if a_qnan {
     return b.finalize(ctx)

@@ -322,12 +322,46 @@ fn round_decision(
 /// Drop the low `drop_len` digits of `coef` under rounding `mode`, returning
 /// `(candidate, kept, dropped)`: the rounded high part, the truncated high
 /// part, and the discarded low part. Callers apply their own flag policy.
+///
+/// When the drop spans the whole coefficient (`drop_len >= digit_count`) the
+/// kept part is zero and the discarded tail is the entire coefficient. This
+/// path is taken without materialising `pow10(drop_len)`, which would explode
+/// for the extreme exponent gaps `quantize` / `to-integral` admit (a target
+/// tens of millions of places below the value). The leading written-out
+/// dropped digit is the coefficient's own leading digit when the drop exactly
+/// spans it, and a left-pad zero when it overshoots.
 fn round_drop(
   coef : BigInt,
   drop_len : Int,
   negative : Bool,
   mode : Rounding,
 ) -> (BigInt, BigInt, BigInt) {
+  if !coef.is_zero() {
+    let n = digit_count(coef)
+    if drop_len >= n {
+      let top = pow10(n - 1)
+      let first_digit = if drop_len == n { (coef / top).to_int() } else { 0 }
+      let rest_nonzero = drop_len > n || !(coef % top).is_zero()
+      let dropped_nonzero = first_digit != 0 || rest_nonzero
+      let half = if first_digit > 5 {
+        1
+      } else if first_digit < 5 {
+        -1
+      } else if rest_nonzero {
+        1
+      } else {
+        0
+      }
+      let candidate : BigInt = if should_round_up(
+          0N, negative, half, dropped_nonzero, mode,
+        ) {
+        1N
+      } else {
+        0N
+      }
+      return (candidate, 0N, coef)
+    }
+  }
   let divisor = pow10(drop_len)
   let kept = coef / divisor
   let dropped = coef % divisor

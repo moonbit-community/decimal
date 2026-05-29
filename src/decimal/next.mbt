@@ -46,13 +46,50 @@ pub fn Decimal::next_toward(
   let cmp = compare_numeric_int(self, other)
   if cmp == 0 {
     // Numerically equal — the value is unchanged but takes `other`'s sign, so
-    // `nextToward(0.00, -0.0000)` yields `-0.00`, not `+0.00`.
+    // `nextToward(0.00, -0.0000)` yields `-0.00`, not `+0.00`. Quiet.
     return { ..self, negative: other.negative }
   }
-  if cmp < 0 {
+  // The step itself is quiet (`next_plus` / `next_minus`), but next-toward
+  // additionally signals when the stepped result leaves the normal range:
+  // Overflow on Infinity, and Subnormal / Underflow when the result is below
+  // e_min (with Clamped when the step collapses to a signed zero at etiny).
+  // Inexact / Rounded accompany those — the true next value sits infinitely
+  // close, so reaching a representable one is a rounding. Normal-range steps
+  // stay quiet.
+  let stepped = if cmp < 0 {
     Decimal::next_plus(self, ctx)
   } else {
     Decimal::next_minus(self, ctx)
+  }
+  raise_next_toward_flags(stepped, ctx)
+  stepped
+}
+
+///|
+/// Raise the status flags for a `next-toward` result whose value left the
+/// normal range. See `next_toward` for the rationale.
+fn raise_next_toward_flags(result : Decimal, ctx : Context) -> Unit {
+  match result.class {
+    Infinity => {
+      ctx.raise_overflow()
+      ctx.raise_inexact()
+      ctx.raise_rounded()
+    }
+    Finite =>
+      if result.coefficient.is_zero() {
+        // Stepped across zero to a signed zero pinned at etiny.
+        ctx.raise_subnormal()
+        ctx.raise_underflow()
+        ctx.raise_inexact()
+        ctx.raise_rounded()
+        ctx.raise_clamped()
+      } else if adjusted_exponent(result) < ctx.e_min {
+        ctx.raise_subnormal()
+        ctx.raise_underflow()
+        ctx.raise_inexact()
+        ctx.raise_rounded()
+      }
+    _ => ()
   }
 }
 
@@ -79,21 +116,17 @@ fn smallest_subnormal(negative : Bool, ctx : Context) -> Decimal {
 /// Unified step: `step_up == true` walks toward +∞ (next-plus), `false`
 /// walks toward -∞ (next-minus). Routes through the sign-flipped helpers
 /// so the directional logic lives in one place.
+///
+/// This is a *quiet* computation — it raises no status flags. `next-plus` /
+/// `next-minus` are defined to be quiet; `next-toward` shares the same
+/// stepping but raises its own flags from the result (see `next_toward`).
 fn next_step(x : Decimal, ctx : Context, step_up : Bool) -> Decimal {
   if ctx.precision <= 0 {
     return invalid_nan(ctx)
   }
   // Zero special-case: next-plus(±0) = smallest +subnormal;
   // next-minus(±0) = smallest -subnormal. The input's sign is dropped.
-  // Stepping from zero into the subnormal range raises the full underflow
-  // flag set (Underflow + Subnormal + Inexact + Rounded), since the
-  // "math next" of zero is infinitesimally close and our representable
-  // step is necessarily inexact.
   if x.coefficient.is_zero() {
-    ctx.raise_subnormal()
-    ctx.raise_underflow()
-    ctx.raise_inexact()
-    ctx.raise_rounded()
     return smallest_subnormal(!step_up, ctx)
   }
   // Reduce to magnitude work: if the input is positive, "step up" walks
@@ -106,13 +139,8 @@ fn next_step(x : Decimal, ctx : Context, step_up : Bool) -> Decimal {
     step_magnitude_down(x.coefficient, x.exponent, ctx)
   }
   match stepped {
-    StepResult::Overflow => {
-      // Stepping past the largest representable lands on a signed Infinity.
-      ctx.raise_overflow()
-      ctx.raise_inexact()
-      ctx.raise_rounded()
-      signed_infinity(x.negative)
-    }
+    // Stepping past the largest representable lands on a signed Infinity.
+    StepResult::Overflow => signed_infinity(x.negative)
     // Magnitude stepped to zero — a signed zero at etiny on the opposite side
     // (next-plus(-tiny) → -0; next-minus(tiny) → +0).
     StepResult::Zero => finite_zero(ctx.etiny(), x.negative)

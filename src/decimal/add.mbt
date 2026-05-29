@@ -109,14 +109,10 @@ fn add_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
     let a_adj = adjusted_exponent(a)
     let b_adj = adjusted_exponent(b)
     if a_adj > b_adj + ctx.precision + 1 {
-      ctx.raise_inexact()
-      ctx.raise_rounded()
-      return align_zero_add(a, b, ctx)
+      return below_noise_sum(a, b, a_adj, ctx)
     }
     if b_adj > a_adj + ctx.precision + 1 {
-      ctx.raise_inexact()
-      ctx.raise_rounded()
-      return align_zero_add(b, a, ctx)
+      return below_noise_sum(b, a, b_adj, ctx)
     }
   }
   // Small-int fast path: when both operands fit in `Int64` and the
@@ -219,6 +215,44 @@ fn cancellation_neg(
   } else {
     computed_sign
   }
+}
+
+///|
+/// Sum when `small` lies more than `precision + 1` places below `large`:
+/// the result is `large` rounded to precision with `small` discarded below
+/// the round digit — always `Inexact` + `Rounded`. Returning the precision-
+/// bounded value (instead of materialising the full alignment) is what keeps
+/// extreme exponent gaps cheap; the caller's `finalize` still applies
+/// overflow, clamp, and strict-subnormal rounding from that bounded value.
+///
+/// One boundary the bounded value hides: opposite signs with `large` a power
+/// of ten *borrow* one place, so the pre-round magnitude is a decade smaller
+/// — subnormal at `e_min - 1` — even though the rounded result carries back up
+/// to `e_min`. `finalize` keys `Subnormal` off the rounded value and so would
+/// miss it; raise it (with `Underflow`, the discard being inexact) here.
+fn below_noise_sum(
+  large : Decimal,
+  small : Decimal,
+  large_adj : Int,
+  ctx : Context,
+) -> Decimal {
+  ctx.raise_inexact()
+  ctx.raise_rounded()
+  if large.negative != small.negative &&
+    large_adj == ctx.e_min &&
+    is_power_of_ten(large.coefficient) {
+    ctx.raise_subnormal()
+    ctx.raise_underflow()
+  }
+  align_zero_add(large, small, ctx)
+}
+
+///|
+/// Whether `coef` is a power of ten (`1` followed by zeros): its leading
+/// digit is `1` and the rest are `0`. Such an operand is the only one whose
+/// magnitude drops a decade under a sub-ULP borrow.
+fn is_power_of_ten(coef : BigInt) -> Bool {
+  !coef.is_zero() && coef == pow10(digit_count(coef) - 1)
 }
 
 ///|

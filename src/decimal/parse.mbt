@@ -1,4 +1,11 @@
 ///|
+/// Magnitude an exponent literal is clamped to once it exceeds every
+/// representable range. Chosen above any context's `e_max` (which never
+/// exceeds `999_999_999`) yet far enough below `Int.max` that the later
+/// `exp - frac_digits` arithmetic and sign flip cannot wrap.
+const EXPONENT_SATURATION : Int = 1_999_999_999
+
+///|
 /// Errors raised by `Decimal::parse`.
 pub(all) suberror ParseError {
   /// Input was empty.
@@ -174,12 +181,29 @@ fn parse_finite(
       false
     }
     let exp_digits_start = i
+    // Saturate rather than wrap: an exponent magnitude beyond every
+    // representable range is clamped to a sentinel that is still well above
+    // any context's e_max yet safely inside `Int`. Without this, a colossal
+    // exponent like `1e-12345678903` would overflow `Int` and could wrap back
+    // into a valid range, turning a should-be-`NaN` into a finite result. The
+    // guard is evaluated before the multiply so the overflow never happens.
+    let mut exp_overflow = false
     while i < n && is_digit(char_at(input, i)) {
-      exp = exp * 10 + (char_at(input, i).to_int() - '0'.to_int())
+      if !exp_overflow {
+        let d = char_at(input, i).to_int() - '0'.to_int()
+        if exp > (EXPONENT_SATURATION - d) / 10 {
+          exp_overflow = true
+        } else {
+          exp = exp * 10 + d
+        }
+      }
       i = i + 1
     }
     if i == exp_digits_start {
       raise InvalidExponent(position=exp_start)
+    }
+    if exp_overflow {
+      exp = EXPONENT_SATURATION
     }
     if exp_negative {
       exp = -exp
