@@ -106,10 +106,12 @@ fn add_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
     let b_adj = adjusted_exponent(b)
     if a_adj > b_adj + ctx.precision + 1 {
       ctx.raise_inexact()
+      ctx.raise_rounded()
       return align_zero_add(a, b, ctx)
     }
     if b_adj > a_adj + ctx.precision + 1 {
       ctx.raise_inexact()
+      ctx.raise_rounded()
       return align_zero_add(b, a, ctx)
     }
   }

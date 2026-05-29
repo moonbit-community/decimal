@@ -100,10 +100,13 @@ fn apply_subnormal(d : Decimal, ctx : Context) -> Decimal {
     dropped, drop, kept, d.negative, ctx.rounding,
   )
   let candidate = if round_up { kept + 1N } else { kept }
+  // Reaching this branch means we dropped at least one digit; Rounded
+  // fires whether or not those digits were zero (consistent with how
+  // round_finite raises Rounded for any precision-cut, exact or not).
+  ctx.raise_rounded()
   if !dropped.is_zero() {
     ctx.raise_inexact()
     ctx.raise_underflow()
-    ctx.raise_rounded()
   }
   if candidate.is_zero() {
     // Rounded all the way to zero — etiny clamp applies as Clamped (per
