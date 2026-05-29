@@ -17,8 +17,8 @@ fn bigint_to_int(magnitude : BigInt, negative : Bool) -> Int? {
 /// Strip trailing factors of ten from `coef` (raising `exp` to compensate),
 /// continuing while the coefficient is non-zero, its last digit is `0`, and
 /// `keep` accepts the current exponent. Returns the reduced `(coef, exp)`.
-/// Shared by `reduce`, `trim`, and the exact-divide normalisation, which differ
-/// only in their `keep` predicate.
+/// Shared by `reduce` and the exact-divide normalisation, which differ only in
+/// their `keep` predicate.
 fn strip_trailing_zeros(
   coef : BigInt,
   exp : Int,

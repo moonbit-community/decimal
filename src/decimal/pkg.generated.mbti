@@ -26,7 +26,7 @@ pub(all) enum Class {
 } derive(Eq)
 pub impl Show for Class
 
-pub(all) struct Context {
+pub struct Context {
   precision : Int
   rounding : Rounding
   e_min : Int
@@ -40,7 +40,7 @@ pub fn Context::decimal64() -> Self
 pub fn Context::exact() -> Self
 pub fn Context::new(precision? : Int, rounding? : Rounding, e_min? : Int, e_max? : Int, clamp? : Bool) -> Self
 
-pub(all) struct Decimal {
+pub struct Decimal {
   class : Class
   negative : Bool
   coefficient : @bigint.BigInt
@@ -110,7 +110,6 @@ pub fn Decimal::subtract(Self, Self, Context) -> Self
 pub fn Decimal::to_integral_exact(Self, Context) -> Self
 pub fn Decimal::to_integral_value(Self, Context) -> Self
 pub fn Decimal::to_sci_string(Self) -> String
-pub fn Decimal::trim(Self, Context) -> Self
 pub fn Decimal::zero() -> Self
 pub impl Show for Decimal
 

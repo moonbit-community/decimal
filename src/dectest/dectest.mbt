@@ -458,8 +458,6 @@ fn compute(case : TestCase) -> (String, Flags)? raise RunnerError {
     Some(binary_ctx(case, Decimal::rescale))
   } else if ascii_eq_ci(case.op, "scaleb") {
     Some(binary_ctx(case, Decimal::scaleb))
-  } else if ascii_eq_ci(case.op, "trim") {
-    Some(unary_ctx(case, Decimal::trim))
   } else if ascii_eq_ci(case.op, "tointegral") {
     Some(unary_ctx(case, Decimal::to_integral_value))
   } else if ascii_eq_ci(case.op, "tointegralx") {

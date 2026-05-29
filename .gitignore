@@ -3,3 +3,6 @@
 
 # Local Claude Code session artifacts
 .claude/
+
+# Test packages have no consumed API contract; do not track their generated mbti
+src/*_test/pkg.generated.mbti
