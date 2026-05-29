@@ -228,6 +228,53 @@ fn to_integral(d : Decimal, ctx : Context, raise_flags : Bool) -> Decimal {
   }
 }
 
+///| GDA `trim`: strip the *insignificant* trailing zeros — those past the
+/// decimal point. Unlike `reduce`, this only collapses zeros to the right
+/// of the radix; integer-side trailing zeros stay.
+///
+/// Concretely:
+/// * `exponent == 0`: identity (`10` stays `10`).
+/// * `exponent < 0`: strip trailing zeros, stopping once the exponent
+///   reaches 0 (`1.00 → 1`, but `1.001 → 1.001`).
+/// * `exponent > 0`: strip all trailing zeros (`10E+1 → 1E+2`), since the
+///   value can be re-expressed without them and there's no decimal point
+///   to preserve scale around.
+/// * Zero normalises to `0` (exponent 0), preserving sign.
+pub fn Decimal::trim(self : Decimal, ctx : Context) -> Decimal {
+  match self.class {
+    SNaN => quiet_snan(self, ctx)
+    QNaN => self
+    Infinity => self
+    Finite => trim_finite(self)
+  }
+}
+
+///| Body of `trim` — see the public function's docstring for the rule
+/// table.
+fn trim_finite(d : Decimal) -> Decimal {
+  if d.coefficient.is_zero() {
+    return { ..d, exponent: 0 }
+  }
+  if d.exponent == 0 {
+    return d
+  }
+  let was_negative_exp = d.exponent < 0
+  let mut coef = d.coefficient
+  let mut exp = d.exponent
+  while !coef.is_zero() {
+    let next = coef / 10N
+    if next * 10N != coef {
+      break
+    }
+    coef = next
+    exp = exp + 1
+    if was_negative_exp && exp == 0 {
+      break
+    }
+  }
+  { ..d, coefficient: coef, exponent: exp }
+}
+
 ///| GDA `reduce` (also known as `normalize`): strip trailing zeros from
 /// the coefficient, raising the exponent to compensate, so the result
 /// has the same value but the most "concise" representation.
