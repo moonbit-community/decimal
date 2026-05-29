@@ -1,10 +1,13 @@
-///| All four chunks of add.decTest. Previously split into add0-3 for
-/// pre-split-era parallelism; sequential serial execution is now fast
-/// enough that one package is fine.
+///| All `addx*` cases from `add.decTest` (sNaN and `#`-malformed cases
+/// excluded — those need binary-dispatcher sNaN flag plumbing and
+/// parser-error→Conversion_syntax routing respectively). 2006 cases
+/// split into four chunks for readability.
 
 let add_subset_0 : String =
-  #|precision: 9
-  #|rounding: half_up
+  #|precision:   9
+  #|rounding:    half_up
+  #|maxExponent: 384
+  #|minexponent: -383
   #|addx001 add 1       1       ->  2
   #|addx002 add 2       3       ->  5
   #|addx003 add '5.75'  '3.3'   ->  9.05
@@ -63,6 +66,22 @@ let add_subset_0 : String =
   #|addx056 add '1.3' '-2.07' -> '-0.77'
   #|addx057 add '1E+2' '1E+4' -> '1.01E+4'
   #|precision: 6
+  #|addx060 add '10000e+9'  '70000' -> '1.00000E+13' Inexact Rounded
+  #|addx061 add 1 '0.0001' -> '1.0001'
+  #|addx062 add 1 '0.00001' -> '1.00001'
+  #|addx063 add 1 '0.000001' -> '1.00000' Inexact Rounded
+  #|addx064 add 1 '0.0000001' -> '1.00000' Inexact Rounded
+  #|addx065 add 1 '0.00000001' -> '1.00000' Inexact Rounded
+  #|addx070 add 1  0    -> 1
+  #|addx071 add 1 0.    -> 1
+  #|addx072 add 1  .0   -> 1.0
+  #|addx073 add 1 0.0   -> 1.0
+  #|addx074 add 1 0.00  -> 1.00
+  #|addx075 add  0  1   -> 1
+  #|addx076 add 0.  1   -> 1
+  #|addx077 add  .0 1   -> 1.0
+  #|addx078 add 0.0 1   -> 1.0
+  #|addx079 add 0.00 1  -> 1.00
   #|precision: 9
   #|addx080 add 999999998 1  -> 999999999
   #|addx081 add 999999999 1  -> 1.00000000E+9 Rounded
@@ -233,8 +252,63 @@ let add_subset_0 : String =
   #|addx269 add '123456789' 1.1           -> '123456790' Inexact Rounded
   #|precision: 3
   #|rounding: half_up
+  #|addx270 add '12345678900000'  9999999999999 ->  '2.23E+13' Inexact Rounded
+  #|addx271 add  '9999999999999' 12345678900000 ->  '2.23E+13' Inexact Rounded
+  #|addx272 add '12E+3'  '3444'   ->  '1.54E+4' Inexact Rounded
+  #|addx273 add '12E+3'  '3446'   ->  '1.54E+4' Inexact Rounded
+  #|addx274 add '12E+3'  '3449.9' ->  '1.54E+4' Inexact Rounded
+  #|addx275 add '12E+3'  '3450.0' ->  '1.55E+4' Inexact Rounded
+  #|addx276 add '12E+3'  '3450.1' ->  '1.55E+4' Inexact Rounded
+  #|addx277 add '12E+3'  '3454'   ->  '1.55E+4' Inexact Rounded
+  #|addx278 add '12E+3'  '3456'   ->  '1.55E+4' Inexact Rounded
+  #|addx281 add '3444'   '12E+3'  ->  '1.54E+4' Inexact Rounded
+  #|addx282 add '3446'   '12E+3'  ->  '1.54E+4' Inexact Rounded
+  #|addx283 add '3449.9' '12E+3'  ->  '1.54E+4' Inexact Rounded
+  #|addx284 add '3450.0' '12E+3'  ->  '1.55E+4' Inexact Rounded
+  #|addx285 add '3450.1' '12E+3'  ->  '1.55E+4' Inexact Rounded
+  #|addx286 add '3454'   '12E+3'  ->  '1.55E+4' Inexact Rounded
+  #|addx287 add '3456'   '12E+3'  ->  '1.55E+4' Inexact Rounded
   #|rounding: half_down
+  #|addx291 add '3444'   '12E+3'  ->  '1.54E+4' Inexact Rounded
+  #|addx292 add '3446'   '12E+3'  ->  '1.54E+4' Inexact Rounded
+  #|addx293 add '3449.9' '12E+3'  ->  '1.54E+4' Inexact Rounded
+  #|addx294 add '3450.0' '12E+3'  ->  '1.54E+4' Inexact Rounded
+  #|addx295 add '3450.1' '12E+3'  ->  '1.55E+4' Inexact Rounded
+  #|addx296 add '3454'   '12E+3'  ->  '1.55E+4' Inexact Rounded
+  #|addx297 add '3456'   '12E+3'  ->  '1.55E+4' Inexact Rounded
   #|rounding: half_up
+  #|addx301 add  -1   1      ->   0
+  #|addx302 add   0   1      ->   1
+  #|addx303 add   1   1      ->   2
+  #|addx304 add  12   1      ->  13
+  #|addx305 add  98   1      ->  99
+  #|addx306 add  99   1      -> 100
+  #|addx307 add 100   1      -> 101
+  #|addx308 add 101   1      -> 102
+  #|addx309 add  -1  -1      ->  -2
+  #|addx310 add   0  -1      ->  -1
+  #|addx311 add   1  -1      ->   0
+  #|addx312 add  12  -1      ->  11
+  #|addx313 add  98  -1      ->  97
+  #|addx314 add  99  -1      ->  98
+  #|addx315 add 100  -1      ->  99
+  #|addx316 add 101  -1      -> 100
+  #|addx321 add -0.01  0.01    ->  0.00
+  #|addx322 add  0.00  0.01    ->  0.01
+  #|addx323 add  0.01  0.01    ->  0.02
+  #|addx324 add  0.12  0.01    ->  0.13
+  #|addx325 add  0.98  0.01    ->  0.99
+  #|addx326 add  0.99  0.01    ->  1.00
+  #|addx327 add  1.00  0.01    ->  1.01
+  #|addx328 add  1.01  0.01    ->  1.02
+  #|addx329 add -0.01 -0.01    -> -0.02
+  #|addx330 add  0.00 -0.01    -> -0.01
+  #|addx331 add  0.01 -0.01    ->  0.00
+  #|addx332 add  0.12 -0.01    ->  0.11
+  #|addx333 add  0.98 -0.01    ->  0.97
+  #|addx334 add  0.99 -0.01    ->  0.98
+  #|addx335 add  1.00 -0.01    ->  0.99
+  #|addx336 add  1.01 -0.01    ->  1.00
   #|precision: 9
   #|addx340 add 1E+3    0    ->         1000
   #|addx341 add 1E+8    0    ->    100000000
@@ -250,19 +324,30 @@ let add_subset_0 : String =
   #|addx351 add 1E+10   7    ->   1.00000000E+10  Inexact Rounded
   #|precision:   7
   #|rounding:    half_up
+  #|maxExponent: 92
+  #|minexponent: -92
+  #|addx361  add 0E+50 10000E+1  -> 1.0000E+5
+  #|addx362  add 10000E+1 0E-50  -> 100000.0  Rounded
+  #|addx363  add 10000E+1 10000E-50  -> 100000.0  Rounded Inexact
+  #|addx364  add 9.999999E+92 -9.999999E+92 -> 0E+86
   #|rounding:    half_down
   #|precision:   10
   #|addx370 add 99999999 81512 -> 100081511
   #|precision:      6
+  #|addx371 add 99999999 81512 -> 1.00082E+8 Rounded Inexact
   #|rounding:    half_up
   #|precision:   10
   #|addx372 add 99999999 81512 -> 100081511
   #|precision:      6
+  #|addx373 add 99999999 81512 -> 1.00082E+8 Rounded Inexact
   #|rounding:    half_even
   #|precision:   10
   #|addx374 add 99999999 81512 -> 100081511
   #|precision:      6
+  #|addx375 add 99999999 81512 -> 1.00082E+8 Rounded Inexact
   #|precision: 9
+  #|maxexponent: 999999999
+  #|minexponent: -999999999
   #|addx400 add   1   77e-7       ->  1.0000077
   #|addx401 add   1   77e-8       ->  1.00000077
   #|addx402 add   1   77e-9       ->  1.00000008 Inexact Rounded
@@ -359,6 +444,8 @@ let add_subset_0 : String =
   #|addx515 add   77e-12      -10  ->  -10.0000000 Inexact Rounded
   #|addx516 add   77e-999     -10  ->  -10.0000000 Inexact Rounded
   #|addx517 add   77e-9999999 -10  ->  -10.0000000 Inexact Rounded
+  #|maxexponent: 999
+  #|minexponent: -999
   #|precision: 9
   #|addx521 add 12345678000 0 -> 1.23456780E+10 Rounded
   #|addx522 add 0 12345678000 -> 1.23456780E+10 Rounded
@@ -386,10 +473,14 @@ let add_subset_0 : String =
   #|addx551 add 1234567896  0 -> 1234567896
   #|addx552 add 0 1234567896  -> 1234567896
   #|precision:    16
+  #|maxExponent: +394
+  #|minExponent: -393
   #|rounding:     down
   #|addx561 add 1e-398 9.000000000000000E+384 -> 9.000000000000000E+384 Inexact Rounded
   #|addx562 add      0 9.000000000000000E+384 -> 9.000000000000000E+384 Rounded
   #|precision:    16
+  #|maxExponent: +384
+  #|minExponent: -383
   #|rounding:     down
   #|addx563 add 1e-388 9.000000000000000E+374 -> 9.000000000000000E+374 Inexact Rounded
   #|addx564 add      0 9.000000000000000E+374 -> 9.000000000000000E+374 Rounded
@@ -512,11 +603,6 @@ let add_subset_0 : String =
   #|precision:  22
   #|addx675 add 98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 98471174166.42211023639                Inexact Rounded
   #|precision:  21
-
-
-let add_subset_1 : String =
-  #|precision: 21
-  #|rounding: half_up
   #|addx676 add 98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 98471174166.4221102364                 Inexact Rounded
   #|precision:  20
   #|addx677 add 98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 98471174166.422110236                  Inexact Rounded
@@ -534,6 +620,12 @@ let add_subset_1 : String =
   #|addx683 add 98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 98471174166.422                        Inexact Rounded
   #|precision:  13
   #|addx684 add 98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 98471174166.42                         Inexact Rounded
+
+let add_subset_1 : String =
+  #|maxexponent: +384
+  #|minexponent: -383
+  #|rounding: half_up
+  #|precision: 13
   #|precision:  12
   #|addx685 add 98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 98471174166.4                          Inexact Rounded
   #|precision:  11
@@ -543,13 +635,21 @@ let add_subset_1 : String =
   #|precision:   9
   #|addx688 add 98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 9.84711742E+10                         Inexact Rounded
   #|precision:   8
+  #|addx689 add 98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 9.8471174E+10                          Inexact Rounded
   #|precision:   7
+  #|addx690 add 98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 9.847117E+10                          Inexact Rounded
   #|precision:   6
+  #|addx691 add 98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 9.84712E+10                          Inexact Rounded
   #|precision:   5
+  #|addx692 add 98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 9.8471E+10                          Inexact Rounded
   #|precision:   4
+  #|addx693 add 98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 9.847E+10                          Inexact Rounded
   #|precision:   3
+  #|addx694 add 98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 9.85E+10                          Inexact Rounded
   #|precision:   2
+  #|addx695 add 98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 9.8E+10                          Inexact Rounded
   #|precision:   1
+  #|addx696 add 98471198160.56524417578665886060 -23994.14313393939743548945165462 -> 1E+11                          Inexact Rounded
   #|rounding: half_up
   #|precision:   9
   #|addx701 add 5.00 1.00E-3 -> 5.00100
@@ -666,25 +766,6 @@ let add_subset_1 : String =
   #|addx835 add  1    NaN    ->  NaN
   #|addx836 add  1000 NaN    ->  NaN
   #|addx837 add  Inf  NaN    ->  NaN
-  #|addx841 add  sNaN -Inf   ->  NaN  Invalid_operation
-  #|addx842 add  sNaN -1000  ->  NaN  Invalid_operation
-  #|addx843 add  sNaN -1     ->  NaN  Invalid_operation
-  #|addx844 add  sNaN -0     ->  NaN  Invalid_operation
-  #|addx845 add  sNaN  0     ->  NaN  Invalid_operation
-  #|addx846 add  sNaN  1     ->  NaN  Invalid_operation
-  #|addx847 add  sNaN  1000  ->  NaN  Invalid_operation
-  #|addx848 add  sNaN  NaN   ->  NaN  Invalid_operation
-  #|addx849 add  sNaN sNaN   ->  NaN  Invalid_operation
-  #|addx850 add  NaN  sNaN   ->  NaN  Invalid_operation
-  #|addx851 add -Inf  sNaN   ->  NaN  Invalid_operation
-  #|addx852 add -1000 sNaN   ->  NaN  Invalid_operation
-  #|addx853 add -1    sNaN   ->  NaN  Invalid_operation
-  #|addx854 add -0    sNaN   ->  NaN  Invalid_operation
-  #|addx855 add  0    sNaN   ->  NaN  Invalid_operation
-  #|addx856 add  1    sNaN   ->  NaN  Invalid_operation
-  #|addx857 add  1000 sNaN   ->  NaN  Invalid_operation
-  #|addx858 add  Inf  sNaN   ->  NaN  Invalid_operation
-  #|addx859 add  NaN  sNaN   ->  NaN  Invalid_operation
   #|addx861 add  NaN1   -Inf    ->  NaN1
   #|addx862 add +NaN2   -1000   ->  NaN2
   #|addx863 add  NaN3    1000   ->  NaN3
@@ -694,37 +775,144 @@ let add_subset_1 : String =
   #|addx867 add -1000    NaN8   ->  NaN8
   #|addx868 add  1000    NaN9   ->  NaN9
   #|addx869 add  Inf    +NaN10  ->  NaN10
-  #|addx871 add  sNaN11  -Inf   ->  NaN11  Invalid_operation
-  #|addx872 add  sNaN12  -1000  ->  NaN12  Invalid_operation
-  #|addx873 add  sNaN13   1000  ->  NaN13  Invalid_operation
-  #|addx874 add  sNaN14   NaN17 ->  NaN14  Invalid_operation
-  #|addx875 add  sNaN15  sNaN18 ->  NaN15  Invalid_operation
-  #|addx876 add  NaN16   sNaN19 ->  NaN19  Invalid_operation
-  #|addx877 add -Inf    +sNaN20 ->  NaN20  Invalid_operation
-  #|addx878 add -1000    sNaN21 ->  NaN21  Invalid_operation
-  #|addx879 add  1000    sNaN22 ->  NaN22  Invalid_operation
-  #|addx880 add  Inf     sNaN23 ->  NaN23  Invalid_operation
-  #|addx881 add +NaN25  +sNaN24 ->  NaN24  Invalid_operation
   #|addx882 add -NaN26    NaN28 -> -NaN26
-  #|addx883 add -sNaN27  sNaN29 -> -NaN27  Invalid_operation
   #|addx884 add  1000    -NaN30 -> -NaN30
-  #|addx885 add  1000   -sNaN31 -> -NaN31  Invalid_operation
+  #|maxexponent: 999999999
+  #|minexponent: -999999999
   #|precision: 9
+  #|addx890 add 1E+999999999     9E+999999999   -> Infinity Overflow Inexact Rounded
+  #|addx891 add 9E+999999999     1E+999999999   -> Infinity Overflow Inexact Rounded
+  #|addx892 add -1.1E-999999999  1E-999999999   -> -1E-1000000000    Subnormal
+  #|addx893 add 1E-999999999    -1.1e-999999999 -> -1E-1000000000    Subnormal
+  #|addx894 add -1.0001E-999999999  1E-999999999   -> -1E-1000000003 Subnormal
+  #|addx895 add 1E-999999999    -1.0001e-999999999 -> -1E-1000000003 Subnormal
+  #|addx896 add -1E+999999999   -9E+999999999   -> -Infinity Overflow Inexact Rounded
+  #|addx897 add -9E+999999999   -1E+999999999   -> -Infinity Overflow Inexact Rounded
+  #|addx898 add +1.1E-999999999 -1E-999999999   -> 1E-1000000000    Subnormal
+  #|addx899 add -1E-999999999   +1.1e-999999999 -> 1E-1000000000    Subnormal
+  #|addx900 add +1.0001E-999999999 -1E-999999999   -> 1E-1000000003 Subnormal
+  #|addx901 add -1E-999999999   +1.0001e-999999999 -> 1E-1000000003 Subnormal
   #|addx902 add -1E+999999999   +9E+999999999   ->  8E+999999999
   #|addx903 add -9E+999999999   +1E+999999999   -> -8E+999999999
   #|precision: 3
+  #|addx904 add      0 -9.999E+999999999   -> -Infinity Inexact Overflow Rounded
+  #|addx905 add        -9.999E+999999999 0 -> -Infinity Inexact Overflow Rounded
+  #|addx906 add      0  9.999E+999999999   ->  Infinity Inexact Overflow Rounded
+  #|addx907 add         9.999E+999999999 0 ->  Infinity Inexact Overflow Rounded
   #|precision: 3
+  #|maxexponent: 999
+  #|minexponent: -999
+  #|addx910 add  1.00E-999   0    ->   1.00E-999
+  #|addx911 add  0.1E-999    0    ->   1E-1000   Subnormal
+  #|addx912 add  0.10E-999   0    ->   1.0E-1000 Subnormal
+  #|addx913 add  0.100E-999  0    ->   1.0E-1000 Subnormal Rounded
+  #|addx914 add  0.01E-999   0    ->   1E-1001   Subnormal
+  #|addx915 add  0.999E-999  0    ->   1.00E-999 Inexact Rounded Subnormal Underflow
+  #|addx916 add  0.099E-999  0    ->   1.0E-1000 Inexact Rounded Subnormal Underflow
+  #|addx917 add  0.009E-999  0    ->   1E-1001   Inexact Rounded Subnormal Underflow
+  #|addx918 add  0.001E-999  0    ->   0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|addx919 add  0.0009E-999 0    ->   0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|addx920 add  0.0001E-999 0    ->   0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|addx930 add -1.00E-999   0    ->  -1.00E-999
+  #|addx931 add -0.1E-999    0    ->  -1E-1000   Subnormal
+  #|addx932 add -0.10E-999   0    ->  -1.0E-1000 Subnormal
+  #|addx933 add -0.100E-999  0    ->  -1.0E-1000 Subnormal Rounded
+  #|addx934 add -0.01E-999   0    ->  -1E-1001   Subnormal
+  #|addx935 add -0.999E-999  0    ->  -1.00E-999 Inexact Rounded Subnormal Underflow
+  #|addx936 add -0.099E-999  0    ->  -1.0E-1000 Inexact Rounded Subnormal Underflow
+  #|addx937 add -0.009E-999  0    ->  -1E-1001   Inexact Rounded Subnormal Underflow
+  #|addx938 add -0.001E-999  0    ->  -0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|addx939 add -0.0009E-999 0    ->  -0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|addx940 add -0.0001E-999 0    ->  -0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|addx950 add  1.00E-999    0.1E-999  ->   1.10E-999
+  #|addx951 add  0.1E-999     0.1E-999  ->   2E-1000    Subnormal
+  #|addx952 add  0.10E-999    0.1E-999  ->   2.0E-1000  Subnormal
+  #|addx953 add  0.100E-999   0.1E-999  ->   2.0E-1000  Subnormal Rounded
+  #|addx954 add  0.01E-999    0.1E-999  ->   1.1E-1000  Subnormal
+  #|addx955 add  0.999E-999   0.1E-999  ->   1.10E-999  Inexact Rounded
+  #|addx956 add  0.099E-999   0.1E-999  ->   2.0E-1000  Inexact Rounded Subnormal Underflow
+  #|addx957 add  0.009E-999   0.1E-999  ->   1.1E-1000  Inexact Rounded Subnormal Underflow
+  #|addx958 add  0.001E-999   0.1E-999  ->   1.0E-1000  Inexact Rounded Subnormal Underflow
+  #|addx959 add  0.0009E-999  0.1E-999  ->   1.0E-1000  Inexact Rounded Subnormal Underflow
+  #|addx960 add  0.0001E-999  0.1E-999  ->   1.0E-1000  Inexact Rounded Subnormal Underflow
+  #|addx961 add  1.00E-999   -0.1E-999  ->   9.0E-1000  Subnormal
+  #|addx962 add  0.1E-999    -0.1E-999  ->   0E-1000
+  #|addx963 add  0.10E-999   -0.1E-999  ->   0E-1001
+  #|addx964 add  0.100E-999  -0.1E-999  ->   0E-1001    Clamped
+  #|addx965 add  0.01E-999   -0.1E-999  ->   -9E-1001   Subnormal
+  #|addx966 add  0.999E-999  -0.1E-999  ->   9.0E-1000  Inexact Rounded Subnormal Underflow
+  #|addx967 add  0.099E-999  -0.1E-999  ->   -0E-1001   Inexact Rounded Subnormal Underflow Clamped
+  #|addx968 add  0.009E-999  -0.1E-999  ->   -9E-1001   Inexact Rounded Subnormal Underflow
+  #|addx969 add  0.001E-999  -0.1E-999  ->   -1.0E-1000 Inexact Rounded Subnormal Underflow
+  #|addx970 add  0.0009E-999 -0.1E-999  ->   -1.0E-1000 Inexact Rounded Subnormal Underflow
+  #|addx971 add  0.0001E-999 -0.1E-999  ->   -1.0E-1000 Inexact Rounded Subnormal Underflow
+  #|maxExponent: 384
+  #|minExponent: -383
   #|precision: 8
+  #|addx566 add 99999061735E-394  0E-394 -> 9.999906E-384 Inexact Rounded Underflow Subnormal
   #|precision: 7
+  #|addx567 add 99999061735E-394  0E-394 -> 9.99991E-384 Inexact Rounded Underflow Subnormal
   #|precision: 6
+  #|addx568 add 99999061735E-394  0E-394 -> 9.9999E-384 Inexact Rounded Underflow Subnormal
   #|precision:   16
   #|rounding:    half_up
+  #|maxExponent: 384
+  #|minExponent: -383
   #|addx571 add       1E-383       0  -> 1E-383
+  #|addx572 add       1E-384       0  -> 1E-384   Subnormal
   #|addx573 add       1E-383  1E-384  -> 1.1E-383
   #|precision:   7
   #|rounding:    half_up
+  #|maxExponent: 96
+  #|minExponent: -95
+  #|addx973 add     9.999999E+96  1      -> 9.999999E+96 Inexact Rounded
+  #|addx974 add      9999999E+90  1      -> 9.999999E+96 Inexact Rounded
+  #|addx975 add      9999999E+90  1E+90  -> Infinity Overflow Inexact Rounded
+  #|addx976 add      9999999E+90  9E+89  -> Infinity Overflow Inexact Rounded
+  #|addx977 add      9999999E+90  8E+89  -> Infinity Overflow Inexact Rounded
+  #|addx978 add      9999999E+90  7E+89  -> Infinity Overflow Inexact Rounded
+  #|addx979 add      9999999E+90  6E+89  -> Infinity Overflow Inexact Rounded
+  #|addx980 add      9999999E+90  5E+89  -> Infinity Overflow Inexact Rounded
+  #|addx981 add      9999999E+90  4E+89  -> 9.999999E+96 Inexact Rounded
+  #|addx982 add      9999999E+90  3E+89  -> 9.999999E+96 Inexact Rounded
+  #|addx983 add      9999999E+90  2E+89  -> 9.999999E+96 Inexact Rounded
+  #|addx984 add      9999999E+90  1E+89  -> 9.999999E+96 Inexact Rounded
+  #|addx986 add    -9.999999E+96 -1      -> -9.999999E+96 Inexact Rounded
+  #|addx987 add     -9999999E+90 -1      -> -9.999999E+96 Inexact Rounded
+  #|addx988 add     -9999999E+90 -1E+90  -> -Infinity Overflow Inexact Rounded
+  #|addx989 add     -9999999E+90 -9E+89  -> -Infinity Overflow Inexact Rounded
+  #|addx990 add     -9999999E+90 -8E+89  -> -Infinity Overflow Inexact Rounded
+  #|addx991 add     -9999999E+90 -7E+89  -> -Infinity Overflow Inexact Rounded
+  #|addx992 add     -9999999E+90 -6E+89  -> -Infinity Overflow Inexact Rounded
+  #|addx993 add     -9999999E+90 -5E+89  -> -Infinity Overflow Inexact Rounded
+  #|addx994 add     -9999999E+90 -4E+89  -> -9.999999E+96 Inexact Rounded
+  #|addx995 add     -9999999E+90 -3E+89  -> -9.999999E+96 Inexact Rounded
+  #|addx996 add     -9999999E+90 -2E+89  -> -9.999999E+96 Inexact Rounded
+  #|addx997 add     -9999999E+90 -1E+89  -> -9.999999E+96 Inexact Rounded
   #|precision:   5
+  #|maxexponent: 79
+  #|minexponent: -79
+  #|addx1001 add       1.52444E-80 0 -> 1.524E-80 Inexact Rounded Subnormal Underflow
+  #|addx1002 add       1.52445E-80 0 -> 1.524E-80 Inexact Rounded Subnormal Underflow
+  #|addx1003 add       1.52446E-80 0 -> 1.524E-80 Inexact Rounded Subnormal Underflow
+  #|addx1004 add       0 1.52444E-80 -> 1.524E-80 Inexact Rounded Subnormal Underflow
+  #|addx1005 add       0 1.52445E-80 -> 1.524E-80 Inexact Rounded Subnormal Underflow
+  #|addx1006 add       0 1.52446E-80 -> 1.524E-80 Inexact Rounded Subnormal Underflow
+  #|addx1011 add       1.52444E-80 1E-100 -> 1.524E-80 Inexact Rounded Subnormal Underflow
+  #|addx1012 add       1.52445E-80 1E-100 -> 1.524E-80 Inexact Rounded Subnormal Underflow
+  #|addx1013 add       1.52446E-80 1E-100 -> 1.524E-80 Inexact Rounded Subnormal Underflow
+  #|addx1014 add       1E-100 1.52444E-80 -> 1.524E-80 Inexact Rounded Subnormal Underflow
+  #|addx1015 add       1E-100 1.52445E-80 -> 1.524E-80 Inexact Rounded Subnormal Underflow
+  #|addx1016 add       1E-100 1.52446E-80 -> 1.524E-80 Inexact Rounded Subnormal Underflow
+  #|addx1021 add       1.52443E-80 1.00001E-80  -> 2.524E-80 Inexact Rounded Subnormal Underflow
+  #|addx1022 add       1.52444E-80 1.00001E-80  -> 2.524E-80 Inexact Rounded Subnormal Underflow
+  #|addx1023 add       1.52445E-80 1.00001E-80  -> 2.524E-80 Inexact Rounded Subnormal Underflow
+  #|addx1024 add       1.00001E-80  1.52443E-80 -> 2.524E-80 Inexact Rounded Subnormal Underflow
+  #|addx1025 add       1.00001E-80  1.52444E-80 -> 2.524E-80 Inexact Rounded Subnormal Underflow
+  #|addx1026 add       1.00001E-80  1.52445E-80 -> 2.524E-80 Inexact Rounded Subnormal Underflow
   #|precision:    16
+  #|maxExponent: +384
+  #|minExponent: -383
   #|rounding:     down
   #|addx1100 add 1e+2 -1e-383    -> 99.99999999999999 Rounded Inexact
   #|addx1101 add 1e+1 -1e-383    -> 9.999999999999999  Rounded Inexact
@@ -756,8 +944,36 @@ let add_subset_1 : String =
   #|addx1129 add +1e-383 -1e-6   -> -9.999999999999999E-7  Rounded Inexact
   #|rounding:     down
   #|precision:    7
+  #|maxExponent: +96
+  #|minExponent: -95
+  #|addx1130 add   1            -1e-200  -> 0.9999999  Rounded Inexact
+  #|addx1131 add   1.000000E-94  -1e-200  ->  9.999999E-95  Rounded Inexact
+  #|addx1132 add   1.000001E-95  -1e-200  ->  1.000000E-95  Rounded Inexact
+  #|addx1133 add   1.000000E-95  -1e-200  ->  9.99999E-96  Rounded Inexact Subnormal Underflow
+  #|addx1134 add   0.999999E-95  -1e-200  ->  9.99998E-96  Rounded Inexact Subnormal Underflow
+  #|addx1135 add   0.001000E-95  -1e-200  ->  9.99E-99  Rounded Inexact Subnormal Underflow
+  #|addx1136 add   0.000999E-95  -1e-200  ->  9.98E-99  Rounded Inexact Subnormal Underflow
+  #|addx1137 add   1.000000E-95  -1e-101  ->  9.99999E-96  Subnormal
+  #|addx1138 add      10000E-101 -1e-200  ->  9.999E-98  Subnormal Inexact Rounded Underflow
+  #|addx1139 add       1000E-101 -1e-200  ->  9.99E-99   Subnormal Inexact Rounded Underflow
+  #|addx1140 add        100E-101 -1e-200  ->  9.9E-100   Subnormal Inexact Rounded Underflow
+  #|addx1141 add         10E-101 -1e-200  ->  9E-101     Subnormal Inexact Rounded Underflow
+  #|addx1142 add          1E-101 -1e-200  ->  0E-101     Subnormal Inexact Rounded Underflow Clamped
+  #|addx1143 add          0E-101 -1e-200  -> -0E-101     Subnormal Inexact Rounded Underflow Clamped
+  #|addx1144 add          1E-102 -1e-200  ->  0E-101     Subnormal Inexact Rounded Underflow Clamped
+  #|addx1151 add      10000E-102 -1e-200  ->  9.99E-99  Subnormal Inexact Rounded Underflow
+  #|addx1152 add       1000E-102 -1e-200  ->  9.9E-100  Subnormal Inexact Rounded Underflow
+  #|addx1153 add        100E-102 -1e-200  ->  9E-101   Subnormal Inexact Rounded Underflow
+  #|addx1154 add         10E-102 -1e-200  ->  0E-101     Subnormal Inexact Rounded Underflow Clamped
+  #|addx1155 add          1E-102 -1e-200  ->  0E-101     Subnormal Inexact Rounded Underflow Clamped
+  #|addx1156 add          0E-102 -1e-200  -> -0E-101     Subnormal Inexact Rounded Underflow Clamped
+  #|addx1157 add          1E-103 -1e-200  ->  0E-101     Subnormal Inexact Rounded Underflow Clamped
+  #|addx1160 add        100E-105 -1e-101  -> -0E-101 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1161 add        100E-105 -1e-201  ->  0E-101 Subnormal Inexact Rounded Underflow Clamped
   #|precision:   15
   #|rounding:    half_up
+  #|maxExponent: 384
+  #|minexponent: -383
   #|addx1200 add 1E15  -0.5                 ->  1.00000000000000E+15 Inexact Rounded
   #|addx1201 add 1E15  -0.50                ->  1.00000000000000E+15 Inexact Rounded
   #|addx1210 add 1E15  -0.51                ->  999999999999999      Inexact Rounded
@@ -860,6 +1076,8 @@ let add_subset_1 : String =
   #|addx1396 add 9999999999999999 0.51                ->  1.000000000000000E+16 Inexact Rounded
   #|precision:   15
   #|rounding:    half_up
+  #|maxExponent: 384
+  #|minexponent: -383
   #|addx1400 add  0 1.23456789012345     -> 1.23456789012345
   #|addx1401 add  0 1.23456789012345E-1  -> 0.123456789012345
   #|addx1402 add  0 1.23456789012345E-2  -> 0.0123456789012345
@@ -942,82 +1160,196 @@ let add_subset_1 : String =
   #|addx1478 add 1.123456789012345  0E-18  -> 1.123456789012345 Rounded
   #|addx1479 add 1.123456789012345  0E-19  -> 1.123456789012345 Rounded
   #|precision:   16
+  #|maxExponent: 384
+  #|minexponent: -383
   #|rounding:    half_up
   #|addx1500 add  0        0E-19  ->  0E-19
   #|addx1501 add -0        0E-19  ->  0E-19
   #|addx1502 add  0       -0E-19  ->  0E-19
   #|addx1503 add -0       -0E-19  -> -0E-19
+  #|addx1504 add  0E-400   0E-19  ->  0E-398 Clamped
+  #|addx1505 add -0E-400   0E-19  ->  0E-398 Clamped
+  #|addx1506 add  0E-400  -0E-19  ->  0E-398 Clamped
+  #|addx1507 add -0E-400  -0E-19  -> -0E-398 Clamped
+  #|addx1511 add  1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1512 add -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1513 add  1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1514 add -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1515 add  1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1516 add -1E-401   1E-401 ->  0E-398 Clamped
+  #|addx1517 add  1E-401  -1E-401 ->  0E-398 Clamped
+  #|addx1518 add -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|rounding:    half_down
   #|addx1520 add  0        0E-19  ->  0E-19
   #|addx1521 add -0        0E-19  ->  0E-19
   #|addx1522 add  0       -0E-19  ->  0E-19
   #|addx1523 add -0       -0E-19  -> -0E-19
+  #|addx1524 add  0E-400   0E-19  ->  0E-398 Clamped
+  #|addx1525 add -0E-400   0E-19  ->  0E-398 Clamped
+  #|addx1526 add  0E-400  -0E-19  ->  0E-398 Clamped
+  #|addx1527 add -0E-400  -0E-19  -> -0E-398 Clamped
+  #|addx1531 add  1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+
+let add_subset_2 : String =
+  #|precision: 16
+  #|maxexponent: 384
+  #|minexponent: -383
+  #|rounding: half_down
+  #|addx1532 add -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1533 add  1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1534 add -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1535 add  1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1536 add -1E-401   1E-401 ->  0E-398 Clamped
+  #|addx1537 add  1E-401  -1E-401 ->  0E-398 Clamped
+  #|addx1538 add -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|rounding:    half_even
   #|addx1540 add  0        0E-19  ->  0E-19
   #|addx1541 add -0        0E-19  ->  0E-19
   #|addx1542 add  0       -0E-19  ->  0E-19
   #|addx1543 add -0       -0E-19  -> -0E-19
+  #|addx1544 add  0E-400   0E-19  ->  0E-398 Clamped
+  #|addx1545 add -0E-400   0E-19  ->  0E-398 Clamped
+  #|addx1546 add  0E-400  -0E-19  ->  0E-398 Clamped
+  #|addx1547 add -0E-400  -0E-19  -> -0E-398 Clamped
+  #|addx1551 add  1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1552 add -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1553 add  1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1554 add -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1555 add  1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1556 add -1E-401   1E-401 ->  0E-398 Clamped
+  #|addx1557 add  1E-401  -1E-401 ->  0E-398 Clamped
+  #|addx1558 add -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|rounding:    up
   #|addx1560 add  0        0E-19  ->  0E-19
   #|addx1561 add -0        0E-19  ->  0E-19
   #|addx1562 add  0       -0E-19  ->  0E-19
   #|addx1563 add -0       -0E-19  -> -0E-19
+  #|addx1564 add  0E-400   0E-19  ->  0E-398 Clamped
+  #|addx1565 add -0E-400   0E-19  ->  0E-398 Clamped
+  #|addx1566 add  0E-400  -0E-19  ->  0E-398 Clamped
+  #|addx1567 add -0E-400  -0E-19  -> -0E-398 Clamped
+  #|addx1571 add  1E-401   1E-400 ->  1E-398 Subnormal Inexact Rounded Underflow
+  #|addx1572 add -1E-401   1E-400 ->  1E-398 Subnormal Inexact Rounded Underflow
+  #|addx1573 add  1E-401  -1E-400 -> -1E-398 Subnormal Inexact Rounded Underflow
+  #|addx1574 add -1E-401  -1E-400 -> -1E-398 Subnormal Inexact Rounded Underflow
+  #|addx1575 add  1E-401   1E-401 ->  1E-398 Subnormal Inexact Rounded Underflow
+  #|addx1576 add -1E-401   1E-401 ->  0E-398 Clamped
+  #|addx1577 add  1E-401  -1E-401 ->  0E-398 Clamped
+  #|addx1578 add -1E-401  -1E-401 -> -1E-398 Subnormal Inexact Rounded Underflow
   #|rounding:    down
   #|addx1580 add  0        0E-19  ->  0E-19
   #|addx1581 add -0        0E-19  ->  0E-19
   #|addx1582 add  0       -0E-19  ->  0E-19
   #|addx1583 add -0       -0E-19  -> -0E-19
+  #|addx1584 add  0E-400   0E-19  ->  0E-398 Clamped
+  #|addx1585 add -0E-400   0E-19  ->  0E-398 Clamped
+  #|addx1586 add  0E-400  -0E-19  ->  0E-398 Clamped
+  #|addx1587 add -0E-400  -0E-19  -> -0E-398 Clamped
+  #|addx1591 add  1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1592 add -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1593 add  1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1594 add -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1595 add  1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1596 add -1E-401   1E-401 ->  0E-398 Clamped
+  #|addx1597 add  1E-401  -1E-401 ->  0E-398 Clamped
+  #|addx1598 add -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|rounding:    ceiling
   #|addx1600 add  0        0E-19  ->  0E-19
   #|addx1601 add -0        0E-19  ->  0E-19
   #|addx1602 add  0       -0E-19  ->  0E-19
   #|addx1603 add -0       -0E-19  -> -0E-19
+  #|addx1604 add  0E-400   0E-19  ->  0E-398 Clamped
+  #|addx1605 add -0E-400   0E-19  ->  0E-398 Clamped
+  #|addx1606 add  0E-400  -0E-19  ->  0E-398 Clamped
+  #|addx1607 add -0E-400  -0E-19  -> -0E-398 Clamped
+  #|addx1611 add  1E-401   1E-400 ->  1E-398 Subnormal Inexact Rounded Underflow
+  #|addx1612 add -1E-401   1E-400 ->  1E-398 Subnormal Inexact Rounded Underflow
+  #|addx1613 add  1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1614 add -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1615 add  1E-401   1E-401 ->  1E-398 Subnormal Inexact Rounded Underflow
+  #|addx1616 add -1E-401   1E-401 ->  0E-398 Clamped
+  #|addx1617 add  1E-401  -1E-401 ->  0E-398 Clamped
+  #|addx1618 add -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|rounding:    floor
   #|addx1620 add  0        0E-19  ->  0E-19
   #|addx1621 add -0        0E-19  -> -0E-19           -- *
   #|addx1622 add  0       -0E-19  -> -0E-19           -- *
   #|addx1623 add -0       -0E-19  -> -0E-19
+  #|addx1624 add  0E-400   0E-19  ->  0E-398 Clamped
+  #|addx1625 add -0E-400   0E-19  -> -0E-398 Clamped  -- *
+  #|addx1626 add  0E-400  -0E-19  -> -0E-398 Clamped  -- *
+  #|addx1627 add -0E-400  -0E-19  -> -0E-398 Clamped
+  #|addx1631 add  1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1632 add -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1633 add  1E-401  -1E-400 -> -1E-398 Subnormal Inexact Rounded Underflow
+  #|addx1634 add -1E-401  -1E-400 -> -1E-398 Subnormal Inexact Rounded Underflow
+  #|addx1635 add  1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx1636 add -1E-401   1E-401 -> -0E-398 Clamped  -- *
+  #|addx1637 add  1E-401  -1E-401 -> -0E-398 Clamped  -- *
+  #|addx1638 add -1E-401  -1E-401 -> -1E-398 Subnormal Inexact Rounded Underflow
   #|precision:   16
+  #|maxExponent: 384
+  #|minexponent: -383
   #|rounding:  down
   #|precision: 7
+  #|addx1651 add  10001E+2  -2E+1 -> 1.00008E+6
   #|precision: 6
+  #|addx1652 add  10001E+2  -2E+1 -> 1.00008E+6
   #|precision: 5
+  #|addx1653 add  10001E+2  -2E+1 -> 1.0000E+6   Inexact Rounded
   #|precision: 4
+  #|addx1654 add  10001E+2  -2E+1 -> 1.000E+6    Inexact Rounded
   #|precision: 3
+  #|addx1655 add  10001E+2  -2E+1 -> 1.00E+6     Inexact Rounded
   #|precision: 2
+  #|addx1656 add  10001E+2  -2E+1 -> 1.0E+6      Inexact Rounded
   #|precision: 1
+  #|addx1657 add  10001E+2  -2E+1 -> 1E+6        Inexact Rounded
   #|rounding:  half_even
   #|precision: 7
+  #|addx1661 add  10001E+2  -2E+1 -> 1.00008E+6
   #|precision: 6
+  #|addx1662 add  10001E+2  -2E+1 -> 1.00008E+6
   #|precision: 5
+  #|addx1663 add  10001E+2  -2E+1 -> 1.0001E+6   Inexact Rounded
   #|precision: 4
+  #|addx1664 add  10001E+2  -2E+1 -> 1.000E+6    Inexact Rounded
   #|precision: 3
+  #|addx1665 add  10001E+2  -2E+1 -> 1.00E+6     Inexact Rounded
   #|precision: 2
+  #|addx1666 add  10001E+2  -2E+1 -> 1.0E+6      Inexact Rounded
   #|precision: 1
+  #|addx1667 add  10001E+2  -2E+1 -> 1E+6        Inexact Rounded
   #|rounding:  up
   #|precision: 7
+  #|addx1671 add  10001E+2  -2E+1 -> 1.00008E+6
   #|precision: 6
+  #|addx1672 add  10001E+2  -2E+1 -> 1.00008E+6
   #|precision: 5
+  #|addx1673 add  10001E+2  -2E+1 -> 1.0001E+6   Inexact Rounded
   #|precision: 4
+  #|addx1674 add  10001E+2  -2E+1 -> 1.001E+6    Inexact Rounded
   #|precision: 3
+  #|addx1675 add  10001E+2  -2E+1 -> 1.01E+6     Inexact Rounded
   #|precision: 2
+  #|addx1676 add  10001E+2  -2E+1 -> 1.1E+6      Inexact Rounded
   #|precision: 1
+  #|addx1677 add  10001E+2  -2E+1 -> 2E+6        Inexact Rounded
   #|precision:   34
   #|rounding:    half_up
+  #|maxExponent: 6144
+  #|minExponent: -6143
   #|addx1701  add 130E-2    120E-2    -> 2.50
   #|addx1702  add 130E-2    12E-1     -> 2.50
   #|addx1703  add 130E-2    1E0       -> 2.30
   #|addx1704  add 1E2       1E4       -> 1.01E+4
   #|precision:   16
   #|rounding:    half_even
+  #|maxExponent: 384
+  #|minexponent: -383
   #|addx6001 add 1       1       ->  2
   #|addx6002 add 2       3       ->  5
   #|addx6003 add '5.75'  '3.3'   ->  9.05
-
-
-let add_subset_2 : String =
-  #|precision: 16
-  #|rounding: half_even
   #|addx6004 add '5'     '-3'    ->  2
   #|addx6005 add '-5'    '-3'    ->  -8
   #|addx6006 add '-7'    '2.5'   ->  -4.5
@@ -1412,6 +1744,12 @@ let add_subset_2 : String =
   #|addx6703 add 00.00 0E-3   -> 0.000
   #|addx6704 add 0E-3  00.00  -> 0.000
   #|addx6710 add 0E+3  00.00  -> 0.00
+
+let add_subset_3 : String =
+  #|precision: 16
+  #|maxexponent: 384
+  #|minexponent: -383
+  #|rounding: half_even
   #|addx6711 add 0E+3  00.0   -> 0.0
   #|addx6712 add 0E+3  00.    -> 0
   #|addx6713 add 0E+3  00.E+1 -> 0E+1
@@ -1440,11 +1778,6 @@ let add_subset_2 : String =
   #|addx6736 add  1    -1     ->  0
   #|addx6737 add -1    -1     -> -2
   #|addx6738 add  1     1     ->  2
-
-
-let add_subset_3 : String =
-  #|precision: 16
-  #|rounding: half_even
   #|addx6739 add -1     1     ->  0
   #|addx6741 add  0    -1     -> -1
   #|addx6742 add -0    -1     -> -1
@@ -1526,25 +1859,6 @@ let add_subset_3 : String =
   #|addx6835 add  1    NaN    ->  NaN
   #|addx6836 add  1000 NaN    ->  NaN
   #|addx6837 add  Inf  NaN    ->  NaN
-  #|addx6841 add  sNaN -Inf   ->  NaN  Invalid_operation
-  #|addx6842 add  sNaN -1000  ->  NaN  Invalid_operation
-  #|addx6843 add  sNaN -1     ->  NaN  Invalid_operation
-  #|addx6844 add  sNaN -0     ->  NaN  Invalid_operation
-  #|addx6845 add  sNaN  0     ->  NaN  Invalid_operation
-  #|addx6846 add  sNaN  1     ->  NaN  Invalid_operation
-  #|addx6847 add  sNaN  1000  ->  NaN  Invalid_operation
-  #|addx6848 add  sNaN  NaN   ->  NaN  Invalid_operation
-  #|addx6849 add  sNaN sNaN   ->  NaN  Invalid_operation
-  #|addx6850 add  NaN  sNaN   ->  NaN  Invalid_operation
-  #|addx6851 add -Inf  sNaN   ->  NaN  Invalid_operation
-  #|addx6852 add -1000 sNaN   ->  NaN  Invalid_operation
-  #|addx6853 add -1    sNaN   ->  NaN  Invalid_operation
-  #|addx6854 add -0    sNaN   ->  NaN  Invalid_operation
-  #|addx6855 add  0    sNaN   ->  NaN  Invalid_operation
-  #|addx6856 add  1    sNaN   ->  NaN  Invalid_operation
-  #|addx6857 add  1000 sNaN   ->  NaN  Invalid_operation
-  #|addx6858 add  Inf  sNaN   ->  NaN  Invalid_operation
-  #|addx6859 add  NaN  sNaN   ->  NaN  Invalid_operation
   #|addx6861 add  NaN1   -Inf    ->  NaN1
   #|addx6862 add +NaN2   -1000   ->  NaN2
   #|addx6863 add  NaN3    1000   ->  NaN3
@@ -1554,31 +1868,31 @@ let add_subset_3 : String =
   #|addx6867 add -1000    NaN8   ->  NaN8
   #|addx6868 add  1000    NaN9   ->  NaN9
   #|addx6869 add  Inf    +NaN10  ->  NaN10
-  #|addx6871 add  sNaN11  -Inf   ->  NaN11  Invalid_operation
-  #|addx6872 add  sNaN12  -1000  ->  NaN12  Invalid_operation
-  #|addx6873 add  sNaN13   1000  ->  NaN13  Invalid_operation
-  #|addx6874 add  sNaN14   NaN17 ->  NaN14  Invalid_operation
-  #|addx6875 add  sNaN15  sNaN18 ->  NaN15  Invalid_operation
-  #|addx6876 add  NaN16   sNaN19 ->  NaN19  Invalid_operation
-  #|addx6877 add -Inf    +sNaN20 ->  NaN20  Invalid_operation
-  #|addx6878 add -1000    sNaN21 ->  NaN21  Invalid_operation
-  #|addx6879 add  1000    sNaN22 ->  NaN22  Invalid_operation
-  #|addx6880 add  Inf     sNaN23 ->  NaN23  Invalid_operation
-  #|addx6881 add +NaN25  +sNaN24 ->  NaN24  Invalid_operation
   #|addx6882 add -NaN26    NaN28 -> -NaN26
-  #|addx6883 add -sNaN27  sNaN29 -> -NaN27  Invalid_operation
   #|addx6884 add  1000    -NaN30 -> -NaN30
-  #|addx6885 add  1000   -sNaN31 -> -NaN31  Invalid_operation
   #|addx6571 add       1E-383       0  -> 1E-383
+  #|addx6572 add       1E-384       0  -> 1E-384   Subnormal
   #|addx6573 add       1E-383  1E-384  -> 1.1E-383
   #|addx6973 add     9.999999999999999E+384  1      -> 9.999999999999999E+384 Inexact Rounded
   #|addx6974 add      9999999999999999E+369  1      -> 9.999999999999999E+384 Inexact Rounded
+  #|addx6975 add      9999999999999999E+369  1E+369  -> Infinity Overflow Inexact Rounded
+  #|addx6976 add      9999999999999999E+369  9E+368  -> Infinity Overflow Inexact Rounded
+  #|addx6977 add      9999999999999999E+369  8E+368  -> Infinity Overflow Inexact Rounded
+  #|addx6978 add      9999999999999999E+369  7E+368  -> Infinity Overflow Inexact Rounded
+  #|addx6979 add      9999999999999999E+369  6E+368  -> Infinity Overflow Inexact Rounded
+  #|addx6980 add      9999999999999999E+369  5E+368  -> Infinity Overflow Inexact Rounded
   #|addx6981 add      9999999999999999E+369  4E+368  -> 9.999999999999999E+384 Inexact Rounded
   #|addx6982 add      9999999999999999E+369  3E+368  -> 9.999999999999999E+384 Inexact Rounded
   #|addx6983 add      9999999999999999E+369  2E+368  -> 9.999999999999999E+384 Inexact Rounded
   #|addx6984 add      9999999999999999E+369  1E+368  -> 9.999999999999999E+384 Inexact Rounded
   #|addx6986 add    -9.999999999999999E+384 -1      -> -9.999999999999999E+384 Inexact Rounded
   #|addx6987 add     -9999999999999999E+369 -1      -> -9.999999999999999E+384 Inexact Rounded
+  #|addx6988 add     -9999999999999999E+369 -1E+369  -> -Infinity Overflow Inexact Rounded
+  #|addx6989 add     -9999999999999999E+369 -9E+368  -> -Infinity Overflow Inexact Rounded
+  #|addx6990 add     -9999999999999999E+369 -8E+368  -> -Infinity Overflow Inexact Rounded
+  #|addx6991 add     -9999999999999999E+369 -7E+368  -> -Infinity Overflow Inexact Rounded
+  #|addx6992 add     -9999999999999999E+369 -6E+368  -> -Infinity Overflow Inexact Rounded
+  #|addx6993 add     -9999999999999999E+369 -5E+368  -> -Infinity Overflow Inexact Rounded
   #|addx6994 add     -9999999999999999E+369 -4E+368  -> -9.999999999999999E+384 Inexact Rounded
   #|addx6995 add     -9999999999999999E+369 -3E+368  -> -9.999999999999999E+384 Inexact Rounded
   #|addx6996 add     -9999999999999999E+369 -2E+368  -> -9.999999999999999E+384 Inexact Rounded
@@ -1749,36 +2063,120 @@ let add_subset_3 : String =
   #|addx61501 add -0        0E-19  ->  0E-19
   #|addx61502 add  0       -0E-19  ->  0E-19
   #|addx61503 add -0       -0E-19  -> -0E-19
+  #|addx61504 add  0E-400   0E-19  ->  0E-398 Clamped
+  #|addx61505 add -0E-400   0E-19  ->  0E-398 Clamped
+  #|addx61506 add  0E-400  -0E-19  ->  0E-398 Clamped
+  #|addx61507 add -0E-400  -0E-19  -> -0E-398 Clamped
+  #|addx61511 add  1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61512 add -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61513 add  1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61514 add -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61515 add  1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61516 add -1E-401   1E-401 ->  0E-398 Clamped
+  #|addx61517 add  1E-401  -1E-401 ->  0E-398 Clamped
+  #|addx61518 add -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|rounding:    half_down
   #|addx61520 add  0        0E-19  ->  0E-19
   #|addx61521 add -0        0E-19  ->  0E-19
   #|addx61522 add  0       -0E-19  ->  0E-19
   #|addx61523 add -0       -0E-19  -> -0E-19
+  #|addx61524 add  0E-400   0E-19  ->  0E-398 Clamped
+  #|addx61525 add -0E-400   0E-19  ->  0E-398 Clamped
+  #|addx61526 add  0E-400  -0E-19  ->  0E-398 Clamped
+  #|addx61527 add -0E-400  -0E-19  -> -0E-398 Clamped
+  #|addx61531 add  1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61532 add -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61533 add  1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61534 add -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61535 add  1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61536 add -1E-401   1E-401 ->  0E-398 Clamped
+  #|addx61537 add  1E-401  -1E-401 ->  0E-398 Clamped
+  #|addx61538 add -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|rounding:    half_even
   #|addx61540 add  0        0E-19  ->  0E-19
   #|addx61541 add -0        0E-19  ->  0E-19
   #|addx61542 add  0       -0E-19  ->  0E-19
   #|addx61543 add -0       -0E-19  -> -0E-19
+  #|addx61544 add  0E-400   0E-19  ->  0E-398 Clamped
+  #|addx61545 add -0E-400   0E-19  ->  0E-398 Clamped
+  #|addx61546 add  0E-400  -0E-19  ->  0E-398 Clamped
+  #|addx61547 add -0E-400  -0E-19  -> -0E-398 Clamped
+  #|addx61551 add  1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61552 add -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61553 add  1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61554 add -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61555 add  1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61556 add -1E-401   1E-401 ->  0E-398 Clamped
+  #|addx61557 add  1E-401  -1E-401 ->  0E-398 Clamped
+  #|addx61558 add -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|rounding:    up
   #|addx61560 add  0        0E-19  ->  0E-19
   #|addx61561 add -0        0E-19  ->  0E-19
   #|addx61562 add  0       -0E-19  ->  0E-19
   #|addx61563 add -0       -0E-19  -> -0E-19
+  #|addx61564 add  0E-400   0E-19  ->  0E-398 Clamped
+  #|addx61565 add -0E-400   0E-19  ->  0E-398 Clamped
+  #|addx61566 add  0E-400  -0E-19  ->  0E-398 Clamped
+  #|addx61567 add -0E-400  -0E-19  -> -0E-398 Clamped
+  #|addx61571 add  1E-401   1E-400 ->  1E-398 Subnormal Inexact Rounded Underflow
+  #|addx61572 add -1E-401   1E-400 ->  1E-398 Subnormal Inexact Rounded Underflow
+  #|addx61573 add  1E-401  -1E-400 -> -1E-398 Subnormal Inexact Rounded Underflow
+  #|addx61574 add -1E-401  -1E-400 -> -1E-398 Subnormal Inexact Rounded Underflow
+  #|addx61575 add  1E-401   1E-401 ->  1E-398 Subnormal Inexact Rounded Underflow
+  #|addx61576 add -1E-401   1E-401 ->  0E-398 Clamped
+  #|addx61577 add  1E-401  -1E-401 ->  0E-398 Clamped
+  #|addx61578 add -1E-401  -1E-401 -> -1E-398 Subnormal Inexact Rounded Underflow
   #|rounding:    down
   #|addx61580 add  0        0E-19  ->  0E-19
   #|addx61581 add -0        0E-19  ->  0E-19
   #|addx61582 add  0       -0E-19  ->  0E-19
   #|addx61583 add -0       -0E-19  -> -0E-19
+  #|addx61584 add  0E-400   0E-19  ->  0E-398 Clamped
+  #|addx61585 add -0E-400   0E-19  ->  0E-398 Clamped
+  #|addx61586 add  0E-400  -0E-19  ->  0E-398 Clamped
+  #|addx61587 add -0E-400  -0E-19  -> -0E-398 Clamped
+  #|addx61591 add  1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61592 add -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61593 add  1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61594 add -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61595 add  1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61596 add -1E-401   1E-401 ->  0E-398 Clamped
+  #|addx61597 add  1E-401  -1E-401 ->  0E-398 Clamped
+  #|addx61598 add -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|rounding:    ceiling
   #|addx61600 add  0        0E-19  ->  0E-19
   #|addx61601 add -0        0E-19  ->  0E-19
   #|addx61602 add  0       -0E-19  ->  0E-19
   #|addx61603 add -0       -0E-19  -> -0E-19
+  #|addx61604 add  0E-400   0E-19  ->  0E-398 Clamped
+  #|addx61605 add -0E-400   0E-19  ->  0E-398 Clamped
+  #|addx61606 add  0E-400  -0E-19  ->  0E-398 Clamped
+  #|addx61607 add -0E-400  -0E-19  -> -0E-398 Clamped
+  #|addx61611 add  1E-401   1E-400 ->  1E-398 Subnormal Inexact Rounded Underflow
+  #|addx61612 add -1E-401   1E-400 ->  1E-398 Subnormal Inexact Rounded Underflow
+  #|addx61613 add  1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61614 add -1E-401  -1E-400 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61615 add  1E-401   1E-401 ->  1E-398 Subnormal Inexact Rounded Underflow
+  #|addx61616 add -1E-401   1E-401 ->  0E-398 Clamped
+  #|addx61617 add  1E-401  -1E-401 ->  0E-398 Clamped
+  #|addx61618 add -1E-401  -1E-401 -> -0E-398 Subnormal Inexact Rounded Underflow Clamped
   #|rounding:    floor
   #|addx61620 add  0        0E-19  ->  0E-19
   #|addx61621 add -0        0E-19  -> -0E-19           -- *
   #|addx61622 add  0       -0E-19  -> -0E-19           -- *
   #|addx61623 add -0       -0E-19  -> -0E-19
+  #|addx61624 add  0E-400   0E-19  ->  0E-398 Clamped
+  #|addx61625 add -0E-400   0E-19  -> -0E-398 Clamped  -- *
+  #|addx61626 add  0E-400  -0E-19  -> -0E-398 Clamped  -- *
+  #|addx61627 add -0E-400  -0E-19  -> -0E-398 Clamped
+  #|addx61631 add  1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61632 add -1E-401   1E-400 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61633 add  1E-401  -1E-400 -> -1E-398 Subnormal Inexact Rounded Underflow
+  #|addx61634 add -1E-401  -1E-400 -> -1E-398 Subnormal Inexact Rounded Underflow
+  #|addx61635 add  1E-401   1E-401 ->  0E-398 Subnormal Inexact Rounded Underflow Clamped
+  #|addx61636 add -1E-401   1E-401 -> -0E-398 Clamped  -- *
+  #|addx61637 add  1E-401  -1E-401 -> -0E-398 Clamped  -- *
+  #|addx61638 add -1E-401  -1E-401 -> -1E-398 Subnormal Inexact Rounded Underflow
   #|addx61701 add 130E-2    120E-2    -> 2.50
   #|addx61702 add 130E-2    12E-1     -> 2.50
   #|addx61703 add 130E-2    1E0       -> 2.30
@@ -1864,7 +2262,8 @@ let add_subset_3 : String =
   #|addx62088 add 12345678 1E-34                   -> 12345678.00000001 Inexact Rounded
   #|addx62089 add 12345678 1E-35                   -> 12345678.00000001 Inexact Rounded
   #|precision: 5
-
+  #|addx62102 add      11   NaN123456789 ->  NaN56789
+  #|addx62103 add     -11  -NaN123456789 -> -NaN56789
 
 ///|
 fn run_subset(label : String, subset : String) -> Unit raise {
