@@ -47,6 +47,32 @@ test "hash agrees with numeric equality (usable as a map key)" {
 }
 
 ///|
+test "arithmetic operators evaluate under the default context" {
+  inspect(
+    (Decimal::parse("0.1") + Decimal::parse("0.2")).to_sci_string(),
+    content="0.3",
+  )
+  inspect(
+    (Decimal::parse("5") - Decimal::parse("3")).to_sci_string(),
+    content="2",
+  )
+  inspect(
+    (Decimal::parse("1.5") * Decimal::parse("2")).to_sci_string(),
+    content="3.0",
+  )
+  inspect(
+    (Decimal::parse("1") / Decimal::parse("4")).to_sci_string(),
+    content="0.25",
+  )
+  inspect((-Decimal::parse("2.5")).to_sci_string(), content="-2.5")
+  // Precedence reads naturally: 2 + (3 * 4).
+  let a = Decimal::parse("2")
+  let b = Decimal::parse("3")
+  let c = Decimal::parse("4")
+  inspect((a + b * c).to_sci_string(), content="14")
+}
+
+///|
 test "to_eng_string: exponent snaps to a multiple of three" {
   inspect(Decimal::parse("7E-7").to_eng_string(), content="700E-9")
   inspect(Decimal::parse("123E+1").to_eng_string(), content="1.23E+3")

@@ -6,6 +6,7 @@ import {
 }
 
 // Values
+pub fn default_context() -> Context
 
 // Errors
 pub(all) suberror ParseError {
@@ -118,10 +119,15 @@ pub fn Decimal::to_integral_exact(Self, Context) -> Self
 pub fn Decimal::to_integral_value(Self, Context) -> Self
 pub fn Decimal::to_sci_string(Self) -> String
 pub fn Decimal::zero() -> Self
+pub impl Add for Decimal
 pub impl Compare for Decimal
+pub impl Div for Decimal
 pub impl Eq for Decimal
 pub impl Hash for Decimal
+pub impl Mul for Decimal
+pub impl Neg for Decimal
 pub impl Show for Decimal
+pub impl Sub for Decimal
 
 pub(all) struct Flags {
   mut inexact : Bool

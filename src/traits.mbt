@@ -71,3 +71,46 @@ pub impl Hash for Decimal with fn hash_combine(self, hasher) {
       }
   }
 }
+
+// ---------------------------------------------------------------------------
+// Arithmetic operators.
+//
+// `+ - * /` and unary `-` are a convenience over the explicit-context methods,
+// evaluated under a fixed `decimal128` context with a fresh flag set per call —
+// so an operator never reads or mutates shared state. Reach for `add(_, ctx)`
+// etc. when you need a different precision/rounding or want to observe the
+// status flags a computation raised.
+// ---------------------------------------------------------------------------
+
+///|
+/// The context the arithmetic operators (`+ - * /`, unary `-`) evaluate under:
+/// a fresh `decimal128`. Fixed by design; use the explicit-context methods for
+/// any other precision.
+pub fn default_context() -> Context {
+  Context::decimal128()
+}
+
+///|
+pub impl Add for Decimal with fn add(self, other) {
+  Decimal::add(self, other, default_context())
+}
+
+///|
+pub impl Sub for Decimal with fn sub(self, other) {
+  self.subtract(other, default_context())
+}
+
+///|
+pub impl Mul for Decimal with fn mul(self, other) {
+  self.multiply(other, default_context())
+}
+
+///|
+pub impl Div for Decimal with fn div(self, other) {
+  self.divide(other, default_context())
+}
+
+///|
+pub impl Neg for Decimal with fn neg(self) {
+  self.minus(default_context())
+}
