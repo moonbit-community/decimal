@@ -8,20 +8,24 @@ fn char_at(s : String, i : Int) -> Char {
 }
 
 ///|
-/// Pre-computed powers of ten covering every shift that fits in `Int.max`
-/// signed digits (33 entries: `10^0` through `10^32`). 32 digits is past the
-/// IEEE 754 `decimal128` precision (34), so almost every call site lands in
-/// the table; values beyond it fall back to a one-shot `BigInt::pow`.
-let pow10_table : Array[BigInt] = [
-  1N, 10N, 100N, 1000N, 10000N, 100000N, 1000000N, 10000000N, 100000000N, 1000000000N,
-  10000000000N, 100000000000N, 1000000000000N, 10000000000000N, 100000000000000N,
-  1000000000000000N, 10000000000000000N, 100000000000000000N, 1000000000000000000N,
-  10000000000000000000N, 100000000000000000000N, 1000000000000000000000N, 10000000000000000000000N,
-  100000000000000000000000N, 1000000000000000000000000N, 10000000000000000000000000N,
-  100000000000000000000000000N, 1000000000000000000000000000N, 10000000000000000000000000000N,
-  100000000000000000000000000000N, 1000000000000000000000000000000N, 10000000000000000000000000000000N,
-  100000000000000000000000000000000N,
-]
+/// Largest power of ten kept in `pow10_table`. Covers IEEE 754 `decimal128`'s
+/// 34-digit precision (and the digit counts the round / align hot paths probe)
+/// with wide headroom; shifts beyond it fall back to a one-shot `BigInt::pow`.
+const POW10_MAX : Int = 128
+
+///|
+/// Pre-computed powers of ten `10^0` … `10^POW10_MAX`, built once at startup,
+/// so the hot-path digit-shift / digit-count routines index the table instead
+/// of allocating via `BigInt::pow`.
+let pow10_table : Array[BigInt] = {
+  let table = Array::new(capacity=POW10_MAX + 1)
+  let mut p : BigInt = 1N
+  for _i in 0..<=POW10_MAX {
+    table.push(p)
+    p = p * 10N
+  }
+  table
+}
 
 ///|
 /// Clamp `v` into the inclusive range `[lo, hi]`.
