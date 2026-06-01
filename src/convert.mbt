@@ -17,6 +17,21 @@
 // ---------------------------------------------------------------------------
 
 ///|
+/// Exact powers of ten `10^0` … `10^22` as binary64. Each is exactly
+/// representable (`10^k = 2^k * 5^k` and `5^22 < 2^52`, so the 53-bit
+/// significand holds it without rounding), which is what makes the `to_double`
+/// fast path a single correctly-rounded operation.
+let pow10_dbl_table : Array[Double] = {
+  let t = Array::new(capacity=23)
+  let mut p = 1.0
+  for _i in 0..<=22 {
+    t.push(p)
+    p = p * 10.0
+  }
+  t
+}
+
+///|
 /// Lift an `Int64` into a `Decimal` at exponent 0. Exact and total.
 pub fn Decimal::of_int64(n : Int64) -> Decimal {
   Decimal::of_bigint(BigInt::from_int64(n))
@@ -130,22 +145,46 @@ pub fn Decimal::to_double(self : Decimal) -> Double {
         (1.0 : Double) / 0.0
       }
     Finite => {
-      // A minimal `<coefficient>e<exponent>` literal parses to the same value
-      // the stdlib rounds correctly — cheaper to build than the full
-      // scientific string. The only failure mode is an exponent past binary64's
-      // range, which saturates to a signed infinity.
-      let sign = if self.negative { "-" } else { "" }
-      let literal = sign +
-        self.coefficient.to_string() +
-        "e" +
-        self.exponent.to_string()
-      @string.parse_double(literal) catch {
-        _ =>
-          if self.negative {
-            (-1.0 : Double) / 0.0
-          } else {
-            (1.0 : Double) / 0.0
-          }
+      let e = self.exponent
+      if e >= -22 && e <= 22 && self.coefficient.bit_length() <= 53 {
+        // Clinger fast path: when the coefficient is exact in binary64
+        // (< 2^53, i.e. bit_length <= 53) and 10^|exponent| is exactly
+        // representable (|exponent| <= 22, since 10^k = 2^k * 5^k with
+        // 5^22 < 2^52), the value is a single product/quotient of two exact
+        // doubles. Round-to-nearest-even then performs exactly one rounding,
+        // so the result is the correctly-rounded binary64 — identical to the
+        // string route but without building a literal or running the parser.
+        let c = self.coefficient.to_int64().to_double()
+        let r = if e >= 0 {
+          c * pow10_dbl_table[e]
+        } else {
+          c / pow10_dbl_table[-e]
+        }
+        // r is +0.0 when the coefficient is zero; reattach the sign so -0
+        // maps to -0.0 exactly as the string route did.
+        if self.negative {
+          -r
+        } else {
+          r
+        }
+      } else {
+        // A minimal `<coefficient>e<exponent>` literal parses to the same value
+        // the stdlib rounds correctly — cheaper to build than the full
+        // scientific string. The only failure mode is an exponent past binary64's
+        // range, which saturates to a signed infinity.
+        let sign = if self.negative { "-" } else { "" }
+        let literal = sign +
+          coeff_to_string(self.coefficient) +
+          "e" +
+          self.exponent.to_string()
+        @string.parse_double(literal) catch {
+          _ =>
+            if self.negative {
+              (-1.0 : Double) / 0.0
+            } else {
+              (1.0 : Double) / 0.0
+            }
+        }
       }
     }
   }
