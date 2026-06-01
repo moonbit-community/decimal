@@ -75,7 +75,7 @@ pub(all) struct Flags {
   /// operations must refuse (returning NaN) rather than attempt a
   /// computation that cannot converge in bounded work.
   mut invalid_context : Bool
-}
+} derive(Eq)
 
 ///|
 /// A fresh `Flags` with every signal cleared.

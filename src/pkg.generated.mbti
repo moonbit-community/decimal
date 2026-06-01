@@ -3,6 +3,7 @@ package "DzmingLi/decimal"
 
 import {
   "moonbitlang/core/bigint",
+  "moonbitlang/core/json",
 }
 
 // Values
@@ -128,6 +129,8 @@ pub impl Mul for Decimal
 pub impl Neg for Decimal
 pub impl Show for Decimal
 pub impl Sub for Decimal
+pub impl ToJson for Decimal
+pub impl @json.FromJson for Decimal
 
 pub(all) struct Flags {
   mut inexact : Bool
@@ -143,7 +146,7 @@ pub(all) struct Flags {
   mut division_undefined : Bool
   mut insufficient_storage : Bool
   mut invalid_context : Bool
-}
+} derive(Eq)
 pub fn Flags::combine(Self, Self) -> Self
 pub fn Flags::new() -> Self
 
