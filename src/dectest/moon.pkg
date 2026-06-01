@@ -1,4 +1,4 @@
 import {
-  "dzmingli/decimal",
+  "DzmingLi/decimal",
   "moonbitlang/core/string",
 }

@@ -7,7 +7,7 @@ Arbitrary-precision decimal arithmetic for MoonBit.
 
 ## Overview
 
-`dzmingli/decimal` is an arbitrary-precision decimal arithmetic library for
+`DzmingLi/decimal` is an arbitrary-precision decimal arithmetic library for
 [MoonBit](https://www.moonbitlang.com/). It implements the **General Decimal
 Arithmetic** specification (Mike Cowlishaw / IBM, the decimal arithmetic of
 IEEE 754-2008): base-10 arithmetic with exact representation of decimal
@@ -30,14 +30,14 @@ Early but well-tested. Every operation is checked against the full IBM
 After the package is published to the MoonBit registry, add the module:
 
 ```shell
-moon add dzmingli/decimal
+moon add DzmingLi/decimal
 ```
 
 Then import it from your package manifest:
 
 ```moonbit
 import {
-  "dzmingli/decimal",
+  "DzmingLi/decimal",
 }
 ```
 
