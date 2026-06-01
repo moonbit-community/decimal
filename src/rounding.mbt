@@ -52,9 +52,11 @@ pub fn Decimal::finalize(self : Decimal, ctx : Context) -> Decimal {
 ///   results with `exponent > etop` get the exponent folded down to etop
 ///   by padding the coefficient.
 ///
-/// Non-zero subnormal (where the coefficient has more digits than fits at
-/// etiny) needs the underflow re-rounding path; that depends on quantize
-/// and lands separately.
+/// Non-zero subnormal results need no re-rounding here: `round_finite`
+/// already folds the etiny floor into its single rounding pass (dropping
+/// `max(precision, etiny)` digits at once), so the value reaching this
+/// function is correctly rounded and only needs `apply_subnormal` to raise
+/// the Subnormal / Underflow flags.
 fn check_range(d : Decimal, pre_adj : Int, ctx : Context) -> Decimal {
   if ctx.precision == 0 {
     return d

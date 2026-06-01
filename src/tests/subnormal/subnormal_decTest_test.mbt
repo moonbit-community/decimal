@@ -2,10 +2,10 @@
 /// Subnormal cluster from `add.decTest` (addx910-937). Tests both
 /// "natural subnormal" cases (where exponent ≥ etiny but adjusted < emin)
 /// and "underflow re-rounded" cases (where exponent < etiny so digits
-/// are dropped to lift the exponent to etiny). Excludes the
-/// Clamped-but-rounded-to-zero outliers (addx918-920) — they need a
-/// special-case in apply_subnormal that doesn't lift exp to etiny when
-/// the result is exactly zero from the re-round.
+/// are dropped to lift the exponent to etiny), including the
+/// Clamped-but-rounded-to-zero outliers (addx918-920) where the re-round
+/// collapses the coefficient to exactly zero at the etiny floor and raises
+/// Clamped alongside Subnormal / Underflow.
 let subnormal_subset : String =
   #|maxexponent: 999
   #|minexponent: -999

@@ -7,8 +7,9 @@
 /// the largest representable finite under truncation modes, and that
 /// just-under-the-limit results pass through unchanged.
 ///
-/// Subnormal-tagged neighbours are NOT included here — they need
-/// finalize's underflow / subnormal branch which depends on quantize.
+/// Subnormal-tagged neighbours are NOT included here — this subset is
+/// scoped to the overflow gate; the underflow / subnormal branch is
+/// exercised in the `subnormal` test package.
 let overflow_subset_add : String =
   #|precision: 9
   #|rounding: half_up

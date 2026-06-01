@@ -1,10 +1,9 @@
 // ---------------------------------------------------------------------------
-// Exact addition and subtraction.
+// Context-aware addition and subtraction.
 //
-// No rounding is applied — the result keeps every digit that arises from
-// aligning the operand exponents. This is the right thing for dectest cases
-// that don't carry an `Inexact`/`Rounded` condition. A future Context layer
-// will add rounding-to-precision on top.
+// Finite operands are aligned to the smaller exponent, combined exactly, then
+// passed through `finalize(ctx)` so precision, exponent bounds, rounding mode,
+// and status flags are applied uniformly.
 // ---------------------------------------------------------------------------
 
 ///|
@@ -16,12 +15,12 @@
 ///   its sign and payload preserved.
 /// * Same-sign infinities: same-sign infinity returned.
 /// * Opposite-sign infinities: `+Infinity + -Infinity = NaN` (the
-///   `Invalid_operation` signal is dropped until a Context lands).
+///   `Invalid_operation` signal is raised).
 /// * Infinity + finite: the infinity.
-/// * Finite + finite: numerical sum, preserving the smaller exponent (so
-///   trailing zeros in either operand survive).
+/// * Finite + finite: exact sum at the smaller operand exponent, then
+///   context finalization.
 /// * Sign of a zero result: same sign when both operands share a sign,
-///   `+0` otherwise (the default-rounding rule).
+///   `-0` under `Floor` when signs differ, `+0` otherwise.
 pub fn Decimal::add(self : Decimal, other : Decimal, ctx : Context) -> Decimal {
   match propagate_nan(self, other, ctx) {
     Some(d) => return d

@@ -11,9 +11,9 @@
 /// next to addx1625/1626/1636/1637 is the GDA file's own annotation for
 /// those Floor-specific lines.
 ///
-/// Subnormal-tagged neighbours (addx1511–1514, 1611–1614, etc.) are
-/// excluded — they need finalize's underflow / re-rounding branch which
-/// depends on quantize.
+/// Subnormal-tagged neighbours (addx1511–1514, 1611–1614, etc.) are scoped
+/// out of this pure-Clamped subset — they also carry Underflow / Subnormal
+/// conditions and are exercised in the `add` and `subnormal` test packages.
 let clamp_subset : String =
   #|precision: 16
   #|maxexponent: 384

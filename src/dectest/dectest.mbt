@@ -253,10 +253,8 @@ pub fn run_cases(cases : Array[TestCase]) -> (Array[String], Int) {
 
 ///|
 /// Dispatch one case, compare the rendered result against expected.
-/// Flag validation is plumbed through `compute` so a future strict-mode
-/// can opt into it via `run_cases_with_flags`, but the default
-/// `run_cases` ignores raised flags to keep the per-op packages green
-/// while the flag-raising audit catches up to the runner's strictness.
+/// The default `run_cases` checks rendered values only; packages that also
+/// want condition checking use `run_cases_with_flags`.
 fn run_one(case : TestCase) -> CaseOutcome {
   let actual = compute(case) catch {
     msg => return Fail("\{case.id}: \{case.op}: \{msg}")
@@ -405,8 +403,8 @@ fn condition_present(conditions : Array[String], name : String) -> Bool {
 
 ///|
 /// Compute the rendered result and condition flags for `case`. Returns
-/// `None` for ops we do not yet handle; raises a diagnostic string for
-/// parse failures or arity mismatches.
+/// `None` for unknown ops; raises a diagnostic string for parse failures or
+/// arity mismatches.
 fn compute(case : TestCase) -> (String, Flags)? raise RunnerError {
   if ascii_eq_ci(case.op, "tosci") {
     Some(unary_render(case))
