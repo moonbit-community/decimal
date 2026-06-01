@@ -157,6 +157,13 @@ moon test src/tests/parse/parse_test.mbt
 moon test src/tests/parse/parse_test.mbt --index 0
 ```
 
+Microbenchmarks (small/large arithmetic, conversion, format, math functions)
+live in [`src/tests/benchmarks/`](src/tests/benchmarks/):
+
+```shell
+moon bench -p DzmingLi/decimal/tests/benchmarks
+```
+
 ## Development
 
 A Nix flake provides a dev shell with the MoonBit toolchain and a C compiler:
