@@ -44,7 +44,9 @@ fn nbits(n : BigInt) -> Int {
 /// zero, so it differs from the floor only when `a < 0`, which this corrects.
 fn floor_div(a : BigInt, b : BigInt) -> BigInt {
   let q = a / b
-  if a % b < 0N {
+  // Reuse the quotient to recover the truncated remainder (a - q*b) rather
+  // than running a second full division for `a % b`.
+  if a - q * b < 0N {
     q - 1N
   } else {
     q

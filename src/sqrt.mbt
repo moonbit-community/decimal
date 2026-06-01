@@ -126,7 +126,7 @@ fn isqrt(n : BigInt) -> BigInt {
   // oscillate.)
   let d = digit_count(n)
   for x = pow10(d / 2 + 1) {
-    let y = (x + n / x) / 2N
+    let y = (x + n / x) >> 1
     if y >= x {
       break x
     } else {

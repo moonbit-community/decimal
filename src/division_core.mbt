@@ -109,7 +109,7 @@ fn divide_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
   if !rem.is_zero() {
     ctx.raise_inexact()
     ctx.raise_rounded()
-    let cmp = (rem * 2N).compare(divisor)
+    let cmp = (rem << 1).compare(divisor)
     let round_up = decide_div_round(quot, neg, cmp, ctx.rounding)
     if round_up {
       quot = quot + 1N
