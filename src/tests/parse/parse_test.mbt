@@ -63,8 +63,9 @@ test "parse signed zero distinct from positive zero" {
   let neg = Decimal::parse("-0")
   assert_false(pos.negative)
   assert_true(neg.negative)
-  // Sign-bit difference is preserved structurally — GDA / IEEE 754 require it.
-  assert_true(pos != neg)
+  // The sign bit is preserved (checked above), but `-0` and `+0` are
+  // numerically equal, so they compare equal under `Eq`.
+  assert_true(pos == neg)
 }
 
 ///|

@@ -129,9 +129,9 @@ fn isqrt(n : BigInt) -> BigInt {
 }
 
 ///|
-/// `floor(n / 2)` on a possibly-negative `Int`. Rust-style division
-/// rounds toward zero, which gives the wrong result for negative odd
-/// inputs; we adjust by one when needed so the GDA "ideal exponent"
+/// `floor(n / 2)` on a possibly-negative `Int`. The built-in `/` truncates
+/// toward zero, which gives the wrong result for negative odd inputs; we
+/// adjust by one when needed so the GDA "ideal exponent"
 /// (`floor(x.exponent / 2)`) is computed correctly even for `sqrt(0E-3)`.
 fn floor_div2(n : Int) -> Int {
   if n >= 0 {

@@ -41,7 +41,7 @@ pub struct Decimal {
   negative : Bool
   coefficient : BigInt
   exponent : Int
-} derive(Eq)
+}
 
 ///|
 /// Default rendering is GDA `to-scientific-string`. See `Decimal::to_sci_string`.

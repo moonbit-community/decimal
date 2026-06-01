@@ -45,7 +45,7 @@ pub struct Decimal {
   negative : Bool
   coefficient : @bigint.BigInt
   exponent : Int
-} derive(Eq)
+}
 pub fn Decimal::abs(Self, Context) -> Self
 pub fn Decimal::add(Self, Self, Context) -> Self
 pub fn Decimal::canonical(Self) -> Self
@@ -111,12 +111,16 @@ pub fn Decimal::sqrt(Self, Context) -> Self
 pub fn Decimal::subtract(Self, Self, Context) -> Self
 pub fn Decimal::to_bigint(Self) -> @bigint.BigInt?
 pub fn Decimal::to_double(Self) -> Double
+pub fn Decimal::to_eng_string(Self) -> String
 pub fn Decimal::to_int(Self) -> Int?
 pub fn Decimal::to_int64(Self) -> Int64?
 pub fn Decimal::to_integral_exact(Self, Context) -> Self
 pub fn Decimal::to_integral_value(Self, Context) -> Self
 pub fn Decimal::to_sci_string(Self) -> String
 pub fn Decimal::zero() -> Self
+pub impl Compare for Decimal
+pub impl Eq for Decimal
+pub impl Hash for Decimal
 pub impl Show for Decimal
 
 pub(all) struct Flags {

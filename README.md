@@ -96,7 +96,14 @@ Convert between `Decimal` and the machine numeric types:
 - **To `Double`** (total but lossy; saturates to +/-Infinity past range):
   `to_double`
 - **To `String`**: `to_sci_string` (GDA to-scientific-string, also the `Show`
-  rendering)
+  rendering) and `to_eng_string` (engineering notation, exponent a multiple of
+  three)
+
+`Decimal` implements `Eq`, `Compare`, and `Hash` by **numeric value**, so values
+sort, dedupe, and serve as map keys directly: `1.0` and `1.00` compare and hash
+equal, `-0` equals `+0`, and `NaN` sorts below everything. For the
+specification's signalling, cohort-distinguishing comparisons use the explicit
+`compare` / `compare_signal` / `compare_total` methods.
 
 `of_double` keeps the double's exact binary value in canonical form, so
 `of_double(0.1)` is
@@ -104,10 +111,6 @@ Convert between `Decimal` and the machine numeric types:
 human-facing form, parse the rendered string instead:
 `Decimal::parse(d.to_string())`. To narrow a non-integer to an integer, round
 first with `to_integral_value` / `to_integral_exact`.
-
-IEEE 754 decimal interchange (the densely-packed-decimal `decimal32` /
-`decimal64` / `decimal128` bit-formats) is out of scope: this library provides
-the specification's arithmetic semantics, not its storage encodings.
 
 ## Tests
 
