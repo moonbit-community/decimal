@@ -63,7 +63,7 @@ pub fn Decimal::divide(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::divide_int(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::exp(Self, Context) -> (Self, Flags)
 pub fn Decimal::finalize(Self, Context) -> (Self, Flags)
-pub fn Decimal::finite(@bigint.BigInt, Int, negative? : Bool) -> Self
+pub fn Decimal::finite_unchecked(@bigint.BigInt, Int, negative? : Bool) -> Self
 pub fn Decimal::fma(Self, Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::infinity() -> Self
 pub fn Decimal::is_canonical(Self) -> Bool
@@ -119,6 +119,7 @@ pub fn Decimal::to_int64(Self) -> Int64?
 pub fn Decimal::to_integral_exact(Self, Context) -> (Self, Flags)
 pub fn Decimal::to_integral_value(Self, Context) -> (Self, Flags)
 pub fn Decimal::to_sci_string(Self) -> String
+pub fn Decimal::try_finite(@bigint.BigInt, Int, negative? : Bool) -> Self?
 pub fn Decimal::zero() -> Self
 pub impl Add for Decimal
 pub impl Compare for Decimal

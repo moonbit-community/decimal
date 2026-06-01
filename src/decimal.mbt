@@ -50,16 +50,30 @@ pub impl Show for Decimal with fn to_string(self) {
 }
 
 ///|
-/// Construct a finite decimal `(-1)^negative * coefficient * 10^exponent`.
-/// Panics if `coefficient` is negative — encode the sign in `negative` instead.
-pub fn Decimal::finite(
+/// Construct a finite decimal `(-1)^negative * coefficient * 10^exponent`, or
+/// `None` if `coefficient` is negative (the representation keeps the sign in
+/// `negative` and the coefficient non-negative). For a signed integer use
+/// `of_bigint` / `of_int`; this constructor is for when you need an explicit
+/// exponent (e.g. `try_finite(150N, -2)` is `1.50`) or an explicit `-0`.
+pub fn Decimal::try_finite(
+  coefficient : BigInt,
+  exponent : Int,
+  negative? : Bool = false,
+) -> Decimal? {
+  guard coefficient >= 0N else { None }
+  Some({ class: Finite, negative, coefficient, exponent })
+}
+
+///|
+/// Low-level finite constructor that trusts `coefficient >= 0` and skips the
+/// check. The result is malformed (and downstream behavior undefined) if the
+/// coefficient is negative — callers maintaining the representation invariant
+/// use this; everyone else uses `try_finite` or `of_bigint`.
+pub fn Decimal::finite_unchecked(
   coefficient : BigInt,
   exponent : Int,
   negative? : Bool = false,
 ) -> Decimal {
-  guard coefficient >= 0N else {
-    abort("Decimal::finite: coefficient must be non-negative")
-  }
   { class: Finite, negative, coefficient, exponent }
 }
 
@@ -117,6 +131,10 @@ pub fn Decimal::neg_infinity() -> Decimal {
 ///|
 /// A quiet NaN with the given (non-negative) diagnostic payload. The
 /// no-payload, non-negative variant returns a shared singleton.
+///
+/// Panics if `payload` is negative — the payload is stored as the
+/// (non-negative) coefficient. A negative payload is a programmer error, not
+/// untrusted input, so it fails fast rather than returning an error.
 pub fn Decimal::nan(
   payload? : BigInt = 0N,
   negative? : Bool = false,
@@ -133,6 +151,7 @@ pub fn Decimal::nan(
 
 ///|
 /// A signaling NaN with the given (non-negative) diagnostic payload.
+/// Panics if `payload` is negative (a programmer error, as for `nan`).
 pub fn Decimal::snan(
   payload? : BigInt = 0N,
   negative? : Bool = false,

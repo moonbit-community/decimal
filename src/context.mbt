@@ -149,6 +149,9 @@ pub struct Context {
 /// Build a Context. Defaults: no precision cap, half-to-even rounding,
 /// near-`Int.max` exponent range (effectively unbounded for dectest's range),
 /// no clamp.
+///
+/// Panics if `precision < 0` or `e_min > e_max` — these are API-misuse
+/// (typically literal typos), so they fail fast rather than returning an error.
 pub fn Context::new(
   precision? : Int = 0,
   rounding? : Rounding = HalfEven,
