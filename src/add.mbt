@@ -136,15 +136,6 @@ fn add_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
       return below_noise_sum(b, a, b_adj, ctx)
     }
   }
-  // Small-int fast path: when both operands fit in `Int64` and the
-  // alignment factor isn't too large, do the whole add in primitive Int64,
-  // skipping BigInt allocations for scale_up / signed_add. The path bails
-  // out (returns `None`) on any overflow, falling through to the BigInt
-  // logic below.
-  match try_add_finite_small(a, b, ctx) {
-    Some(d) => return d
-    None => ()
-  }
   let (a_scaled, b_scaled, result_exp) = align(a, b)
   let (sum, neg) = signed_add(a_scaled, a.negative, b_scaled, b.negative)
   let final_neg = cancellation_sign(
@@ -155,53 +146,6 @@ fn add_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
     neg,
   )
   { class: Finite, negative: final_neg, coefficient: sum, exponent: result_exp }
-}
-
-///|
-/// Attempt the add in Int64. Returns `None` if either coefficient or any
-/// intermediate overflows. Caller falls back to the BigInt path on `None`.
-fn try_add_finite_small(a : Decimal, b : Decimal, ctx : Context) -> Decimal? {
-  let a64 = fits_int64(a.coefficient)
-  let b64 = fits_int64(b.coefficient)
-  guard a64 is Some(ai) else { return None }
-  guard b64 is Some(bi) else { return None }
-  let result_exp = min_exponent(a, b)
-  let a_shift = a.exponent - result_exp
-  let b_shift = b.exponent - result_exp
-  let ai_scaled = match scale_up_i64(ai, a_shift) {
-    Some(v) => v
-    None => return None
-  }
-  let bi_scaled = match scale_up_i64(bi, b_shift) {
-    Some(v) => v
-    None => return None
-  }
-  // Signed add at Int64 precision.
-  let (sum, neg) = if a.negative == b.negative {
-    match checked_add_i64(ai_scaled, bi_scaled) {
-      Some(s) => (s, a.negative)
-      None => return None
-    }
-  } else if ai_scaled > bi_scaled {
-    (ai_scaled - bi_scaled, a.negative)
-  } else if ai_scaled < bi_scaled {
-    (bi_scaled - ai_scaled, b.negative)
-  } else {
-    (0L, false)
-  }
-  let final_neg = cancellation_neg(
-    sum == 0L,
-    a.negative,
-    b.negative,
-    ctx.rounding,
-    neg,
-  )
-  Some({
-    class: Finite,
-    negative: final_neg,
-    coefficient: BigInt::from_int64(sum),
-    exponent: result_exp,
-  })
 }
 
 ///|

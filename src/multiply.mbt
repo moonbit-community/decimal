@@ -124,35 +124,10 @@ fn multiply_finite(a : Decimal, b : Decimal) -> Decimal {
   if a.coefficient.is_zero() || b.coefficient.is_zero() {
     return finite_zero(exp, neg)
   }
-  // Small-int fast path; falls through to the BigInt multiply on overflow.
-  match try_multiply_finite_small(a, b, neg, exp) {
-    Some(d) => return d
-    None => ()
-  }
   {
     class: Finite,
     negative: neg,
     coefficient: a.coefficient * b.coefficient,
     exponent: exp,
   }
-}
-
-///|
-/// Attempt the product in `Int64`, returning `None` if either coefficient or
-/// the product overflows. Mirrors `try_add_finite_small`.
-fn try_multiply_finite_small(
-  a : Decimal,
-  b : Decimal,
-  neg : Bool,
-  exp : Int,
-) -> Decimal? {
-  guard fits_int64(a.coefficient) is Some(ai) else { return None }
-  guard fits_int64(b.coefficient) is Some(bi) else { return None }
-  guard checked_mul_i64(ai, bi) is Some(p) else { return None }
-  Some({
-    class: Finite,
-    negative: neg,
-    coefficient: BigInt::from_int64(p),
-    exponent: exp,
-  })
 }

@@ -38,20 +38,6 @@ fn strip_trailing_zeros(
 }
 
 ///|
-/// Multiply `n` by `10^shift` in `Int64`, returning `None` on overflow.
-/// `shift == 0` is the identity short-circuit; `shift >= 19` always
-/// overflows since `10^19 > Int64.MAX`.
-fn scale_up_i64(n : Int64, shift : Int) -> Int64? {
-  if shift == 0 || n == 0L {
-    return Some(n)
-  }
-  match pow10_int64(shift) {
-    Some(factor) => checked_mul_i64(n, factor)
-    None => None
-  }
-}
-
-///|
 /// Multiply `coeff` by `10^shift`. Shift must be non-negative. Hot-path
 /// shifts (`< 33`) land in the `pow10_table` cache and avoid a fresh
 /// allocation.
