@@ -69,9 +69,9 @@ pub fn Decimal::of_double(x : Double) -> Decimal {
   // value = m × 2^exp2. For exp2 ≥ 0 that is an integer; for exp2 < 0 spread
   // the 2^exp2 as 5^|exp2| × 10^exp2 so the coefficient stays integral.
   let (coefficient, exponent) = if exp2 >= 0 {
-    (m * BigInt::pow(2N, BigInt::from_int(exp2)), 0)
+    (m << exp2, 0)
   } else {
-    (m * BigInt::pow(5N, BigInt::from_int(-exp2)), exp2)
+    (m * pow5(-exp2), exp2)
   }
   { class: Finite, negative, coefficient, exponent }
 }

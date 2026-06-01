@@ -52,6 +52,34 @@ fn pow10(n : Int) -> BigInt {
 }
 
 ///|
+/// Powers of five `5^0` … `5^POW5_MAX`, built once at startup. `of_double`
+/// spreads a binary fraction's `2^-k` as `5^k × 10^-k`, so the conversion's hot
+/// factor is a power of five; caching them avoids a `BigInt::pow` per call.
+const POW5_MAX : Int = 128
+
+///|
+let pow5_table : Array[BigInt] = {
+  let table = Array::new(capacity=POW5_MAX + 1)
+  let mut p : BigInt = 1N
+  for _i in 0..<=POW5_MAX {
+    table.push(p)
+    p = p * 5N
+  }
+  table
+}
+
+///|
+/// `5^n` as a `BigInt`. Negative `n` is a programmer error and aborts.
+fn pow5(n : Int) -> BigInt {
+  guard n >= 0 else { abort("pow5: negative exponent \{n}") }
+  if n < pow5_table.length() {
+    pow5_table[n]
+  } else {
+    BigInt::pow(5N, BigInt::from_int(n))
+  }
+}
+
+///|
 /// `10^n` as `Int64` if it fits, `None` if `n >= 19` (10^19 overflows
 /// Int64.MAX). The fast-path arithmetic routines use this to choose whether
 /// they can align coefficients without leaving the Int64 lane.
