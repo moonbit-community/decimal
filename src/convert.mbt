@@ -129,11 +129,17 @@ pub fn Decimal::to_double(self : Decimal) -> Double {
       } else {
         (1.0 : Double) / 0.0
       }
-    Finite =>
-      // The rendered string is a valid numeric literal the parser rounds
-      // correctly; the only failure mode is an exponent past binary64's
+    Finite => {
+      // A minimal `<coefficient>e<exponent>` literal parses to the same value
+      // the stdlib rounds correctly — cheaper to build than the full
+      // scientific string. The only failure mode is an exponent past binary64's
       // range, which saturates to a signed infinity.
-      @string.parse_double(self.to_sci_string()) catch {
+      let sign = if self.negative { "-" } else { "" }
+      let literal = sign +
+        self.coefficient.to_string() +
+        "e" +
+        self.exponent.to_string()
+      @string.parse_double(literal) catch {
         _ =>
           if self.negative {
             (-1.0 : Double) / 0.0
@@ -141,5 +147,6 @@ pub fn Decimal::to_double(self : Decimal) -> Double {
             (1.0 : Double) / 0.0
           }
       }
+    }
   }
 }
