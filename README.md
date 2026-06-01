@@ -2,15 +2,17 @@
 
 Arbitrary-precision decimal arithmetic for MoonBit.
 
+[![mooncakes.io](https://img.shields.io/badge/mooncakes.io-DzmingLi%2Fdecimal-blue)](https://mooncakes.io/docs/DzmingLi/decimal)
 [![MoonBit library](https://img.shields.io/badge/MoonBit-library-blue.svg)](https://www.moonbitlang.com/)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
 
 ## Overview
 
 `DzmingLi/decimal` is an arbitrary-precision decimal arithmetic library for
-[MoonBit](https://www.moonbitlang.com/). It implements the **General Decimal
-Arithmetic** specification (Mike Cowlishaw / IBM, the decimal arithmetic of
-IEEE 754-2008): base-10 arithmetic with exact representation of decimal
+[MoonBit](https://www.moonbitlang.com/). It implements the
+[General Decimal Arithmetic specification](https://speleotrove.com/decimal/decarith.html)
+(v1.70, Mike Cowlishaw / IBM — the decimal arithmetic of IEEE 754-2008):
+base-10 arithmetic with exact representation of decimal
 fractions, correct rounding, and the full set of status flags and special
 values (+0/-0, +/-Infinity, quiet NaN, and signaling NaN).
 
@@ -27,7 +29,7 @@ Early but well-tested. Every operation is checked against the full IBM
 
 ## Installation
 
-After the package is published to the MoonBit registry, add the module:
+Add the module from the [MoonBit registry](https://mooncakes.io/docs/DzmingLi/decimal):
 
 ```shell
 moon add DzmingLi/decimal
