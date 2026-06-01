@@ -91,7 +91,9 @@ pub fn Decimal::next_plus(Self, Context) -> Self
 pub fn Decimal::next_toward(Self, Self, Context) -> Self
 pub fn Decimal::number_class(Self, Context) -> String
 pub fn Decimal::of_bigint(@bigint.BigInt) -> Self
+pub fn Decimal::of_double(Double) -> Self
 pub fn Decimal::of_int(Int) -> Self
+pub fn Decimal::of_int64(Int64) -> Self
 pub fn Decimal::one() -> Self
 pub fn Decimal::parse(String) -> Self raise ParseError
 pub fn Decimal::plus(Self, Context) -> Self
@@ -107,6 +109,10 @@ pub fn Decimal::shift(Self, Self, Context) -> Self
 pub fn Decimal::snan(payload? : @bigint.BigInt, negative? : Bool) -> Self
 pub fn Decimal::sqrt(Self, Context) -> Self
 pub fn Decimal::subtract(Self, Self, Context) -> Self
+pub fn Decimal::to_bigint(Self) -> @bigint.BigInt?
+pub fn Decimal::to_double(Self) -> Double
+pub fn Decimal::to_int(Self) -> Int?
+pub fn Decimal::to_int64(Self) -> Int64?
 pub fn Decimal::to_integral_exact(Self, Context) -> Self
 pub fn Decimal::to_integral_value(Self, Context) -> Self
 pub fn Decimal::to_sci_string(Self) -> String
