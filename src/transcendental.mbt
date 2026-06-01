@@ -72,6 +72,13 @@ fn math_precheck(x : Decimal, ctx : Context) -> Decimal? {
 
 ///|
 /// GDA `exp`: e raised to the operand.
+pub fn Decimal::exp(self : Decimal, ctx : Context) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.exp_raw(ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `exp`: returns the value, raising into `ctx.flags`.
 fn Decimal::exp_raw(self : Decimal, ctx : Context) -> Decimal {
   match math_precheck(self, ctx) {
     Some(d) => return d
@@ -179,6 +186,13 @@ fn dstr_lt(a : String, b : String) -> Bool {
 /// the atanh series plus range reduction; ln(0) = -Infinity (with
 /// `Division_by_zero` raised); ln of negative or NaN is the usual
 /// propagation / invalid.
+pub fn Decimal::ln(self : Decimal, ctx : Context) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.ln_raw(ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `ln`: returns the value, raising into `ctx.flags`.
 fn Decimal::ln_raw(self : Decimal, ctx : Context) -> Decimal {
   match math_precheck(self, ctx) {
     Some(d) => return d
@@ -276,6 +290,13 @@ fn ln_exp_bound(x : Decimal) -> Int {
 /// GDA `log10`: common (base-10) logarithm. Built as `ln(x) / ln(10)`
 /// at workp precision; falls back to the closed-form result for exact
 /// powers of ten.
+pub fn Decimal::log10(self : Decimal, ctx : Context) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.log10_raw(ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `log10`: returns the value, raising into `ctx.flags`.
 fn Decimal::log10_raw(self : Decimal, ctx : Context) -> Decimal {
   match math_precheck(self, ctx) {
     Some(d) => return d
@@ -372,6 +393,17 @@ fn power_of_ten_log(x : Decimal) -> Int? {
 /// for exactness; non-integer exponents use `exp(other · ln(self))`.
 /// Domain rules: power(0, 0) = 1; power(±0, neg) = ±Infinity with
 /// `Division_by_zero`; power(neg, non-integer) = NaN.
+pub fn Decimal::power(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.power_raw(other, ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `power`: returns the value, raising into `ctx.flags`.
 fn Decimal::power_raw(
   self : Decimal,
   other : Decimal,
@@ -777,32 +809,4 @@ fn magnitude_above_one(x : Decimal) -> Bool {
   // adj == 0: 1.xxx; magnitude > 1 iff coefficient > 10^(digits-1).
   let n = digit_count(x.coefficient)
   x.coefficient > pow10(n - 1)
-}
-
-///|
-pub fn Decimal::power(
-  self : Decimal,
-  other : Decimal,
-  ctx : Context,
-) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.power_raw(other, ctx), ctx.flags)
-}
-
-///|
-pub fn Decimal::exp(self : Decimal, ctx : Context) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.exp_raw(ctx), ctx.flags)
-}
-
-///|
-pub fn Decimal::ln(self : Decimal, ctx : Context) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.ln_raw(ctx), ctx.flags)
-}
-
-///|
-pub fn Decimal::log10(self : Decimal, ctx : Context) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.log10_raw(ctx), ctx.flags)
 }

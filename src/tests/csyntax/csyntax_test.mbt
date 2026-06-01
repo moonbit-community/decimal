@@ -2,6 +2,7 @@
 // quiet NaN with Conversion_syntax, per GDA `to-number`. These exercise the
 // harness's operand-parse → conversion_syntax routing (the cases the op
 // corpora omit because they need exactly this path).
+
 ///|
 let conversion_syntax_cases : String =
   #|precision: 9

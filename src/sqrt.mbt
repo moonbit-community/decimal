@@ -22,6 +22,13 @@
 /// * sqrt(±0): ±0 with the GDA "ideal exponent" `floor(x.exponent / 2)`.
 /// * sqrt(finite positive): Newton-style integer sqrt, half-even rounded
 ///   to `precision` digits.
+pub fn Decimal::sqrt(self : Decimal, ctx : Context) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.sqrt_raw(ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `sqrt`: returns the value, raising into `ctx.flags`.
 fn Decimal::sqrt_raw(self : Decimal, ctx : Context) -> Decimal {
   match self.class {
     SNaN => quiet_snan(self, ctx)
@@ -139,10 +146,4 @@ fn floor_div2(n : Int) -> Int {
   } else {
     -((-n + 1) / 2)
   }
-}
-
-///|
-pub fn Decimal::sqrt(self : Decimal, ctx : Context) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.sqrt_raw(ctx), ctx.flags)
 }

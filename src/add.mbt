@@ -21,6 +21,17 @@
 ///   context finalization.
 /// * Sign of a zero result: same sign when both operands share a sign,
 ///   `-0` under `Floor` when signs differ, `+0` otherwise.
+pub fn Decimal::add(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.add_raw(other, ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `add`: returns the value, raising into `ctx.flags`.
 fn Decimal::add_raw(self : Decimal, other : Decimal, ctx : Context) -> Decimal {
   match propagate_nan(self, other, ctx) {
     Some(d) => return d
@@ -52,6 +63,17 @@ fn Decimal::add_raw(self : Decimal, other : Decimal, ctx : Context) -> Decimal {
 /// would lose its sign through `minus(0) = +0` followed by
 /// `add(-0, +0) = +0`. Flipping the sign without zero-canonicalisation makes
 /// `add(-0, -0) = -0` (the same-sign-zeros rule) produce the right answer.
+pub fn Decimal::subtract(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.subtract_raw(other, ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `subtract`: returns the value, raising into `ctx.flags`.
 fn Decimal::subtract_raw(
   self : Decimal,
   other : Decimal,
@@ -316,24 +338,4 @@ fn is_half_mode(r : Rounding) -> Bool {
     HalfUp | HalfEven | HalfDown => true
     Up | Down | Ceiling | Floor | ZeroFiveUp => false
   }
-}
-
-///|
-pub fn Decimal::add(
-  self : Decimal,
-  other : Decimal,
-  ctx : Context,
-) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.add_raw(other, ctx), ctx.flags)
-}
-
-///|
-pub fn Decimal::subtract(
-  self : Decimal,
-  other : Decimal,
-  ctx : Context,
-) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.subtract_raw(other, ctx), ctx.flags)
 }

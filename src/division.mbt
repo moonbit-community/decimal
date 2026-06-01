@@ -23,6 +23,17 @@
 /// Precision is required: when `ctx.precision == 0` and the division is
 /// not exact, the result is NaN with `Invalid_operation` raised — there's
 /// no stopping criterion for a non-terminating decimal (e.g. 1/3).
+pub fn Decimal::divide(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.divide_raw(other, ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `divide`: returns the value, raising into `ctx.flags`.
 fn Decimal::divide_raw(
   self : Decimal,
   other : Decimal,
@@ -80,6 +91,17 @@ fn Decimal::divide_raw(
 ///   definition an integer.
 /// * If the finite quotient exceeds the active precision,
 ///   `Division_impossible` is raised and the result is NaN.
+pub fn Decimal::divide_int(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.divide_int_raw(other, ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `divide_int`: returns the value, raising into `ctx.flags`.
 fn Decimal::divide_int_raw(
   self : Decimal,
   other : Decimal,
@@ -125,6 +147,17 @@ fn Decimal::divide_int_raw(
 /// * `Infinity` as dividend, or `0` as divisor: NaN.
 /// * Finite dividend with `Infinity` divisor: the dividend is returned
 ///   unchanged.
+pub fn Decimal::remainder(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.remainder_raw(other, ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `remainder`: returns the value, raising into `ctx.flags`.
 fn Decimal::remainder_raw(
   self : Decimal,
   other : Decimal,
@@ -152,34 +185,4 @@ fn Decimal::remainder_raw(
       }
     _ => abort("Decimal::remainder: unreachable class combination")
   }
-}
-
-///|
-pub fn Decimal::divide(
-  self : Decimal,
-  other : Decimal,
-  ctx : Context,
-) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.divide_raw(other, ctx), ctx.flags)
-}
-
-///|
-pub fn Decimal::divide_int(
-  self : Decimal,
-  other : Decimal,
-  ctx : Context,
-) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.divide_int_raw(other, ctx), ctx.flags)
-}
-
-///|
-pub fn Decimal::remainder(
-  self : Decimal,
-  other : Decimal,
-  ctx : Context,
-) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.remainder_raw(other, ctx), ctx.flags)
 }

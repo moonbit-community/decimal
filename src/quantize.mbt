@@ -23,6 +23,17 @@
 /// If the rescaled coefficient would have more than `precision` digits,
 /// the result is `NaN` with `Invalid_operation` raised — there's no
 /// representable value with that exponent at the given precision.
+pub fn Decimal::quantize(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.quantize_raw(other, ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `quantize`: returns the value, raising into `ctx.flags`.
 fn Decimal::quantize_raw(
   self : Decimal,
   other : Decimal,
@@ -45,6 +56,17 @@ fn Decimal::quantize_raw(
 /// (not its exponent) is the target exponent. `rescale(x, 2) ≡
 /// quantize(x, 1E+2)`. Provided for spec completeness; quantize is the
 /// more general form.
+pub fn Decimal::rescale(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.rescale_raw(other, ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `rescale`: returns the value, raising into `ctx.flags`.
 fn Decimal::rescale_raw(
   self : Decimal,
   other : Decimal,
@@ -75,6 +97,17 @@ fn Decimal::rescale_raw(
 ///
 /// `other` must be a finite integer with |value| ≤ `2 · (e_max +
 /// precision)`; out-of-range yields NaN with `Invalid_operation`.
+pub fn Decimal::scaleb(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.scaleb_raw(other, ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `scaleb`: returns the value, raising into `ctx.flags`.
 fn Decimal::scaleb_raw(
   self : Decimal,
   other : Decimal,
@@ -216,6 +249,16 @@ fn quantize_finite(a : Decimal, target_exp : Int, ctx : Context) -> Decimal {
 ///
 /// `Decimal::to_integral_exact` is the same op but with normal flag
 /// raising.
+pub fn Decimal::to_integral_value(
+  self : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.to_integral_value_raw(ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `to_integral_value`: returns the value, raising into `ctx.flags`.
 fn Decimal::to_integral_value_raw(self : Decimal, ctx : Context) -> Decimal {
   to_integral(self, ctx, false)
 }
@@ -227,6 +270,16 @@ fn Decimal::to_integral_value_raw(self : Decimal, ctx : Context) -> Decimal {
 /// `Invalid_operation` guard suppressed for "value too big to fit" — the
 /// op's purpose is to drop fractional digits, so it always succeeds for
 /// representable inputs.
+pub fn Decimal::to_integral_exact(
+  self : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.to_integral_exact_raw(ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `to_integral_exact`: returns the value, raising into `ctx.flags`.
 fn Decimal::to_integral_exact_raw(self : Decimal, ctx : Context) -> Decimal {
   to_integral(self, ctx, true)
 }
@@ -255,6 +308,13 @@ fn to_integral(d : Decimal, ctx : Context, raise_flags : Bool) -> Decimal {
 /// Re-finalises the result so precision rounding still applies if the
 /// stripped coefficient happens to exceed `ctx.precision` (unusual but
 /// possible for inputs that arrive over-wide).
+pub fn Decimal::reduce(self : Decimal, ctx : Context) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.reduce_raw(ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `reduce`: returns the value, raising into `ctx.flags`.
 fn Decimal::reduce_raw(self : Decimal, ctx : Context) -> Decimal {
   match self.class {
     SNaN => quiet_snan(self, ctx)
@@ -318,58 +378,4 @@ fn to_integral_finite(
     }
   }
   { ..d, coefficient: candidate, exponent: 0 }
-}
-
-///|
-pub fn Decimal::quantize(
-  self : Decimal,
-  other : Decimal,
-  ctx : Context,
-) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.quantize_raw(other, ctx), ctx.flags)
-}
-
-///|
-pub fn Decimal::rescale(
-  self : Decimal,
-  other : Decimal,
-  ctx : Context,
-) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.rescale_raw(other, ctx), ctx.flags)
-}
-
-///|
-pub fn Decimal::scaleb(
-  self : Decimal,
-  other : Decimal,
-  ctx : Context,
-) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.scaleb_raw(other, ctx), ctx.flags)
-}
-
-///|
-pub fn Decimal::to_integral_value(
-  self : Decimal,
-  ctx : Context,
-) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.to_integral_value_raw(ctx), ctx.flags)
-}
-
-///|
-pub fn Decimal::to_integral_exact(
-  self : Decimal,
-  ctx : Context,
-) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.to_integral_exact_raw(ctx), ctx.flags)
-}
-
-///|
-pub fn Decimal::reduce(self : Decimal, ctx : Context) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.reduce_raw(ctx), ctx.flags)
 }

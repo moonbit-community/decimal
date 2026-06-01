@@ -5,6 +5,17 @@
 /// quieten-and-keep-sign rule); `0 * Infinity` is `NaN` and raises `Invalid_operation`; finite-nonzero *
 /// Infinity yields an infinity
 /// with the XOR sign; Infinity * Infinity yields the XOR-signed Infinity.
+pub fn Decimal::multiply(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.multiply_raw(other, ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `multiply`: returns the value, raising into `ctx.flags`.
 fn Decimal::multiply_raw(
   self : Decimal,
   other : Decimal,
@@ -52,6 +63,18 @@ fn Decimal::multiply_raw(
 ///
 /// The product is formed at unbounded precision so the precision-bounded
 /// result never loses digits the subsequent add would have recovered.
+pub fn Decimal::fma(
+  self : Decimal,
+  other : Decimal,
+  addend : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.fma_raw(other, addend, ctx), ctx.flags)
+}
+
+///|
+/// Internal worker for `fma`: returns the value, raising into `ctx.flags`.
 fn Decimal::fma_raw(
   self : Decimal,
   other : Decimal,
@@ -132,25 +155,4 @@ fn try_multiply_finite_small(
     coefficient: BigInt::from_int64(p),
     exponent: exp,
   })
-}
-
-///|
-pub fn Decimal::multiply(
-  self : Decimal,
-  other : Decimal,
-  ctx : Context,
-) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.multiply_raw(other, ctx), ctx.flags)
-}
-
-///|
-pub fn Decimal::fma(
-  self : Decimal,
-  other : Decimal,
-  addend : Decimal,
-  ctx : Context,
-) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
-  (self.fma_raw(other, addend, ctx), ctx.flags)
 }
