@@ -19,9 +19,9 @@ pub impl ToJson for Decimal with fn to_json(self) {
 /// string that isn't a valid GDA numeric literal, is a decode error.
 pub impl @json.FromJson for Decimal with fn from_json(json, path) {
   guard json is String(s) else {
-    raise @json.JsonDecodeError((path, "Decimal: expected a string"))
+    raise JsonDecodeError((path, "Decimal: expected a string"))
   }
   Decimal::parse(s) catch {
-    e => raise @json.JsonDecodeError((path, "Decimal: \{e}"))
+    e => raise JsonDecodeError((path, "Decimal: \{e}"))
   }
 }
