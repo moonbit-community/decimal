@@ -47,23 +47,23 @@ pub struct Decimal {
   coefficient : @bigint.BigInt
   exponent : Int
 }
-pub fn Decimal::abs(Self, Context) -> Self
-pub fn Decimal::add(Self, Self, Context) -> Self
+pub fn Decimal::abs(Self, Context) -> (Self, Flags)
+pub fn Decimal::add(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::canonical(Self) -> Self
-pub fn Decimal::compare(Self, Self, Context) -> Self
-pub fn Decimal::compare_signal(Self, Self, Context) -> Self
+pub fn Decimal::compare(Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::compare_signal(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::compare_total(Self, Self) -> Self
 pub fn Decimal::compare_total_mag(Self, Self) -> Self
 pub fn Decimal::copy(Self) -> Self
 pub fn Decimal::copy_abs(Self) -> Self
 pub fn Decimal::copy_negate(Self) -> Self
 pub fn Decimal::copy_sign(Self, Self) -> Self
-pub fn Decimal::divide(Self, Self, Context) -> Self
-pub fn Decimal::divide_int(Self, Self, Context) -> Self
-pub fn Decimal::exp(Self, Context) -> Self
-pub fn Decimal::finalize(Self, Context) -> Self
+pub fn Decimal::divide(Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::divide_int(Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::exp(Self, Context) -> (Self, Flags)
+pub fn Decimal::finalize(Self, Context) -> (Self, Flags)
 pub fn Decimal::finite(@bigint.BigInt, Int, negative? : Bool) -> Self
-pub fn Decimal::fma(Self, Self, Self, Context) -> Self
+pub fn Decimal::fma(Self, Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::infinity() -> Self
 pub fn Decimal::is_canonical(Self) -> Bool
 pub fn Decimal::is_finite(Self) -> Bool
@@ -73,23 +73,23 @@ pub fn Decimal::is_normal(Self, Context) -> Bool
 pub fn Decimal::is_signaling(Self) -> Bool
 pub fn Decimal::is_subnormal(Self, Context) -> Bool
 pub fn Decimal::is_zero(Self) -> Bool
-pub fn Decimal::ln(Self, Context) -> Self
-pub fn Decimal::log10(Self, Context) -> Self
-pub fn Decimal::logical_and(Self, Self, Context) -> Self
-pub fn Decimal::logical_invert(Self, Context) -> Self
-pub fn Decimal::logical_or(Self, Self, Context) -> Self
-pub fn Decimal::logical_xor(Self, Self, Context) -> Self
-pub fn Decimal::max(Self, Self, Context) -> Self
-pub fn Decimal::max_magnitude(Self, Self, Context) -> Self
-pub fn Decimal::min(Self, Self, Context) -> Self
-pub fn Decimal::min_magnitude(Self, Self, Context) -> Self
-pub fn Decimal::minus(Self, Context) -> Self
-pub fn Decimal::multiply(Self, Self, Context) -> Self
+pub fn Decimal::ln(Self, Context) -> (Self, Flags)
+pub fn Decimal::log10(Self, Context) -> (Self, Flags)
+pub fn Decimal::logical_and(Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::logical_invert(Self, Context) -> (Self, Flags)
+pub fn Decimal::logical_or(Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::logical_xor(Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::max(Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::max_magnitude(Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::min(Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::min_magnitude(Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::minus(Self, Context) -> (Self, Flags)
+pub fn Decimal::multiply(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::nan(payload? : @bigint.BigInt, negative? : Bool) -> Self
 pub fn Decimal::neg_infinity() -> Self
-pub fn Decimal::next_minus(Self, Context) -> Self
-pub fn Decimal::next_plus(Self, Context) -> Self
-pub fn Decimal::next_toward(Self, Self, Context) -> Self
+pub fn Decimal::next_minus(Self, Context) -> (Self, Flags)
+pub fn Decimal::next_plus(Self, Context) -> (Self, Flags)
+pub fn Decimal::next_toward(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::number_class(Self, Context) -> String
 pub fn Decimal::of_bigint(@bigint.BigInt) -> Self
 pub fn Decimal::of_double(Double) -> Self
@@ -97,26 +97,26 @@ pub fn Decimal::of_int(Int) -> Self
 pub fn Decimal::of_int64(Int64) -> Self
 pub fn Decimal::one() -> Self
 pub fn Decimal::parse(String) -> Self raise ParseError
-pub fn Decimal::plus(Self, Context) -> Self
-pub fn Decimal::power(Self, Self, Context) -> Self
-pub fn Decimal::quantize(Self, Self, Context) -> Self
-pub fn Decimal::reduce(Self, Context) -> Self
-pub fn Decimal::remainder(Self, Self, Context) -> Self
-pub fn Decimal::rescale(Self, Self, Context) -> Self
-pub fn Decimal::rotate(Self, Self, Context) -> Self
+pub fn Decimal::plus(Self, Context) -> (Self, Flags)
+pub fn Decimal::power(Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::quantize(Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::reduce(Self, Context) -> (Self, Flags)
+pub fn Decimal::remainder(Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::rescale(Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::rotate(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::same_quantum(Self, Self) -> Self
-pub fn Decimal::scaleb(Self, Self, Context) -> Self
-pub fn Decimal::shift(Self, Self, Context) -> Self
+pub fn Decimal::scaleb(Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::shift(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::snan(payload? : @bigint.BigInt, negative? : Bool) -> Self
-pub fn Decimal::sqrt(Self, Context) -> Self
-pub fn Decimal::subtract(Self, Self, Context) -> Self
+pub fn Decimal::sqrt(Self, Context) -> (Self, Flags)
+pub fn Decimal::subtract(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::to_bigint(Self) -> @bigint.BigInt?
 pub fn Decimal::to_double(Self) -> Double
 pub fn Decimal::to_eng_string(Self) -> String
 pub fn Decimal::to_int(Self) -> Int?
 pub fn Decimal::to_int64(Self) -> Int64?
-pub fn Decimal::to_integral_exact(Self, Context) -> Self
-pub fn Decimal::to_integral_value(Self, Context) -> Self
+pub fn Decimal::to_integral_exact(Self, Context) -> (Self, Flags)
+pub fn Decimal::to_integral_value(Self, Context) -> (Self, Flags)
 pub fn Decimal::to_sci_string(Self) -> String
 pub fn Decimal::zero() -> Self
 pub impl Add for Decimal
@@ -144,6 +144,7 @@ pub(all) struct Flags {
   mut insufficient_storage : Bool
   mut invalid_context : Bool
 }
+pub fn Flags::combine(Self, Self) -> Self
 pub fn Flags::new() -> Self
 
 pub(all) enum Rounding {

@@ -520,8 +520,8 @@ fn unary_apply(case : TestCase) -> (String, Flags) raise RunnerError {
   let one = Decimal::parse("1") catch {
     _ => raise RunnerError("internal: literal 1 failed to parse")
   }
-  let ctx = ctx_for(case)
-  (x.multiply(one, ctx).to_sci_string(), ctx.flags)
+  let (result, flags) = x.multiply(one, ctx_for(case))
+  (result.to_sci_string(), flags)
 }
 
 ///|
@@ -541,7 +541,7 @@ fn ctx_for(case : TestCase) -> Context {
 /// -> Decimal`) to the three operands. Used by `fma`.
 fn ternary_ctx(
   case : TestCase,
-  op : (Decimal, Decimal, Decimal, Context) -> Decimal,
+  op : (Decimal, Decimal, Decimal, Context) -> (Decimal, Flags),
 ) -> (String, Flags) raise RunnerError {
   if case.operands.length() != 3 {
     raise RunnerError("expects 3 operands, got \{case.operands.length()}")
@@ -555,8 +555,8 @@ fn ternary_ctx(
   let c = Decimal::parse(case.operands[2]) catch {
     e => raise RunnerError("parse error in operand 2: \{e}")
   }
-  let ctx = ctx_for(case)
-  (op(a, b, c, ctx).to_sci_string(), ctx.flags)
+  let (result, flags) = op(a, b, c, ctx_for(case))
+  (result.to_sci_string(), flags)
 }
 
 ///|
@@ -581,7 +581,7 @@ fn unary_ctx_string(
 /// Apply a context-aware unary op to the single operand.
 fn unary_ctx(
   case : TestCase,
-  op : (Decimal, Context) -> Decimal,
+  op : (Decimal, Context) -> (Decimal, Flags),
 ) -> (String, Flags) raise RunnerError {
   if case.operands.length() != 1 {
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
@@ -589,8 +589,8 @@ fn unary_ctx(
   let parsed = Decimal::parse(case.operands[0]) catch {
     e => raise RunnerError("parse error: \{e}")
   }
-  let ctx = ctx_for(case)
-  (op(parsed, ctx).to_sci_string(), ctx.flags)
+  let (result, flags) = op(parsed, ctx_for(case))
+  (result.to_sci_string(), flags)
 }
 
 ///|
@@ -669,7 +669,7 @@ fn unary(
 /// Apply a context-aware binary op.
 fn binary_ctx(
   case : TestCase,
-  op : (Decimal, Decimal, Context) -> Decimal,
+  op : (Decimal, Decimal, Context) -> (Decimal, Flags),
 ) -> (String, Flags) raise RunnerError {
   if case.operands.length() != 2 {
     raise RunnerError("expects 2 operands, got \{case.operands.length()}")
@@ -680,8 +680,8 @@ fn binary_ctx(
   let rhs = Decimal::parse(case.operands[1]) catch {
     e => raise RunnerError("parse error in operand 1: \{e}")
   }
-  let ctx = ctx_for(case)
-  (op(lhs, rhs, ctx).to_sci_string(), ctx.flags)
+  let (result, flags) = op(lhs, rhs, ctx_for(case))
+  (result.to_sci_string(), flags)
 }
 
 ///|

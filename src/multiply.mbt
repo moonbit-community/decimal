@@ -5,7 +5,7 @@
 /// quieten-and-keep-sign rule); `0 * Infinity` is `NaN` and raises `Invalid_operation`; finite-nonzero *
 /// Infinity yields an infinity
 /// with the XOR sign; Infinity * Infinity yields the XOR-signed Infinity.
-pub fn Decimal::multiply(
+fn Decimal::multiply_raw(
   self : Decimal,
   other : Decimal,
   ctx : Context,
@@ -16,7 +16,7 @@ pub fn Decimal::multiply(
   }
   let sign = xor_sign(self, other)
   match (self.class, other.class) {
-    (Finite, Finite) => multiply_finite(self, other).finalize(ctx)
+    (Finite, Finite) => multiply_finite(self, other).finalize_raw(ctx)
     (Infinity, Finite) =>
       if other.coefficient.is_zero() {
         invalid_nan(ctx)
@@ -52,7 +52,7 @@ pub fn Decimal::multiply(
 ///
 /// The product is formed at unbounded precision so the precision-bounded
 /// result never loses digits the subsequent add would have recovered.
-pub fn Decimal::fma(
+fn Decimal::fma_raw(
   self : Decimal,
   other : Decimal,
   addend : Decimal,
@@ -79,11 +79,11 @@ pub fn Decimal::fma(
   // Both multiplicands are non-NaN: form the exact product (which may signal
   // 0×∞), then add the addend (which handles ∞−∞ and a quiet-NaN addend).
   let exact = Context::exact()
-  let product = Decimal::multiply(self, other, exact)
+  let product = Decimal::multiply_raw(self, other, exact)
   if exact.flags.invalid_operation {
     ctx.raise_invalid_operation()
   }
-  product.add(addend, ctx)
+  product.add_raw(addend, ctx)
 }
 
 ///|
@@ -132,4 +132,25 @@ fn try_multiply_finite_small(
     coefficient: BigInt::from_int64(p),
     exponent: exp,
   })
+}
+
+///|
+pub fn Decimal::multiply(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.multiply_raw(other, ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::fma(
+  self : Decimal,
+  other : Decimal,
+  addend : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.fma_raw(other, addend, ctx), ctx.flags)
 }

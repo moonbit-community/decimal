@@ -17,7 +17,7 @@
 ///
 /// For infinities: `-Infinity < every finite < +Infinity`. Two infinities
 /// of the same sign are equal; opposite signs use the sign rule.
-pub fn Decimal::compare(
+fn Decimal::compare_raw(
   self : Decimal,
   other : Decimal,
   ctx : Context,
@@ -82,7 +82,7 @@ fn compare_numeric_int(a : Decimal, b : Decimal) -> Int {
 /// GDA `compare-signal`: numerically compare like `compare`, but signal
 /// `Invalid_operation` on *any* NaN operand — quiet NaNs are treated as
 /// signaling.
-pub fn Decimal::compare_signal(
+fn Decimal::compare_signal_raw(
   self : Decimal,
   other : Decimal,
   ctx : Context,
@@ -92,7 +92,7 @@ pub fn Decimal::compare_signal(
   }
   // sNaN already raises Invalid_operation inside propagate_nan, so
   // `compare` handles the signaling/quietening for us.
-  Decimal::compare(self, other, ctx)
+  Decimal::compare_raw(self, other, ctx)
 }
 
 ///|
@@ -106,13 +106,13 @@ pub fn Decimal::compare_signal(
 /// and `max(qNaN, x) = x` (with x re-finalised). A signaling NaN still
 /// signals and quietens. Both qNaN: canonical NaN returned (the left
 /// operand here).
-pub fn Decimal::max(self : Decimal, other : Decimal, ctx : Context) -> Decimal {
+fn Decimal::max_raw(self : Decimal, other : Decimal, ctx : Context) -> Decimal {
   max_min_choose(self, other, ctx, true, false)
 }
 
 ///|
 /// GDA `min`: numeric minimum. Mirrors `max`'s sign / exponent tiebreak.
-pub fn Decimal::min(self : Decimal, other : Decimal, ctx : Context) -> Decimal {
+fn Decimal::min_raw(self : Decimal, other : Decimal, ctx : Context) -> Decimal {
   max_min_choose(self, other, ctx, false, false)
 }
 
@@ -120,7 +120,7 @@ pub fn Decimal::min(self : Decimal, other : Decimal, ctx : Context) -> Decimal {
 /// GDA `max-magnitude`: compare by absolute value, returning the operand
 /// whose magnitude is larger. Sign of the returned operand is preserved.
 /// On a magnitude tie the same sign / exponent rule as `max` applies.
-pub fn Decimal::max_magnitude(
+fn Decimal::max_magnitude_raw(
   self : Decimal,
   other : Decimal,
   ctx : Context,
@@ -131,7 +131,7 @@ pub fn Decimal::max_magnitude(
 ///|
 /// GDA `min-magnitude`: compare by absolute value, returning the operand
 /// whose magnitude is smaller.
-pub fn Decimal::min_magnitude(
+fn Decimal::min_magnitude_raw(
   self : Decimal,
   other : Decimal,
   ctx : Context,
@@ -168,10 +168,10 @@ fn max_min_choose(
     return truncate_nan_payload(a, ctx)
   }
   if a_qnan {
-    return b.finalize(ctx)
+    return b.finalize_raw(ctx)
   }
   if b_qnan {
-    return a.finalize(ctx)
+    return a.finalize_raw(ctx)
   }
   let cmp = if magnitude {
     compare_numeric_int({ ..a, negative: false }, { ..b, negative: false })
@@ -200,7 +200,7 @@ fn max_min_choose(
   }
   let pick = if is_max { pick_max } else { -pick_max }
   let choice = if pick > 0 { a } else { b }
-  choice.finalize(ctx)
+  choice.finalize_raw(ctx)
 }
 
 ///|
@@ -363,4 +363,64 @@ fn compare_magnitudes(
   } else {
     a_coeff.compare(b_coeff * pow10(b_exp - a_exp))
   }
+}
+
+///|
+pub fn Decimal::compare(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.compare_raw(other, ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::compare_signal(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.compare_signal_raw(other, ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::max(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.max_raw(other, ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::min(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.min_raw(other, ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::max_magnitude(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.max_magnitude_raw(other, ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::min_magnitude(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.min_magnitude_raw(other, ctx), ctx.flags)
 }

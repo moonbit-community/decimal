@@ -72,7 +72,7 @@ fn math_precheck(x : Decimal, ctx : Context) -> Decimal? {
 
 ///|
 /// GDA `exp`: e raised to the operand.
-pub fn Decimal::exp(self : Decimal, ctx : Context) -> Decimal {
+fn Decimal::exp_raw(self : Decimal, ctx : Context) -> Decimal {
   match math_precheck(self, ctx) {
     Some(d) => return d
     None => ()
@@ -148,7 +148,7 @@ fn exp_finite(x : Decimal, ctx : Context) -> Decimal {
     { class: Finite, negative: false, coefficient: coeff, exponent: exp }
   }
   // exp always rounds half-even; flags accumulate into the shared Flags.
-  result.finalize({ ..ctx, rounding: HalfEven })
+  result.finalize_raw({ ..ctx, rounding: HalfEven })
 }
 
 ///|
@@ -179,7 +179,7 @@ fn dstr_lt(a : String, b : String) -> Bool {
 /// the atanh series plus range reduction; ln(0) = -Infinity (with
 /// `Division_by_zero` raised); ln of negative or NaN is the usual
 /// propagation / invalid.
-pub fn Decimal::ln(self : Decimal, ctx : Context) -> Decimal {
+fn Decimal::ln_raw(self : Decimal, ctx : Context) -> Decimal {
   match math_precheck(self, ctx) {
     Some(d) => return d
     None => ()
@@ -244,7 +244,7 @@ fn ln_finite(x : Decimal, ctx : Context) -> Decimal {
       negative: coeff < 0N,
       coefficient: abs_big(coeff),
       exponent: -places,
-    } : Decimal).finalize({ ..ctx, rounding: HalfEven })
+    } : Decimal).finalize_raw({ ..ctx, rounding: HalfEven })
 }
 
 ///|
@@ -276,7 +276,7 @@ fn ln_exp_bound(x : Decimal) -> Int {
 /// GDA `log10`: common (base-10) logarithm. Built as `ln(x) / ln(10)`
 /// at workp precision; falls back to the closed-form result for exact
 /// powers of ten.
-pub fn Decimal::log10(self : Decimal, ctx : Context) -> Decimal {
+fn Decimal::log10_raw(self : Decimal, ctx : Context) -> Decimal {
   match math_precheck(self, ctx) {
     Some(d) => return d
     None => ()
@@ -303,7 +303,8 @@ pub fn Decimal::log10(self : Decimal, ctx : Context) -> Decimal {
 fn log10_finite(x : Decimal, ctx : Context) -> Decimal {
   match power_of_ten_log(x) {
     // log10(10^k) = k; still finalized so it fits precision (may round).
-    Some(k) => return Decimal::of_int(k).finalize({ ..ctx, rounding: HalfEven })
+    Some(k) =>
+      return Decimal::of_int(k).finalize_raw({ ..ctx, rounding: HalfEven })
     None => ()
   }
   let p = ctx.precision
@@ -323,7 +324,7 @@ fn log10_finite(x : Decimal, ctx : Context) -> Decimal {
       negative: coeff < 0N,
       coefficient: abs_big(coeff),
       exponent: -places,
-    } : Decimal).finalize({ ..ctx, rounding: HalfEven })
+    } : Decimal).finalize_raw({ ..ctx, rounding: HalfEven })
 }
 
 ///|
@@ -371,7 +372,7 @@ fn power_of_ten_log(x : Decimal) -> Int? {
 /// for exactness; non-integer exponents use `exp(other · ln(self))`.
 /// Domain rules: power(0, 0) = 1; power(±0, neg) = ±Infinity with
 /// `Division_by_zero`; power(neg, non-integer) = NaN.
-pub fn Decimal::power(
+fn Decimal::power_raw(
   self : Decimal,
   other : Decimal,
   ctx : Context,
@@ -555,7 +556,7 @@ fn power_finite(x : Decimal, y : Decimal, ctx : Context) -> Decimal {
           negative: result_neg,
           coefficient: 1N,
           exponent: ctx.e_max + 1,
-        } : Decimal).finalize(ctx)
+        } : Decimal).finalize_raw(ctx)
     }
   } else if bound >= int_digits(-etiny) {
     return (
@@ -564,7 +565,7 @@ fn power_finite(x : Decimal, y : Decimal, ctx : Context) -> Decimal {
         negative: result_neg,
         coefficient: 1N,
         exponent: etiny - 1,
-      } : Decimal).finalize(ctx)
+      } : Decimal).finalize_raw(ctx)
   }
   // In-range integer exponent → exact square-and-multiply (sign handled by the
   // repeated multiply, matching `result_neg`).
@@ -612,7 +613,7 @@ fn power_finite(x : Decimal, y : Decimal, ctx : Context) -> Decimal {
   }
   (
     { class: Finite, negative: result_neg, coefficient: coeff, exponent: exp } :
-    Decimal).finalize(ctx)
+    Decimal).finalize_raw(ctx)
 }
 
 ///|
@@ -684,17 +685,17 @@ fn power_int(x : Decimal, n : Int, ctx : Context) -> Decimal {
   let mut exp = if n < 0 { -n } else { n }
   while exp > 0 {
     if exp % 2 == 1 {
-      result = Decimal::multiply(result, base, workctx)
+      result = Decimal::multiply_raw(result, base, workctx)
     }
     exp = exp / 2
     if exp > 0 {
-      base = Decimal::multiply(base, base, workctx)
+      base = Decimal::multiply_raw(base, base, workctx)
     }
   }
   if n < 0 {
-    result = Decimal::divide(Decimal::one(), result, workctx)
+    result = Decimal::divide_raw(Decimal::one(), result, workctx)
   }
-  result.finalize(ctx)
+  result.finalize_raw(ctx)
 }
 
 ///|
@@ -776,4 +777,32 @@ fn magnitude_above_one(x : Decimal) -> Bool {
   // adj == 0: 1.xxx; magnitude > 1 iff coefficient > 10^(digits-1).
   let n = digit_count(x.coefficient)
   x.coefficient > pow10(n - 1)
+}
+
+///|
+pub fn Decimal::power(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.power_raw(other, ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::exp(self : Decimal, ctx : Context) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.exp_raw(ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::ln(self : Decimal, ctx : Context) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.ln_raw(ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::log10(self : Decimal, ctx : Context) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.log10_raw(ctx), ctx.flags)
 }

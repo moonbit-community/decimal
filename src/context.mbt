@@ -98,10 +98,35 @@ pub fn Flags::new() -> Flags {
 }
 
 ///|
-/// Arithmetic context — precision, rounding mode, exponent range, and
-/// accumulated flags. Ops take a `Context` (with a no-precision default),
-/// produce a result that has been rounded / clamped to fit, and side-channel
-/// signals into the context's flags.
+/// Combine two flag sets — the union of every raised signal. `Flags` under
+/// `combine` with `Flags::new()` as identity forms a monoid, so the flags of
+/// a multi-step computation are the `combine` of each step's flags.
+pub fn Flags::combine(self : Flags, other : Flags) -> Flags {
+  {
+    inexact: self.inexact || other.inexact,
+    rounded: self.rounded || other.rounded,
+    invalid_operation: self.invalid_operation || other.invalid_operation,
+    division_by_zero: self.division_by_zero || other.division_by_zero,
+    overflow: self.overflow || other.overflow,
+    underflow: self.underflow || other.underflow,
+    subnormal: self.subnormal || other.subnormal,
+    clamped: self.clamped || other.clamped,
+    conversion_syntax: self.conversion_syntax || other.conversion_syntax,
+    division_impossible: self.division_impossible || other.division_impossible,
+    division_undefined: self.division_undefined || other.division_undefined,
+    insufficient_storage: self.insufficient_storage ||
+    other.insufficient_storage,
+    invalid_context: self.invalid_context || other.invalid_context,
+  }
+}
+
+///|
+/// Arithmetic context — precision, rounding mode, and exponent range.
+///
+/// Context is immutable configuration: operations take a `Context`, never
+/// mutate it, and return their result paired with the `Flags` they raised.
+/// (The `flags` field below is a per-call scratch accumulator; a caller's own
+/// `Context` value is never written to.)
 ///
 /// `precision == 0` means "no precision limit": the op produces an exact
 /// result with as many digits as needed. This is the default so the existing

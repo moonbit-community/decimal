@@ -22,7 +22,7 @@
 /// * sqrt(±0): ±0 with the GDA "ideal exponent" `floor(x.exponent / 2)`.
 /// * sqrt(finite positive): Newton-style integer sqrt, half-even rounded
 ///   to `precision` digits.
-pub fn Decimal::sqrt(self : Decimal, ctx : Context) -> Decimal {
+fn Decimal::sqrt_raw(self : Decimal, ctx : Context) -> Decimal {
   match self.class {
     SNaN => quiet_snan(self, ctx)
     QNaN => self
@@ -30,7 +30,7 @@ pub fn Decimal::sqrt(self : Decimal, ctx : Context) -> Decimal {
     Finite =>
       if self.coefficient.is_zero() {
         let ideal = floor_div2(self.exponent)
-        ({ ..self, exponent: ideal } : Decimal).finalize(ctx)
+        ({ ..self, exponent: ideal } : Decimal).finalize_raw(ctx)
       } else if self.negative {
         invalid_nan(ctx)
       } else {
@@ -99,7 +99,7 @@ fn sqrt_finite(x : Decimal, ctx : Context) -> Decimal {
   // rules and raises Inexact / Rounded. Flags accumulate into the shared
   // Flags object, so they still surface on the caller's context.
   let he_ctx = { ..ctx, rounding: HalfEven }
-  Decimal::finalize(
+  Decimal::finalize_raw(
     { class: Finite, negative: false, coefficient: n, exponent: e },
     he_ctx,
   )
@@ -139,4 +139,10 @@ fn floor_div2(n : Int) -> Int {
   } else {
     -((-n + 1) / 2)
   }
+}
+
+///|
+pub fn Decimal::sqrt(self : Decimal, ctx : Context) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.sqrt_raw(ctx), ctx.flags)
 }

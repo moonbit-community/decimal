@@ -15,11 +15,11 @@ fn zero_like(d : Decimal) -> Decimal {
 /// NaN handling is explicit so the operand's NaN *sign and payload* propagate
 /// unchanged — a NaN is never arithmetically negated — while a signaling NaN
 /// raises `Invalid_operation` (and its payload is truncated to precision).
-pub fn Decimal::minus(self : Decimal, ctx : Context) -> Decimal {
+fn Decimal::minus_raw(self : Decimal, ctx : Context) -> Decimal {
   match self.class {
     SNaN => quiet_snan(self, ctx)
     QNaN => truncate_nan_payload(self, ctx)
-    _ => Decimal::subtract(zero_like(self), self, ctx)
+    _ => Decimal::subtract_raw(zero_like(self), self, ctx)
   }
 }
 
@@ -28,11 +28,11 @@ pub fn Decimal::minus(self : Decimal, ctx : Context) -> Decimal {
 /// precision (value and sign preserved) and raise the usual flags. As with
 /// `minus`, a NaN propagates unchanged and a signaling NaN raises
 /// `Invalid_operation`.
-pub fn Decimal::plus(self : Decimal, ctx : Context) -> Decimal {
+fn Decimal::plus_raw(self : Decimal, ctx : Context) -> Decimal {
   match self.class {
     SNaN => quiet_snan(self, ctx)
     QNaN => truncate_nan_payload(self, ctx)
-    _ => Decimal::add(zero_like(self), self, ctx)
+    _ => Decimal::add_raw(zero_like(self), self, ctx)
   }
 }
 
@@ -41,15 +41,33 @@ pub fn Decimal::plus(self : Decimal, ctx : Context) -> Decimal {
 /// otherwise `plus`. NaN propagation wins over the absolute value, so a NaN's
 /// sign is *not* cleared (e.g. `abs(-NaN22) = -NaN22`); a signaling NaN raises
 /// `Invalid_operation`.
-pub fn Decimal::abs(self : Decimal, ctx : Context) -> Decimal {
+fn Decimal::abs_raw(self : Decimal, ctx : Context) -> Decimal {
   match self.class {
     SNaN => quiet_snan(self, ctx)
     QNaN => truncate_nan_payload(self, ctx)
     _ =>
       if self.negative {
-        Decimal::minus(self, ctx)
+        Decimal::minus_raw(self, ctx)
       } else {
-        Decimal::plus(self, ctx)
+        Decimal::plus_raw(self, ctx)
       }
   }
+}
+
+///|
+pub fn Decimal::minus(self : Decimal, ctx : Context) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.minus_raw(ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::plus(self : Decimal, ctx : Context) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.plus_raw(ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::abs(self : Decimal, ctx : Context) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.abs_raw(ctx), ctx.flags)
 }

@@ -178,8 +178,8 @@ fn remainder_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
   if quot.class is QNaN {
     return quot
   }
-  let prod = Decimal::multiply(quot, b, exact_ctx)
-  let result = Decimal::subtract(a, prod, ctx)
+  let prod = Decimal::multiply_raw(quot, b, exact_ctx)
+  let result = Decimal::subtract_raw(a, prod, ctx)
   if result.class is Finite && result.coefficient.is_zero() {
     { ..result, negative: a.negative }
   } else {

@@ -92,25 +92,25 @@ pub fn default_context() -> Context {
 
 ///|
 pub impl Add for Decimal with fn add(self, other) {
-  Decimal::add(self, other, default_context())
+  Decimal::add_raw(self, other, default_context())
 }
 
 ///|
 pub impl Sub for Decimal with fn sub(self, other) {
-  self.subtract(other, default_context())
+  self.subtract_raw(other, default_context())
 }
 
 ///|
 pub impl Mul for Decimal with fn mul(self, other) {
-  self.multiply(other, default_context())
+  self.multiply_raw(other, default_context())
 }
 
 ///|
 pub impl Div for Decimal with fn div(self, other) {
-  self.divide(other, default_context())
+  self.divide_raw(other, default_context())
 }
 
 ///|
 pub impl Neg for Decimal with fn neg(self) {
-  self.minus(default_context())
+  self.minus_raw(default_context())
 }

@@ -10,7 +10,7 @@
 
 ///|
 /// GDA `next-plus`: smallest representable value greater than `self`.
-pub fn Decimal::next_plus(self : Decimal, ctx : Context) -> Decimal {
+fn Decimal::next_plus_raw(self : Decimal, ctx : Context) -> Decimal {
   match self.class {
     SNaN => quiet_snan(self, ctx)
     QNaN => self
@@ -21,7 +21,7 @@ pub fn Decimal::next_plus(self : Decimal, ctx : Context) -> Decimal {
 
 ///|
 /// GDA `next-minus`: largest representable value less than `self`.
-pub fn Decimal::next_minus(self : Decimal, ctx : Context) -> Decimal {
+fn Decimal::next_minus_raw(self : Decimal, ctx : Context) -> Decimal {
   match self.class {
     SNaN => quiet_snan(self, ctx)
     QNaN => self
@@ -34,7 +34,7 @@ pub fn Decimal::next_minus(self : Decimal, ctx : Context) -> Decimal {
 /// GDA `next-toward`: walk `self` one ULP toward `other`. When the two
 /// operands compare equal numerically, return `self` (with `other`'s sign
 /// in the equal-zero case, per GDA's sign-of-zero rule for next-toward).
-pub fn Decimal::next_toward(
+fn Decimal::next_toward_raw(
   self : Decimal,
   other : Decimal,
   ctx : Context,
@@ -57,9 +57,9 @@ pub fn Decimal::next_toward(
   // close, so reaching a representable one is a rounding. Normal-range steps
   // stay quiet.
   let stepped = if cmp < 0 {
-    Decimal::next_plus(self, ctx)
+    Decimal::next_plus_raw(self, ctx)
   } else {
-    Decimal::next_minus(self, ctx)
+    Decimal::next_minus_raw(self, ctx)
   }
   raise_next_toward_flags(stepped, ctx)
   stepped
@@ -275,4 +275,26 @@ fn normalise_for_step(
   }
   let pad = if precision - n < pad_max { precision - n } else { pad_max }
   (coef * pow10(pad), exp - pad)
+}
+
+///|
+pub fn Decimal::next_toward(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.next_toward_raw(other, ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::next_plus(self : Decimal, ctx : Context) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.next_plus_raw(ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::next_minus(self : Decimal, ctx : Context) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.next_minus_raw(ctx), ctx.flags)
 }

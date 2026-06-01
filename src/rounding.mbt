@@ -19,7 +19,7 @@
 ///
 /// `underflow` / `subnormal` / `clamped` are not raised yet; those land
 /// alongside the subnormal handling and the `clamp` field on Context.
-pub fn Decimal::finalize(self : Decimal, ctx : Context) -> Decimal {
+fn Decimal::finalize_raw(self : Decimal, ctx : Context) -> Decimal {
   match self.class {
     Finite => {
       // Capture the operand's adjusted exponent *before* rounding so the
@@ -373,4 +373,13 @@ fn round_drop(
     kept
   }
   (candidate, kept, dropped)
+}
+
+///|
+/// Finalize `self` under `ctx` — round to precision and enforce the exponent
+/// range — returning the result paired with the `Flags` it raised. See
+/// `finalize_raw` for the algorithm.
+pub fn Decimal::finalize(self : Decimal, ctx : Context) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.finalize_raw(ctx), ctx.flags)
 }

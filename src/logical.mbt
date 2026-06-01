@@ -10,7 +10,7 @@
 
 ///|
 /// GDA `logical-and`: digit-wise AND of two bit-string Decimals.
-pub fn Decimal::logical_and(
+fn Decimal::logical_and_raw(
   self : Decimal,
   other : Decimal,
   ctx : Context,
@@ -20,7 +20,7 @@ pub fn Decimal::logical_and(
 
 ///|
 /// GDA `logical-or`: digit-wise OR.
-pub fn Decimal::logical_or(
+fn Decimal::logical_or_raw(
   self : Decimal,
   other : Decimal,
   ctx : Context,
@@ -30,7 +30,7 @@ pub fn Decimal::logical_or(
 
 ///|
 /// GDA `logical-xor`: digit-wise XOR.
-pub fn Decimal::logical_xor(
+fn Decimal::logical_xor_raw(
   self : Decimal,
   other : Decimal,
   ctx : Context,
@@ -44,7 +44,7 @@ pub fn Decimal::logical_xor(
 /// ops, invert *needs* the operand to be left-padded to the full precision
 /// width — otherwise `invert(10)` at precision 9 would render as `01`
 /// rather than `111111101`.
-pub fn Decimal::logical_invert(self : Decimal, ctx : Context) -> Decimal {
+fn Decimal::logical_invert_raw(self : Decimal, ctx : Context) -> Decimal {
   if !valid_logical_operand(self) {
     return invalid_nan(ctx)
   }
@@ -140,7 +140,7 @@ fn logical_digits(d : Decimal, ctx : Context) -> String? {
 /// positive, right for negative. The first operand may carry any decimal
 /// digit (unlike the logical ops); only the second has the integer-in-
 /// `[-precision, precision]` constraint.
-pub fn Decimal::rotate(
+fn Decimal::rotate_raw(
   self : Decimal,
   other : Decimal,
   ctx : Context,
@@ -152,7 +152,7 @@ pub fn Decimal::rotate(
 /// GDA `shift`: shift the digits of `self` (precision-width) by `other`
 /// positions; positions shifted past either end are discarded, vacated
 /// positions are filled with zeros.
-pub fn Decimal::shift(
+fn Decimal::shift_raw(
   self : Decimal,
   other : Decimal,
   ctx : Context,
@@ -287,4 +287,63 @@ fn build_logical_result(s : String) -> Decimal {
     coefficient: BigInt::from_string(s),
     exponent: 0,
   }
+}
+
+///|
+pub fn Decimal::logical_and(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.logical_and_raw(other, ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::logical_or(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.logical_or_raw(other, ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::logical_xor(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.logical_xor_raw(other, ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::rotate(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.rotate_raw(other, ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::shift(
+  self : Decimal,
+  other : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.shift_raw(other, ctx), ctx.flags)
+}
+
+///|
+pub fn Decimal::logical_invert(
+  self : Decimal,
+  ctx : Context,
+) -> (Decimal, Flags) {
+  let ctx = { ..ctx, flags: Flags::new() }
+  (self.logical_invert_raw(ctx), ctx.flags)
 }
