@@ -45,9 +45,21 @@ fn nan_payload_string(payload : BigInt) -> String {
 }
 
 ///|
+/// Render a non-negative coefficient to its base-10 digit string. Coefficients
+/// that fit an `Int64` (anything up to ~19 digits, which covers decimal64 and
+/// smaller) format via the `Int64` path, skipping BigInt's slower base-10
+/// conversion; the digits produced are byte-identical.
+fn coeff_to_string(coefficient : BigInt) -> String {
+  match fits_int64(coefficient) {
+    Some(v) => v.to_string()
+    None => coefficient.to_string()
+  }
+}
+
+///|
 /// Render the magnitude of a finite decimal (without leading sign).
 fn finite_to_sci(coefficient : BigInt, exponent : Int) -> String {
-  let coeff = coefficient.to_string()
+  let coeff = coeff_to_string(coefficient)
   let n = coeff.length()
   let adjusted = exponent + n - 1
   if exponent <= 0 && adjusted >= -6 {
@@ -91,7 +103,7 @@ fn sci_form(coeff : String, n : Int, adjusted : Int) -> String {
 /// the no-exponent plain branch with `finite_to_sci`; only the exponential
 /// case differs, snapping the exponent to a multiple of three.
 fn finite_to_eng(coefficient : BigInt, exponent : Int) -> String {
-  let coeff = coefficient.to_string()
+  let coeff = coeff_to_string(coefficient)
   let n = coeff.length()
   let adjusted = exponent + n - 1
   if exponent <= 0 && adjusted >= -6 {
