@@ -16,11 +16,13 @@ base-10 arithmetic with exact representation of decimal
 fractions, correct rounding, and the full set of status flags and special
 values (+0/-0, +/-Infinity, quiet NaN, and signaling NaN).
 
-Unlike binary floating point, `0.1 + 0.2` is exactly `0.3`. Every operation is
-parameterized by an explicit `Context` that carries precision, rounding mode,
-exponent bounds, and accumulated status flags, so results are deterministic
-and the same code can target `decimal32`, `decimal64`, `decimal128`, or an
-unbounded exact context.
+Unlike binary floating point, `0.1 + 0.2` is exactly `0.3`. Each context-aware
+operation takes an explicit `Context` (precision, rounding mode, exponent
+bounds) and returns its result paired with the status `Flags` it raised — no
+hidden mutable state — so arithmetic is deterministic and the same code can
+target `decimal32`, `decimal64`, `decimal128`, or an unbounded exact context.
+For quick math, the `+` `-` `*` `/` operators work directly under a fixed
+default context.
 
 ## Status
 
@@ -46,24 +48,33 @@ import {
 ## Examples
 
 ```moonbit
-let ctx = @decimal.Context::decimal64()
-
-// 0.1 + 0.2 is exactly 0.3
 let a = @decimal.Decimal::parse("0.1")
 let b = @decimal.Decimal::parse("0.2")
-let sum = a.add(b, ctx)
-println(sum) // 0.3
 
-// Money: keep two fractional digits
+// Operators evaluate under a fixed default context — handy for quick math.
+println(a + b) // 0.3   (exact, not 0.30000000000000004)
+
+// The explicit-context methods return the result *and* the flags they raised.
+let ctx = @decimal.Context::decimal64()
+let (sum, flags) = a.add(b, ctx)
+println(sum) // 0.3
+println(flags.inexact) // false
+
+// Money: round a product to two fractional digits.
 let price = @decimal.Decimal::parse("19.99")
 let qty = @decimal.Decimal::of_int(3)
-let total = price.multiply(qty, ctx).quantize(@decimal.Decimal::parse("0.01"), ctx)
+let (subtotal, _) = price.multiply(qty, ctx)
+let (total, _) = subtotal.quantize(@decimal.Decimal::parse("0.01"), ctx)
 println(total) // 59.97
 ```
 
 ## Operations
 
-All arithmetic methods take an explicit `Context` as the final argument.
+Each context-aware method takes a `Context` as the final argument and returns
+`(Decimal, Flags)` — the result paired with the status flags that computation
+raised (`Flags::combine` folds them across a sequence). The `+` `-` `*` `/` and
+unary `-` operators are conveniences over these, evaluated under a fixed
+`decimal128` context with a fresh flag set per call.
 
 - **Arithmetic**: `add` `subtract` `multiply` `divide` `divide_int`
   `remainder` `fma` `abs` `minus` `plus`
@@ -89,6 +100,9 @@ signatures.
 
 Convert between `Decimal` and the machine numeric types:
 
+- **From strings**: `parse(s)` (exact; raises `ParseError` on bad input) and
+  `of_string(s, ctx)` (GDA *to-number*: rounds to the context and returns
+  `(Decimal, Flags)`, yielding `NaN` with `conversion_syntax` set on bad input)
 - **From** (exact, total): `of_int` `of_int64` `of_bigint` `of_double`
 - **To integer** (partial — `None` for non-finite, non-integer, or
   out-of-range values, never a silent truncation): `to_int` `to_int64`
@@ -111,6 +125,15 @@ specification's signalling, cohort-distinguishing comparisons use the explicit
 human-facing form, parse the rendered string instead:
 `Decimal::parse(d.to_string())`. To narrow a non-integer to an integer, round
 first with `to_integral_value` / `to_integral_exact`.
+
+To build a value with an explicit exponent (a coefficient × 10ᵉ), use
+`try_finite(coef, exp, negative?) -> Decimal?` (e.g. `try_finite(150N, -2)` is
+`1.50`; `None` if the coefficient is negative — the sign lives in `negative`),
+or `finite_unchecked` when you already uphold that invariant.
+
+`Decimal` also implements `ToJson` / `@json.FromJson`, serializing as the GDA
+string so values round-trip exactly (JSON numbers are binary64 and would lose
+precision).
 
 ## Tests
 
