@@ -257,3 +257,22 @@ fn match_ci(input : String, start : Int, word : String) -> Bool {
     continue k + 1
   }
 }
+
+///|
+/// GDA `to-number`: convert a string to a `Decimal` under a context, returning
+/// the result paired with the `Flags` raised. This is the flag-based companion
+/// to `parse`: on a malformed string it returns a quiet `NaN` and raises
+/// `conversion_syntax` (rather than raising `ParseError`); on a valid string it
+/// rounds the parsed value to the context and reports any `inexact` / `rounded`
+/// / range flags. Use `parse` when a syntax error should be a catchable
+/// `ParseError`; use this when you want GDA's NaN-plus-`conversion_syntax`
+/// behaviour.
+pub fn Decimal::of_string(s : String, ctx : Context) -> (Decimal, Flags) {
+  Decimal::parse(s).finalize(ctx) catch {
+    _ => {
+      let flags = Flags::new()
+      flags.conversion_syntax = true
+      (Decimal::nan(), flags)
+    }
+  }
+}

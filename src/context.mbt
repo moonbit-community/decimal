@@ -54,9 +54,9 @@ pub(all) struct Flags {
   mut underflow : Bool
   mut subnormal : Bool
   mut clamped : Bool
-  /// Raised by `parse` when input doesn't match the GDA grammar — the
-  /// parser surfaces a `ParseError` today and callers can route into
-  /// here at a Context boundary.
+  /// Raised by `of_string` (GDA `to-number`) when the input doesn't match the
+  /// GDA grammar: the result is a quiet NaN and this flag is set. (`parse`
+  /// instead reports a syntax error as a catchable `ParseError`.)
   mut conversion_syntax : Bool
   /// Raised by integer division when the quotient would exceed precision
   /// (`Decimal::divide_int` with a multi-precision quotient), and by

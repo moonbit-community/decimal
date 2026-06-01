@@ -96,6 +96,7 @@ pub fn Decimal::of_bigint(@bigint.BigInt) -> Self
 pub fn Decimal::of_double(Double) -> Self
 pub fn Decimal::of_int(Int) -> Self
 pub fn Decimal::of_int64(Int64) -> Self
+pub fn Decimal::of_string(String, Context) -> (Self, Flags)
 pub fn Decimal::one() -> Self
 pub fn Decimal::parse(String) -> Self raise ParseError
 pub fn Decimal::plus(Self, Context) -> (Self, Flags)
