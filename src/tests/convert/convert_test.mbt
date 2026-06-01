@@ -94,3 +94,35 @@ test "to_double: lossy, total, saturating" {
   assert_true(Decimal::parse("NaN").to_double().is_nan())
   inspect(Decimal::parse("Infinity").to_double(), content="Infinity")
 }
+
+///|
+test "decimal64 interchange encoding matches the specification example" {
+  let (hex, flags) = Decimal::parse("-7.50").to_decimal64_hex()
+  inspect(hex, content="A2300000000003D0")
+  assert_true(flags == Flags::new())
+  inspect(Decimal::from_decimal64_hex(hex).unwrap(), content="-7.50")
+}
+
+///|
+test "decimal interchange DPD round-trips representative formats" {
+  let xs = [
+    "0", "-0", "1.23", "9999999E+90", "8.666666666666000E+384", "8.555555555555555555555555555555555E+6143",
+    "Infinity", "-Infinity", "NaN42", "sNaN7",
+  ]
+  for s in xs {
+    let d = Decimal::parse(s)
+    let (h32, _) = d.to_decimal32_hex()
+    assert_true(Decimal::from_decimal32_hex(h32) is Some(_))
+    let (h64, _) = d.to_decimal64_hex()
+    assert_true(Decimal::from_decimal64_hex(h64) is Some(_))
+    let (h128, _) = d.to_decimal128_hex()
+    assert_true(Decimal::from_decimal128_hex(h128) is Some(_))
+  }
+}
+
+///|
+test "decimal interchange rejects malformed hex strings" {
+  assert_true(Decimal::from_decimal32_hex("123") is None)
+  assert_true(Decimal::from_decimal64_hex("not-a-hex-string") is None)
+  assert_true(Decimal::from_decimal128_hex("0000") is None)
+}

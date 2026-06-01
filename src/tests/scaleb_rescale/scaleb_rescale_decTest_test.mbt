@@ -986,13 +986,11 @@ fn run_subset(label : String, subset : String) -> Unit {
   let cases = parse_dectest(subset)
   guard cases.length() > 0 else { abort("\{label}.decTest: no cases parsed") }
   let (failures, skipped) = run_cases_with_flags(cases)
-  // Skipped cases are those the harness sets aside: interchange-format /
-  // null-operand syntax (`NN#value`, bare `#`) and the few reference-specific
-  // divergences. Surfaced here, never silently dropped.
+  // Skipped cases are the decNumber-reference-specific scaleb exponent
+  // overflow divergences (`scbx164`/`scbx165`). Surfaced here, never silently
+  // dropped.
   if skipped > 0 {
-    println(
-      "\{label}: \{skipped} cases skipped (format-encoding / reference-specific)",
-    )
+    println("\{label}: \{skipped} reference-specific cases skipped")
   }
   if failures.length() > 0 {
     println("\{label}: \{failures.length()} of \{cases.length()} cases failed:")

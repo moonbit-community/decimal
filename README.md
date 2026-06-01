@@ -26,8 +26,9 @@ default context.
 
 ## Status
 
-Early but well-tested. Every operation is checked against the full IBM
-`.decTest` conformance corpora embedded under [`src/tests/`](src/tests/).
+Early but well-tested. Every operation is checked against the IBM `.decTest`
+conformance corpora embedded under [`src/tests/`](src/tests/), including
+decimal32/decimal64/decimal128 interchange-format operands/results.
 
 ## Installation
 
@@ -134,6 +135,17 @@ or `finite_unchecked` when you already uphold that invariant.
 `Decimal` also implements `ToJson` / `@json.FromJson`, serializing as the GDA
 string so values round-trip exactly (JSON numbers are binary64 and would lose
 precision).
+
+### Interchange Encoding
+
+IEEE 754 / GDA decimal interchange encodings are available as uppercase
+network-byte-order hexadecimal strings:
+
+- Decode: `from_decimal32_hex` `from_decimal64_hex` `from_decimal128_hex`
+- Encode: `to_decimal32_hex` `to_decimal64_hex` `to_decimal128_hex`
+
+Encoding returns `(hex, Flags)` after rounding/clamping into the selected
+format. Decoding is exact and returns `None` for malformed hex strings.
 
 ## Tests
 

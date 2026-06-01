@@ -955,11 +955,8 @@ let quantize_corpus : String =
 test "quantize.decTest full corpus" {
   let cases = parse_dectest(quantize_corpus)
   let (failures, skipped) = run_cases_with_flags(cases)
-  // The interchange-format / null-operand cases (`NN#value`, bare `#`) are
-  // skipped: they exercise decimal32/64/128 bit-encoding round-trips, not the
-  // GDA core arithmetic under test. The count is asserted so the coverage gap
-  // stays visible and any change to it is caught.
-  inspect(skipped, content="12")
+  // Interchange-format and null-operand cases are handled by the runner.
+  inspect(skipped, content="0")
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 30 { failures.length() } else { 30 }

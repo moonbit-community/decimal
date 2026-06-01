@@ -65,6 +65,9 @@ pub fn Decimal::exp(Self, Context) -> (Self, Flags)
 pub fn Decimal::finalize(Self, Context) -> (Self, Flags)
 pub fn Decimal::finite_unchecked(@bigint.BigInt, Int, negative? : Bool) -> Self
 pub fn Decimal::fma(Self, Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::from_decimal128_hex(String) -> Self?
+pub fn Decimal::from_decimal32_hex(String) -> Self?
+pub fn Decimal::from_decimal64_hex(String) -> Self?
 pub fn Decimal::infinity() -> Self
 pub fn Decimal::is_canonical(Self) -> Bool
 pub fn Decimal::is_finite(Self) -> Bool
@@ -113,6 +116,9 @@ pub fn Decimal::snan(payload? : @bigint.BigInt, negative? : Bool) -> Self
 pub fn Decimal::sqrt(Self, Context) -> (Self, Flags)
 pub fn Decimal::subtract(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::to_bigint(Self) -> @bigint.BigInt?
+pub fn Decimal::to_decimal128_hex(Self, rounding? : Rounding) -> (String, Flags)
+pub fn Decimal::to_decimal32_hex(Self, rounding? : Rounding) -> (String, Flags)
+pub fn Decimal::to_decimal64_hex(Self, rounding? : Rounding) -> (String, Flags)
 pub fn Decimal::to_double(Self) -> Double
 pub fn Decimal::to_eng_string(Self) -> String
 pub fn Decimal::to_int(Self) -> Int?

@@ -262,9 +262,12 @@ fn run_one(case : TestCase) -> CaseOutcome {
   match actual {
     None => Skip
     Some((s, _flags)) => {
-      if s != case.expected {
+      let expected = expected_token_for_compare(case) catch {
+        msg => return Fail("\{case.id}: \{case.op}: \{msg}")
+      }
+      if s != expected {
         return Fail(
-          "\{case.id}: \{case.op}(\{format_operands(case.operands)}) = \{s}, expected \{case.expected}",
+          "\{case.id}: \{case.op}(\{format_operands(case.operands)}) = \{s}, expected \{expected}",
         )
       }
       Pass
@@ -289,21 +292,6 @@ pub fn run_cases_with_flags(cases : Array[TestCase]) -> (Array[String], Int) {
 }
 
 ///|
-/// Does any operand or the expected result use the decTest interchange-format
-/// syntax (`NN#value`, `#hexbytes`, or a bare `#` null operand)? Those cases
-/// exercise the decimal32/64/128 bit-encoding round-trip — a representation
-/// feature distinct from the GDA core arithmetic implemented here — so they
-/// are skipped (counted, never silently dropped) rather than parsed as values.
-fn case_uses_format_marker(case : TestCase) -> Bool {
-  for op in case.operands {
-    if op.find("#") is Some(_) {
-      return true
-    }
-  }
-  case.expected.find("#") is Some(_)
-}
-
-///|
 /// Cases where the reference (decNumber) result is an artifact of its own
 /// 32-bit internal exponent arithmetic, diverging from the IEEE-754 /
 /// arbitrary-range semantics this library follows. `scaleb` of a value near
@@ -322,7 +310,7 @@ fn case_is_reference_specific(case : TestCase) -> Bool {
 ///|
 /// Strict run_one that fails on either rendered-result or flag mismatch.
 fn run_one_strict(case : TestCase) -> CaseOutcome {
-  if case_uses_format_marker(case) || case_is_reference_specific(case) {
+  if case_is_reference_specific(case) {
     return Skip
   }
   let actual = compute(case) catch {
@@ -335,9 +323,12 @@ fn run_one_strict(case : TestCase) -> CaseOutcome {
     // count. Intentional skips happen earlier (format-marker / reference).
     None => Fail("\{case.id}: \{case.op}: operation not handled by runner")
     Some((s, flags)) => {
-      if s != case.expected {
+      let expected = expected_token_for_compare(case) catch {
+        msg => return Fail("\{case.id}: \{case.op}: \{msg}")
+      }
+      if s != expected {
         return Fail(
-          "\{case.id}: \{case.op}(\{format_operands(case.operands)}) = \{s}, expected \{case.expected}",
+          "\{case.id}: \{case.op}(\{format_operands(case.operands)}) = \{s}, expected \{expected}",
         )
       }
       let flag_diff = compare_flags(flags, case.conditions)
@@ -406,6 +397,9 @@ fn condition_present(conditions : Array[String], name : String) -> Bool {
 /// `None` for unknown ops; raises a diagnostic string for parse failures or
 /// arity mismatches.
 fn compute(case : TestCase) -> (String, Flags)? raise RunnerError {
+  if case_has_null_operand(case) {
+    return Some(null_operand_result(case))
+  }
   if ascii_eq_ci(case.op, "tosci") {
     Some(unary_render(case))
   } else if ascii_eq_ci(case.op, "minus") {
@@ -506,6 +500,23 @@ fn compute(case : TestCase) -> (String, Flags)? raise RunnerError {
 }
 
 ///|
+fn case_has_null_operand(case : TestCase) -> Bool {
+  for op in case.operands {
+    if op == "#" {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn null_operand_result(case : TestCase) -> (String, Flags) raise RunnerError {
+  let flags = Flags::new()
+  flags.invalid_operation = true
+  render_decimal_result(case, Decimal::nan(), flags)
+}
+
+///|
 /// decTest `apply`: round the single operand to the context (the GDA
 /// "apply" / unary-plus operation). Realised by multiplying by one, which
 /// reuses `multiply`'s full precision rounding and NaN handling rather than
@@ -514,14 +525,14 @@ fn unary_apply(case : TestCase) -> (String, Flags) raise RunnerError {
   if case.operands.length() != 1 {
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
-  let x = Decimal::parse(case.operands[0]) catch {
+  let (x, operand_flags) = parse_operand(case.operands[0], case) catch {
     _ => return conv_syntax_result()
   }
   let one = Decimal::parse("1") catch {
     _ => raise RunnerError("internal: literal 1 failed to parse")
   }
   let (result, flags) = x.multiply(one, ctx_for(case))
-  (result.to_sci_string(), flags)
+  render_decimal_result(case, result, operand_flags.combine(flags))
 }
 
 ///|
@@ -548,6 +559,165 @@ fn ctx_for(case : TestCase) -> Context {
 }
 
 ///|
+fn parse_operand(token : String, case : TestCase) -> (Decimal, Flags) raise {
+  if token == "#" {
+    let flags = Flags::new()
+    flags.invalid_operation = true
+    return (Decimal::nan(), flags)
+  }
+  match format_token_kind(token) {
+    Some((kind, body)) =>
+      match kind {
+        32 | 64 | 128 => {
+          let d = Decimal::parse(body) catch { e => raise e }
+          let (hex, _flags) = encode_by_format(d, kind, case.rounding)
+          match decode_by_format(hex, kind) {
+            Some(decoded) => (decoded, Flags::new())
+            None =>
+              raise RunnerError(
+                "internal: encoded decimal\{kind} did not decode",
+              )
+          }
+        }
+        0 => {
+          let hex = body
+          let decoded = decode_hex_by_length(hex)
+          match decoded {
+            Some(d) => (d, Flags::new())
+            None => raise RunnerError("invalid interchange hex '\{token}'")
+          }
+        }
+        _ => raise RunnerError("unsupported interchange format '\{kind}'")
+      }
+    None => {
+      let d = Decimal::parse(token) catch { e => raise e }
+      (d, Flags::new())
+    }
+  }
+}
+
+///|
+fn render_decimal_result(
+  case : TestCase,
+  result : Decimal,
+  flags : Flags,
+) -> (String, Flags) raise RunnerError {
+  match result_format_kind(case.expected) {
+    Some(kind) => {
+      let (hex, encode_flags) = encode_by_format(result, kind, case.rounding)
+      ("#" + hex, flags.combine(encode_flags))
+    }
+    None => (result.to_sci_string(), flags)
+  }
+}
+
+///|
+fn expected_token_for_compare(case : TestCase) -> String raise RunnerError {
+  match format_token_kind(case.expected) {
+    Some((kind, body)) =>
+      match kind {
+        32 | 64 | 128 => {
+          let d = Decimal::parse(body) catch {
+            _ =>
+              raise RunnerError(
+                "bad expected format operand '\{case.expected}'",
+              )
+          }
+          let (hex, _flags) = encode_by_format(d, kind, case.rounding)
+          "#" + hex
+        }
+        0 => {
+          guard decode_hex_by_length(body) is Some(_) else {
+            raise RunnerError("bad expected interchange hex '\{case.expected}'")
+          }
+          "#" + uppercase_ascii(body)
+        }
+        _ => raise RunnerError("unsupported expected format '\{kind}'")
+      }
+    None => case.expected
+  }
+}
+
+///|
+fn result_format_kind(token : String) -> Int? {
+  match format_token_kind(token) {
+    Some((kind, body)) =>
+      if kind == 0 {
+        match body.length() {
+          8 => Some(32)
+          16 => Some(64)
+          32 => Some(128)
+          _ => None
+        }
+      } else {
+        Some(kind)
+      }
+    None => None
+  }
+}
+
+///|
+fn format_token_kind(token : String) -> (Int, String)? {
+  match token.find("#") {
+    Some(i) =>
+      if i == 0 {
+        if token.length() == 1 {
+          None
+        } else {
+          Some((0, token[1:].to_owned()))
+        }
+      } else {
+        let tag = token[:i].to_owned()
+        let body = token[i + 1:].to_owned()
+        if tag == "32" {
+          Some((32, body))
+        } else if tag == "64" {
+          Some((64, body))
+        } else if tag == "128" {
+          Some((128, body))
+        } else {
+          None
+        }
+      }
+    None => None
+  }
+}
+
+///|
+fn encode_by_format(
+  d : Decimal,
+  kind : Int,
+  rounding : Rounding,
+) -> (String, Flags) raise RunnerError {
+  match kind {
+    32 => d.to_decimal32_hex(rounding~)
+    64 => d.to_decimal64_hex(rounding~)
+    128 => d.to_decimal128_hex(rounding~)
+    _ => raise RunnerError("unsupported decimal interchange format \{kind}")
+  }
+}
+
+///|
+fn decode_by_format(hex : String, kind : Int) -> Decimal? {
+  match kind {
+    32 => Decimal::from_decimal32_hex(hex)
+    64 => Decimal::from_decimal64_hex(hex)
+    128 => Decimal::from_decimal128_hex(hex)
+    _ => None
+  }
+}
+
+///|
+fn decode_hex_by_length(hex : String) -> Decimal? {
+  match hex.length() {
+    8 => Decimal::from_decimal32_hex(hex)
+    16 => Decimal::from_decimal64_hex(hex)
+    32 => Decimal::from_decimal128_hex(hex)
+    _ => None
+  }
+}
+
+///|
 /// Apply a context-aware ternary op (`(Decimal, Decimal, Decimal, Context)
 /// -> Decimal`) to the three operands. Used by `fma`.
 fn ternary_ctx(
@@ -557,17 +727,17 @@ fn ternary_ctx(
   if case.operands.length() != 3 {
     raise RunnerError("expects 3 operands, got \{case.operands.length()}")
   }
-  let a = Decimal::parse(case.operands[0]) catch {
+  let (a, fa) = parse_operand(case.operands[0], case) catch {
     _ => return conv_syntax_result()
   }
-  let b = Decimal::parse(case.operands[1]) catch {
+  let (b, fb) = parse_operand(case.operands[1], case) catch {
     _ => return conv_syntax_result()
   }
-  let c = Decimal::parse(case.operands[2]) catch {
+  let (c, fc) = parse_operand(case.operands[2], case) catch {
     _ => return conv_syntax_result()
   }
   let (result, flags) = op(a, b, c, ctx_for(case))
-  (result.to_sci_string(), flags)
+  render_decimal_result(case, result, fa.combine(fb).combine(fc).combine(flags))
 }
 
 ///|
@@ -581,11 +751,11 @@ fn unary_ctx_string(
   if case.operands.length() != 1 {
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
-  let parsed = Decimal::parse(case.operands[0]) catch {
+  let (parsed, operand_flags) = parse_operand(case.operands[0], case) catch {
     _ => return conv_syntax_result()
   }
   let ctx = ctx_for(case)
-  (op(parsed, ctx), ctx.flags)
+  (op(parsed, ctx), operand_flags.combine(ctx.flags))
 }
 
 ///|
@@ -597,11 +767,11 @@ fn unary_ctx(
   if case.operands.length() != 1 {
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
-  let parsed = Decimal::parse(case.operands[0]) catch {
+  let (parsed, operand_flags) = parse_operand(case.operands[0], case) catch {
     _ => return conv_syntax_result()
   }
   let (result, flags) = op(parsed, ctx_for(case))
-  (result.to_sci_string(), flags)
+  render_decimal_result(case, result, operand_flags.combine(flags))
 }
 
 ///|
@@ -615,10 +785,10 @@ fn unary_bitlevel(
   if case.operands.length() != 1 {
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
-  let parsed = Decimal::parse(case.operands[0]) catch {
+  let (parsed, operand_flags) = parse_operand(case.operands[0], case) catch {
     _ => return conv_syntax_result()
   }
-  (op(parsed).to_sci_string(), Flags::new())
+  render_decimal_result(case, op(parsed), operand_flags)
 }
 
 ///|
@@ -630,13 +800,13 @@ fn binary_bitlevel(
   if case.operands.length() != 2 {
     raise RunnerError("expects 2 operands, got \{case.operands.length()}")
   }
-  let lhs = Decimal::parse(case.operands[0]) catch {
+  let (lhs, fl) = parse_operand(case.operands[0], case) catch {
     _ => return conv_syntax_result()
   }
-  let rhs = Decimal::parse(case.operands[1]) catch {
+  let (rhs, fr) = parse_operand(case.operands[1], case) catch {
     _ => return conv_syntax_result()
   }
-  (op(lhs, rhs).to_sci_string(), Flags::new())
+  render_decimal_result(case, op(lhs, rhs), fl.combine(fr))
 }
 
 ///|
@@ -647,10 +817,10 @@ fn unary_render(case : TestCase) -> (String, Flags) raise RunnerError {
   if case.operands.length() != 1 {
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
-  let parsed = Decimal::parse(case.operands[0]) catch {
+  let (parsed, operand_flags) = parse_operand(case.operands[0], case) catch {
     _ => return conv_syntax_result()
   }
-  (parsed.to_sci_string(), Flags::new())
+  render_decimal_result(case, parsed, operand_flags)
 }
 
 ///|
@@ -666,14 +836,14 @@ fn unary(
   if case.operands.length() != 1 {
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
-  let parsed = Decimal::parse(case.operands[0]) catch {
+  let (parsed, operand_flags) = parse_operand(case.operands[0], case) catch {
     _ => return conv_syntax_result()
   }
   let flags = Flags::new()
   if parsed.class is SNaN {
     flags.invalid_operation = true
   }
-  (op(parsed).to_sci_string(), flags)
+  render_decimal_result(case, op(parsed), operand_flags.combine(flags))
 }
 
 ///|
@@ -685,14 +855,14 @@ fn binary_ctx(
   if case.operands.length() != 2 {
     raise RunnerError("expects 2 operands, got \{case.operands.length()}")
   }
-  let lhs = Decimal::parse(case.operands[0]) catch {
+  let (lhs, fl) = parse_operand(case.operands[0], case) catch {
     _ => return conv_syntax_result()
   }
-  let rhs = Decimal::parse(case.operands[1]) catch {
+  let (rhs, fr) = parse_operand(case.operands[1], case) catch {
     _ => return conv_syntax_result()
   }
   let (result, flags) = op(lhs, rhs, ctx_for(case))
-  (result.to_sci_string(), flags)
+  render_decimal_result(case, result, fl.combine(fr).combine(flags))
 }
 
 ///|
@@ -705,13 +875,13 @@ fn binary(
   if case.operands.length() != 2 {
     raise RunnerError("expects 2 operands, got \{case.operands.length()}")
   }
-  let lhs = Decimal::parse(case.operands[0]) catch {
+  let (lhs, fl) = parse_operand(case.operands[0], case) catch {
     _ => return conv_syntax_result()
   }
-  let rhs = Decimal::parse(case.operands[1]) catch {
+  let (rhs, fr) = parse_operand(case.operands[1], case) catch {
     _ => return conv_syntax_result()
   }
-  (op(lhs, rhs).to_sci_string(), Flags::new())
+  render_decimal_result(case, op(lhs, rhs), fl.combine(fr))
 }
 
 ///|
@@ -738,6 +908,23 @@ fn ascii_lowercase(s : String) -> String {
     let c = char_at(s, i)
     if c >= 'A' && c <= 'Z' {
       buf.write_char((c.to_int() + 32).unsafe_to_char())
+    } else {
+      buf.write_char(c)
+    }
+    i = i + 1
+  }
+  buf.to_string()
+}
+
+///|
+fn uppercase_ascii(s : String) -> String {
+  let buf = StringBuilder::new()
+  let n = s.length()
+  let mut i = 0
+  while i < n {
+    let c = char_at(s, i)
+    if c >= 'a' && c <= 'z' {
+      buf.write_char((c.to_int() - 32).unsafe_to_char())
     } else {
       buf.write_char(c)
     }
