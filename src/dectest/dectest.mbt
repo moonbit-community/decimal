@@ -515,13 +515,24 @@ fn unary_apply(case : TestCase) -> (String, Flags) raise RunnerError {
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
   let x = Decimal::parse(case.operands[0]) catch {
-    e => raise RunnerError("parse error: \{e}")
+    _ => return conv_syntax_result()
   }
   let one = Decimal::parse("1") catch {
     _ => raise RunnerError("internal: literal 1 failed to parse")
   }
   let (result, flags) = x.multiply(one, ctx_for(case))
   (result.to_sci_string(), flags)
+}
+
+///|
+/// GDA result for a malformed operand: any operation that can't convert its
+/// string operand yields a quiet `NaN` with `conversion_syntax` raised. The
+/// operand-parse `catch` arms short-circuit to this instead of erroring out,
+/// so the corpus's malformed-operand cases exercise the real GDA behaviour.
+fn conv_syntax_result() -> (String, Flags) {
+  let flags = Flags::new()
+  flags.conversion_syntax = true
+  ("NaN", flags)
 }
 
 ///|
@@ -547,13 +558,13 @@ fn ternary_ctx(
     raise RunnerError("expects 3 operands, got \{case.operands.length()}")
   }
   let a = Decimal::parse(case.operands[0]) catch {
-    e => raise RunnerError("parse error in operand 0: \{e}")
+    _ => return conv_syntax_result()
   }
   let b = Decimal::parse(case.operands[1]) catch {
-    e => raise RunnerError("parse error in operand 1: \{e}")
+    _ => return conv_syntax_result()
   }
   let c = Decimal::parse(case.operands[2]) catch {
-    e => raise RunnerError("parse error in operand 2: \{e}")
+    _ => return conv_syntax_result()
   }
   let (result, flags) = op(a, b, c, ctx_for(case))
   (result.to_sci_string(), flags)
@@ -571,7 +582,7 @@ fn unary_ctx_string(
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
   let parsed = Decimal::parse(case.operands[0]) catch {
-    e => raise RunnerError("parse error: \{e}")
+    _ => return conv_syntax_result()
   }
   let ctx = ctx_for(case)
   (op(parsed, ctx), ctx.flags)
@@ -587,7 +598,7 @@ fn unary_ctx(
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
   let parsed = Decimal::parse(case.operands[0]) catch {
-    e => raise RunnerError("parse error: \{e}")
+    _ => return conv_syntax_result()
   }
   let (result, flags) = op(parsed, ctx_for(case))
   (result.to_sci_string(), flags)
@@ -605,7 +616,7 @@ fn unary_bitlevel(
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
   let parsed = Decimal::parse(case.operands[0]) catch {
-    e => raise RunnerError("parse error: \{e}")
+    _ => return conv_syntax_result()
   }
   (op(parsed).to_sci_string(), Flags::new())
 }
@@ -620,10 +631,10 @@ fn binary_bitlevel(
     raise RunnerError("expects 2 operands, got \{case.operands.length()}")
   }
   let lhs = Decimal::parse(case.operands[0]) catch {
-    e => raise RunnerError("parse error in operand 0: \{e}")
+    _ => return conv_syntax_result()
   }
   let rhs = Decimal::parse(case.operands[1]) catch {
-    e => raise RunnerError("parse error in operand 1: \{e}")
+    _ => return conv_syntax_result()
   }
   (op(lhs, rhs).to_sci_string(), Flags::new())
 }
@@ -637,7 +648,7 @@ fn unary_render(case : TestCase) -> (String, Flags) raise RunnerError {
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
   let parsed = Decimal::parse(case.operands[0]) catch {
-    e => raise RunnerError("parse error: \{e}")
+    _ => return conv_syntax_result()
   }
   (parsed.to_sci_string(), Flags::new())
 }
@@ -656,7 +667,7 @@ fn unary(
     raise RunnerError("expects 1 operand, got \{case.operands.length()}")
   }
   let parsed = Decimal::parse(case.operands[0]) catch {
-    e => raise RunnerError("parse error: \{e}")
+    _ => return conv_syntax_result()
   }
   let flags = Flags::new()
   if parsed.class is SNaN {
@@ -675,10 +686,10 @@ fn binary_ctx(
     raise RunnerError("expects 2 operands, got \{case.operands.length()}")
   }
   let lhs = Decimal::parse(case.operands[0]) catch {
-    e => raise RunnerError("parse error in operand 0: \{e}")
+    _ => return conv_syntax_result()
   }
   let rhs = Decimal::parse(case.operands[1]) catch {
-    e => raise RunnerError("parse error in operand 1: \{e}")
+    _ => return conv_syntax_result()
   }
   let (result, flags) = op(lhs, rhs, ctx_for(case))
   (result.to_sci_string(), flags)
@@ -695,10 +706,10 @@ fn binary(
     raise RunnerError("expects 2 operands, got \{case.operands.length()}")
   }
   let lhs = Decimal::parse(case.operands[0]) catch {
-    e => raise RunnerError("parse error in operand 0: \{e}")
+    _ => return conv_syntax_result()
   }
   let rhs = Decimal::parse(case.operands[1]) catch {
-    e => raise RunnerError("parse error in operand 1: \{e}")
+    _ => return conv_syntax_result()
   }
   (op(lhs, rhs).to_sci_string(), Flags::new())
 }

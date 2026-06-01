@@ -1,0 +1,4 @@
+import {
+  "DzmingLi/decimal",
+  "DzmingLi/decimal/dectest",
+}
