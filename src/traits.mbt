@@ -75,42 +75,83 @@ pub impl Hash for Decimal with fn hash_combine(self, hasher) {
 // ---------------------------------------------------------------------------
 // Arithmetic operators.
 //
-// `+ - * /` and unary `-` are a convenience over the explicit-context methods,
-// evaluated under a fixed `decimal128` context with a fresh flag set per call —
-// so an operator never reads or mutates shared state. Reach for `add(_, ctx)`
-// etc. when you need a different precision/rounding or want to observe the
-// status flags a computation raised.
+// `+ - * /` and unary `-` are a convenience over the explicit-context methods.
+// Each evaluates under the *active* context: the `decimal128` baseline by
+// default, or whatever context the enclosing `with_context` block installed.
+// Outside a block every operator gets a fresh flag set and touches no shared
+// state; inside a block, operators accumulate their flags into the block's
+// context so `with_context` can hand them back. Reach for `add(_, ctx)` etc.
+// when you want a one-off precision or to observe flags without a block.
 // ---------------------------------------------------------------------------
 
 ///|
-/// The context the arithmetic operators (`+ - * /`, unary `-`) evaluate under:
-/// a fresh `decimal128`. Fixed by design; use the explicit-context methods for
-/// any other precision.
+/// The baseline context for the arithmetic operators when no `with_context`
+/// block is active: a fresh `decimal128` (precision 34, half-even). Override it
+/// for a dynamic extent with `with_context`.
 pub fn default_context() -> Context {
   Context::decimal128()
 }
 
 ///|
+/// Context installed by the innermost active `with_context` block. `None` means
+/// no block is active and the operators fall back to `default_context()`.
+let active_ctx_slot : Ref[Context?] = { val: None }
+
+///|
+/// The context the arithmetic operators currently evaluate under: the active
+/// `with_context` context if a block is running, else a fresh `default_context`.
+fn active_context() -> Context {
+  match active_ctx_slot.val {
+    Some(ctx) => ctx
+    None => default_context()
+  }
+}
+
+///|
+/// Run `f` with the arithmetic operators (`+ - * /`, unary `-`) evaluating
+/// under `ctx` for the dynamic extent of the call, then restore the previously
+/// active context. Returns `f`'s result together with the status flags every
+/// operator inside the block accumulated.
+///
+/// The caller's own `ctx` value is never mutated: the block runs on a fresh
+/// copy with cleared flags. Blocks nest — an inner `with_context` restores the
+/// outer context on exit, not the global default.
+///
+/// ```
+/// let (sum, _flags) = with_context(Context::decimal64(), fn() {
+///   Decimal::from_int(1) + Decimal::from_int(2) // evaluated at 16-digit decimal64
+/// })
+/// ```
+pub fn[T] with_context(ctx : Context, f : () -> T) -> (T, Flags) {
+  let installed = { ..ctx, flags: Flags::new() }
+  let saved = active_ctx_slot.val
+  active_ctx_slot.val = Some(installed)
+  let result = f()
+  active_ctx_slot.val = saved
+  (result, installed.flags)
+}
+
+///|
 pub impl Add for Decimal with fn add(self, other) {
-  Decimal::add_raw(self, other, default_context())
+  Decimal::add_raw(self, other, active_context())
 }
 
 ///|
 pub impl Sub for Decimal with fn sub(self, other) {
-  self.subtract_raw(other, default_context())
+  self.subtract_raw(other, active_context())
 }
 
 ///|
 pub impl Mul for Decimal with fn mul(self, other) {
-  self.multiply_raw(other, default_context())
+  self.multiply_raw(other, active_context())
 }
 
 ///|
 pub impl Div for Decimal with fn div(self, other) {
-  self.divide_raw(other, default_context())
+  self.divide_raw(other, active_context())
 }
 
 ///|
 pub impl Neg for Decimal with fn neg(self) {
-  self.minus_raw(default_context())
+  self.minus_raw(active_context())
 }
