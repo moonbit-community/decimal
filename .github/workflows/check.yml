@@ -22,7 +22,7 @@ jobs:
       OS_PLATFORM: ${{ matrix.os.name }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: install
         if: ${{ matrix.os.name != 'windows-latest' }}
@@ -54,7 +54,7 @@ jobs:
           moon test --target all --serial
 
       - name: moon test (native)
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 5
@@ -87,7 +87,7 @@ jobs:
       OS_PLATFORM: ${{ matrix.os.name }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: install
         if: ${{ matrix.os.name != 'windows-latest' }}
@@ -121,7 +121,7 @@ jobs:
           moon test --target all --serial
 
       - name: moon test (native)
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 5
