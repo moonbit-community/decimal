@@ -27,11 +27,20 @@ test "to_json is the scientific string, quoted" {
 }
 
 ///|
+/// `true` when decoding `j` into a `Decimal` raises (the rejection path).
+fn decode_fails(j : Json) -> Bool {
+  try {
+    let _ : Decimal = @json.from_json(j)
+    false
+  } catch {
+    _ => true
+  }
+}
+
+///|
 test "from_json rejects non-strings and bad literals" {
-  assert_true((try? (@json.from_json(1.5.to_json()) : Decimal)) is Err(_))
-  assert_true(
-    (try? (@json.from_json("not a number".to_json()) : Decimal)) is Err(_),
-  )
+  assert_true(decode_fails(1.5.to_json()))
+  assert_true(decode_fails("not a number".to_json()))
 }
 
 ///|

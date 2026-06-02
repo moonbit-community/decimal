@@ -113,33 +113,43 @@ test "parse signaling nan" {
 }
 
 ///|
+/// Capture a parse attempt as a `Result` so the rejection tests can match on the
+/// error variant. The real API is the raising `Decimal::parse`; this wrapper
+/// just turns the raise into a value via `try ... catch`.
+fn try_parse(s : String) -> Result[Decimal, ParseError] {
+  Ok(Decimal::parse(s)) catch {
+    e => Err(e)
+  }
+}
+
+///|
 test "reject empty input" {
-  assert_true((try? Decimal::parse("")) is Err(Empty))
+  assert_true(try_parse("") is Err(Empty))
 }
 
 ///|
 test "reject lone dot" {
-  assert_true((try? Decimal::parse(".")) is Err(ExpectedDigit(..)))
+  assert_true(try_parse(".") is Err(ExpectedDigit(..)))
 }
 
 ///|
 test "reject exponent without digits" {
-  assert_true((try? Decimal::parse("1e")) is Err(InvalidExponent(..)))
-  assert_true((try? Decimal::parse("1e+")) is Err(InvalidExponent(..)))
+  assert_true(try_parse("1e") is Err(InvalidExponent(..)))
+  assert_true(try_parse("1e+") is Err(InvalidExponent(..)))
 }
 
 ///|
 test "reject malformed special keyword" {
-  assert_true((try? Decimal::parse("Inx")) is Err(_))
-  assert_true((try? Decimal::parse("Na")) is Err(_))
-  assert_true((try? Decimal::parse("sNa")) is Err(_))
+  assert_true(try_parse("Inx") is Err(_))
+  assert_true(try_parse("Na") is Err(_))
+  assert_true(try_parse("sNa") is Err(_))
 }
 
 ///|
 test "reject underscore separator and whitespace" {
-  assert_true((try? Decimal::parse("1_000")) is Err(_))
-  assert_true((try? Decimal::parse(" 1")) is Err(_))
-  assert_true((try? Decimal::parse("1 ")) is Err(_))
+  assert_true(try_parse("1_000") is Err(_))
+  assert_true(try_parse(" 1") is Err(_))
+  assert_true(try_parse("1 ") is Err(_))
 }
 
 ///|
