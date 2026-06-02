@@ -24,12 +24,6 @@ target `decimal32`, `decimal64`, `decimal128`, or an unbounded exact context.
 For quick math, the `+` `-` `*` `/` operators work directly under a fixed
 default context.
 
-## Status
-
-Early but well-tested. Every operation is checked against the IBM `.decTest`
-conformance corpora embedded under [`src/tests/`](src/tests/), including
-decimal32/decimal64/decimal128 interchange-format operands/results.
-
 ## Installation
 
 Add the module from the [MoonBit registry](https://mooncakes.io/docs/DzmingLi/decimal):
