@@ -1,8 +1,8 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "DzmingLi/decimal/dectest"
+package "moonbit-community/decimal/dectest"
 
 import {
-  "DzmingLi/decimal",
+  "moonbit-community/decimal",
 }
 
 // Values

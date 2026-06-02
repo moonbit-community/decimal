@@ -22,7 +22,7 @@ test "to_double fast path matches the correctly-rounded string parser" {
           c.to_string() +
           "e" +
           e.to_string()
-        let fast = (Decimal::parse(lit) catch { _ => Decimal::of_int64(0L) }).to_double()
+        let fast = (Decimal::parse(lit) catch { _ => Decimal::from_int64(0L) }).to_double()
         let reference = @string.parse_double(lit) catch { _ => 0.0 }
         if fast.reinterpret_as_int64() != reference.reinterpret_as_int64() {
           mismatches = mismatches + 1

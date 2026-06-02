@@ -53,7 +53,7 @@ pub impl Show for Decimal with fn to_string(self) {
 /// Construct a finite decimal `(-1)^negative * coefficient * 10^exponent`, or
 /// `None` if `coefficient` is negative (the representation keeps the sign in
 /// `negative` and the coefficient non-negative). For a signed integer use
-/// `of_bigint` / `of_int`; this constructor is for when you need an explicit
+/// `from_bigint` / `from_int`; this constructor is for when you need an explicit
 /// exponent (e.g. `try_finite(150N, -2)` is `1.50`) or an explicit `-0`.
 pub fn Decimal::try_finite(
   coefficient : BigInt,
@@ -68,8 +68,8 @@ pub fn Decimal::try_finite(
 /// Low-level finite constructor that trusts `coefficient >= 0` and skips the
 /// check. The result is malformed (and downstream behavior undefined) if the
 /// coefficient is negative — callers maintaining the representation invariant
-/// use this; everyone else uses `try_finite` or `of_bigint`.
-pub fn Decimal::finite_unchecked(
+/// use this; everyone else uses `try_finite` or `from_bigint`.
+pub fn Decimal::unsafe_finite(
   coefficient : BigInt,
   exponent : Int,
   negative? : Bool = false,
@@ -179,7 +179,7 @@ pub fn Decimal::snan(
 
 ///|
 /// Lift a `BigInt` into a `Decimal` at exponent 0.
-pub fn Decimal::of_bigint(n : BigInt) -> Decimal {
+pub fn Decimal::from_bigint(n : BigInt) -> Decimal {
   if n >= 0N {
     { class: Finite, negative: false, coefficient: n, exponent: 0 }
   } else {
@@ -189,8 +189,8 @@ pub fn Decimal::of_bigint(n : BigInt) -> Decimal {
 
 ///|
 /// Lift an `Int` into a `Decimal` at exponent 0.
-pub fn Decimal::of_int(n : Int) -> Decimal {
-  Decimal::of_bigint(BigInt::from_int(n))
+pub fn Decimal::from_int(n : Int) -> Decimal {
+  Decimal::from_bigint(BigInt::from_int(n))
 }
 
 ///|

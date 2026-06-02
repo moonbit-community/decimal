@@ -143,9 +143,9 @@ test "reject underscore separator and whitespace" {
 }
 
 ///|
-test "of_string: GDA to-number rounds, flags, and conversion_syntax" {
+test "from_string: GDA to-number rounds, flags, and conversion_syntax" {
   // Valid literal with more digits than precision → rounded + inexact.
-  let (r, flags) = Decimal::of_string(
+  let (r, flags) = Decimal::from_string(
     "1.23456789",
     Context::new(precision=3, rounding=HalfUp),
   )
@@ -154,11 +154,11 @@ test "of_string: GDA to-number rounds, flags, and conversion_syntax" {
   assert_true(flags.inexact)
   assert_false(flags.conversion_syntax)
   // Malformed input → quiet NaN + conversion_syntax (no raise).
-  let (bad, bf) = Decimal::of_string("not a number", Context::new())
+  let (bad, bf) = Decimal::from_string("not a number", Context::new())
   assert_true(bad.is_nan())
   assert_true(bf.conversion_syntax)
   // Valid, exact context → unchanged, no flags.
-  let (e, ef) = Decimal::of_string("1.5", Context::exact())
+  let (e, ef) = Decimal::from_string("1.5", Context::exact())
   assert_eq(e.to_sci_string(), "1.5")
   assert_false(ef.conversion_syntax)
 }

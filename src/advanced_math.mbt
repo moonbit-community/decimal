@@ -325,7 +325,7 @@ fn log10_finite(x : Decimal, ctx : Context) -> Decimal {
   match power_of_ten_log(x) {
     // log10(10^k) = k; still finalized so it fits precision (may round).
     Some(k) =>
-      return Decimal::of_int(k).finalize_raw({ ..ctx, rounding: HalfEven })
+      return Decimal::from_int(k).finalize_raw({ ..ctx, rounding: HalfEven })
     None => ()
   }
   let p = ctx.precision

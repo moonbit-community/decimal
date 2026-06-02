@@ -4,7 +4,7 @@
 // Two directions with deliberately different totality:
 //
 // * `of_*` widen a machine value into the (broader) decimal domain. They are
-//   total and exact — `of_double` keeps every bit of the binary value.
+//   total and exact — `from_double` keeps every bit of the binary value.
 // * `to_*` narrow a decimal into a (smaller) machine type, so they are
 //   partial: the integer extractors return `None` when the value is not a
 //   finite integer or falls outside the target's range, and `to_double`
@@ -33,8 +33,8 @@ let pow10_dbl_table : Array[Double] = {
 
 ///|
 /// Lift an `Int64` into a `Decimal` at exponent 0. Exact and total.
-pub fn Decimal::of_int64(n : Int64) -> Decimal {
-  Decimal::of_bigint(BigInt::from_int64(n))
+pub fn Decimal::from_int64(n : Int64) -> Decimal {
+  Decimal::from_bigint(BigInt::from_int64(n))
 }
 
 ///|
@@ -42,12 +42,12 @@ pub fn Decimal::of_int64(n : Int64) -> Decimal {
 ///
 /// A finite double is a binary fraction `±mantissa × 2^e`, which has an exact
 /// finite decimal expansion — so the result is faithful, not rounded:
-/// `of_double(0.1)` is `0.1000000000000000055511151231257827021181583404541015625`,
+/// `from_double(0.1)` is `0.1000000000000000055511151231257827021181583404541015625`,
 /// the value `0.1` actually denotes in binary64. (For the short, human-facing
 /// form instead, parse the rendered string: `Decimal::parse(d.to_string())`.)
 ///
 /// `NaN` and `±Infinity` map to the corresponding decimal specials.
-pub fn Decimal::of_double(x : Double) -> Decimal {
+pub fn Decimal::from_double(x : Double) -> Decimal {
   let bits = x.reinterpret_as_int64()
   let negative = bits < 0L
   // Bit layout: [sign:1][biased exponent:11][fraction:52].
@@ -73,7 +73,7 @@ pub fn Decimal::of_double(x : Double) -> Decimal {
   }
   // Strip the significand's trailing factors of two, lifting them into the
   // exponent. This yields the canonical exact decimal (the cohort member with
-  // the fewest trailing zeros): `of_double(2.0)` is `2`, not `2.000…`.
+  // the fewest trailing zeros): `from_double(2.0)` is `2`, not `2.000…`.
   let (mantissa, exp2) = for m = mantissa, e = exp2; (m & 1L) == 0L; {
     continue m >> 1, e + 1
   } nobreak {

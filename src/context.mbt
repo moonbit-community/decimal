@@ -54,7 +54,7 @@ pub(all) struct Flags {
   mut underflow : Bool
   mut subnormal : Bool
   mut clamped : Bool
-  /// Raised by `of_string` (GDA `to-number`) when the input doesn't match the
+  /// Raised by `from_string` (GDA `to-number`) when the input doesn't match the
   /// GDA grammar: the result is a quiet NaN and this flag is set. (`parse`
   /// instead reports a syntax error as a catchable `ParseError`.)
   mut conversion_syntax : Bool

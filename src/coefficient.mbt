@@ -52,7 +52,7 @@ fn pow10(n : Int) -> BigInt {
 }
 
 ///|
-/// Powers of five `5^0` … `5^POW5_MAX`, built once at startup. `of_double`
+/// Powers of five `5^0` … `5^POW5_MAX`, built once at startup. `from_double`
 /// spreads a binary fraction's `2^-k` as `5^k × 10^-k`, so the conversion's hot
 /// factor is a power of five; caching them avoids a `BigInt::pow` per call.
 const POW5_MAX : Int = 128

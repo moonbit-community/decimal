@@ -77,8 +77,8 @@ test "bench parse" (b : @bench.T) {
 }
 
 ///|
-test "bench of_double" (b : @bench.T) {
-  b.bench(() => b.keep(Decimal::of_double(3.141592653589793)))
+test "bench from_double" (b : @bench.T) {
+  b.bench(() => b.keep(Decimal::from_double(3.141592653589793)))
 }
 
 ///|

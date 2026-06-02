@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "DzmingLi/decimal"
+package "moonbit-community/decimal"
 
 import {
   "moonbitlang/core/bigint",
@@ -54,7 +54,7 @@ pub fn Decimal::canonical(Self) -> Self
 pub fn Decimal::compare(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::compare_signal(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::compare_total(Self, Self) -> Self
-pub fn Decimal::compare_total_mag(Self, Self) -> Self
+pub fn Decimal::compare_total_magnitude(Self, Self) -> Self
 pub fn Decimal::copy(Self) -> Self
 pub fn Decimal::copy_abs(Self) -> Self
 pub fn Decimal::copy_negate(Self) -> Self
@@ -63,7 +63,7 @@ pub fn Decimal::divide(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::divide_int(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::exp(Self, Context) -> (Self, Flags)
 pub fn Decimal::finalize(Self, Context) -> (Self, Flags)
-pub fn Decimal::finite_unchecked(@bigint.BigInt, Int, negative? : Bool) -> Self
+pub fn Decimal::unsafe_finite(@bigint.BigInt, Int, negative? : Bool) -> Self
 pub fn Decimal::fma(Self, Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::from_decimal128_hex(String) -> Self?
 pub fn Decimal::from_decimal32_hex(String) -> Self?
@@ -95,11 +95,11 @@ pub fn Decimal::next_minus(Self, Context) -> (Self, Flags)
 pub fn Decimal::next_plus(Self, Context) -> (Self, Flags)
 pub fn Decimal::next_toward(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::number_class(Self, Context) -> String
-pub fn Decimal::of_bigint(@bigint.BigInt) -> Self
-pub fn Decimal::of_double(Double) -> Self
-pub fn Decimal::of_int(Int) -> Self
-pub fn Decimal::of_int64(Int64) -> Self
-pub fn Decimal::of_string(String, Context) -> (Self, Flags)
+pub fn Decimal::from_bigint(@bigint.BigInt) -> Self
+pub fn Decimal::from_double(Double) -> Self
+pub fn Decimal::from_int(Int) -> Self
+pub fn Decimal::from_int64(Int64) -> Self
+pub fn Decimal::from_string(String, Context) -> (Self, Flags)
 pub fn Decimal::one() -> Self
 pub fn Decimal::parse(String) -> Self raise ParseError
 pub fn Decimal::plus(Self, Context) -> (Self, Flags)

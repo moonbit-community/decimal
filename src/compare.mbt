@@ -37,7 +37,7 @@ fn Decimal::compare_raw(
     Some(d) => return d
     None => ()
   }
-  Decimal::of_int(compare_numeric_int(self, other))
+  Decimal::from_int(compare_numeric_int(self, other))
 }
 
 ///|
@@ -285,14 +285,14 @@ fn max_min_choose(
 /// the smaller exponent sorts first — regardless of sign. This is GDA's
 /// sign-independent tie-break rule.
 pub fn Decimal::compare_total(self : Decimal, other : Decimal) -> Decimal {
-  Decimal::of_int(compare_total_int(self, other))
+  Decimal::from_int(compare_total_int(self, other))
 }
 
 ///|
 /// GDA `compare-total-magnitude`: `compare-total` applied to `|self|` and
 /// `|other|`. Sign-stripping happens via `copy_abs`, which clears the sign
 /// bit even on NaN.
-pub fn Decimal::compare_total_mag(self : Decimal, other : Decimal) -> Decimal {
+pub fn Decimal::compare_total_magnitude(self : Decimal, other : Decimal) -> Decimal {
   Decimal::compare_total(Decimal::copy_abs(self), Decimal::copy_abs(other))
 }
 

@@ -441,7 +441,7 @@ fn compute(case : TestCase) -> (String, Flags)? raise RunnerError {
   } else if ascii_eq_ci(case.op, "comparetotal") {
     Some(binary(case, Decimal::compare_total))
   } else if ascii_eq_ci(case.op, "comparetotmag") {
-    Some(binary(case, Decimal::compare_total_mag))
+    Some(binary(case, Decimal::compare_total_magnitude))
   } else if ascii_eq_ci(case.op, "samequantum") {
     Some(binary(case, Decimal::same_quantum))
   } else if ascii_eq_ci(case.op, "quantize") {

@@ -2,13 +2,13 @@
 
 Arbitrary-precision decimal arithmetic for MoonBit.
 
-[![mooncakes.io](https://img.shields.io/badge/mooncakes.io-DzmingLi%2Fdecimal-blue)](https://mooncakes.io/docs/DzmingLi/decimal)
+[![mooncakes.io](https://img.shields.io/badge/mooncakes.io-moonbit-community%2Fdecimal-blue)](https://mooncakes.io/docs/moonbit-community/decimal)
 [![MoonBit library](https://img.shields.io/badge/MoonBit-library-blue.svg)](https://www.moonbitlang.com/)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
 
 ## Overview
 
-`DzmingLi/decimal` is an arbitrary-precision decimal arithmetic library for
+`moonbit-community/decimal` is an arbitrary-precision decimal arithmetic library for
 [MoonBit](https://www.moonbitlang.com/). It implements the
 [General Decimal Arithmetic specification](https://speleotrove.com/decimal/decarith.html)
 (v1.70, Mike Cowlishaw / IBM — the decimal arithmetic of IEEE 754-2008):
@@ -26,17 +26,17 @@ default context.
 
 ## Installation
 
-Add the module from the [MoonBit registry](https://mooncakes.io/docs/DzmingLi/decimal):
+Add the module from the [MoonBit registry](https://mooncakes.io/docs/moonbit-community/decimal):
 
 ```shell
-moon add DzmingLi/decimal
+moon add moonbit-community/decimal
 ```
 
 Then import it from your package manifest:
 
 ```moonbit
 import {
-  "DzmingLi/decimal",
+  "moonbit-community/decimal",
 }
 ```
 
@@ -57,7 +57,7 @@ println(flags.inexact) // false
 
 // Money: round a product to two fractional digits.
 let price = @decimal.Decimal::parse("19.99")
-let qty = @decimal.Decimal::of_int(3)
+let qty = @decimal.Decimal::from_int(3)
 let (subtotal, _) = price.multiply(qty, ctx)
 let (total, _) = subtotal.quantize(@decimal.Decimal::parse("0.01"), ctx)
 println(total) // 59.97
@@ -74,7 +74,7 @@ unary `-` operators are conveniences over these, evaluated under a fixed
 - **Arithmetic**: `add` `subtract` `multiply` `divide` `divide_int`
   `remainder` `fma` `abs` `minus` `plus`
 - **Comparison**: `compare` `compare_signal` `compare_total`
-  `compare_total_mag` `max` `min` `max_magnitude` `min_magnitude`
+  `compare_total_magnitude` `max` `min` `max_magnitude` `min_magnitude`
   `same_quantum`
 - **Rounding / scaling**: `quantize` `rescale` `reduce` `scaleb`
   `to_integral_value` `to_integral_exact` `finalize`
@@ -96,9 +96,9 @@ signatures.
 Convert between `Decimal` and the machine numeric types:
 
 - **From strings**: `parse(s)` (exact; raises `ParseError` on bad input) and
-  `of_string(s, ctx)` (GDA *to-number*: rounds to the context and returns
+  `from_string(s, ctx)` (GDA *to-number*: rounds to the context and returns
   `(Decimal, Flags)`, yielding `NaN` with `conversion_syntax` set on bad input)
-- **From** (exact, total): `of_int` `of_int64` `of_bigint` `of_double`
+- **From** (exact, total): `from_int` `from_int64` `from_bigint` `from_double`
 - **To integer** (partial — `None` for non-finite, non-integer, or
   out-of-range values, never a silent truncation): `to_int` `to_int64`
   `to_bigint`
@@ -114,8 +114,8 @@ equal, `-0` equals `+0`, and `NaN` sorts below everything. For the
 specification's signalling, cohort-distinguishing comparisons use the explicit
 `compare` / `compare_signal` / `compare_total` methods.
 
-`of_double` keeps the double's exact binary value in canonical form, so
-`of_double(0.1)` is
+`from_double` keeps the double's exact binary value in canonical form, so
+`from_double(0.1)` is
 `0.1000000000000000055511151231257827021181583404541015625`. For the short,
 human-facing form, parse the rendered string instead:
 `Decimal::parse(d.to_string())`. To narrow a non-integer to an integer, round
@@ -124,7 +124,7 @@ first with `to_integral_value` / `to_integral_exact`.
 To build a value with an explicit exponent (a coefficient × 10ᵉ), use
 `try_finite(coef, exp, negative?) -> Decimal?` (e.g. `try_finite(150N, -2)` is
 `1.50`; `None` if the coefficient is negative — the sign lives in `negative`),
-or `finite_unchecked` when you already uphold that invariant.
+or `unsafe_finite` when you already uphold that invariant.
 
 `Decimal` also implements `ToJson` / `@json.FromJson`, serializing as the GDA
 string so values round-trip exactly (JSON numbers are binary64 and would lose
@@ -165,7 +165,7 @@ Microbenchmarks (small/large arithmetic, conversion, format, math functions)
 live in [`src/tests/benchmarks/`](src/tests/benchmarks/):
 
 ```shell
-moon bench -p DzmingLi/decimal/tests/benchmarks
+moon bench -p moonbit-community/decimal/tests/benchmarks
 ```
 
 ## Development

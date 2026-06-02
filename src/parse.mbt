@@ -267,7 +267,7 @@ fn match_ci(input : String, start : Int, word : String) -> Bool {
 /// / range flags. Use `parse` when a syntax error should be a catchable
 /// `ParseError`; use this when you want GDA's NaN-plus-`conversion_syntax`
 /// behaviour.
-pub fn Decimal::of_string(s : String, ctx : Context) -> (Decimal, Flags) {
+pub fn Decimal::from_string(s : String, ctx : Context) -> (Decimal, Flags) {
   Decimal::parse(s).finalize(ctx) catch {
     _ => {
       let flags = Flags::new()

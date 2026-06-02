@@ -1,51 +1,51 @@
 // Conversions between `Decimal` and the machine numeric types.
 
 ///|
-test "of_int64 widens exactly" {
-  inspect(Decimal::of_int64(0L), content="0")
+test "from_int64 widens exactly" {
+  inspect(Decimal::from_int64(0L), content="0")
   inspect(
-    Decimal::of_int64(9223372036854775807L),
+    Decimal::from_int64(9223372036854775807L),
     content="9223372036854775807",
   )
   inspect(
-    Decimal::of_int64(-9223372036854775808L),
+    Decimal::from_int64(-9223372036854775808L),
     content="-9223372036854775808",
   )
 }
 
 ///|
 /// Exact binary-fraction values round-trip through Decimal and back to the
-/// identical double — the strongest single check on of_double + to_double.
+/// identical double — the strongest single check on from_double + to_double.
 test "double round-trip is exact" {
   let xs : Array[Double] = [
     0.1, 0.5, 1.5, -2.5, 3.14159265358979, 1.0e10, 1.0e-10, 1234.5678, -0.0,
   ]
   for x in xs {
-    assert_eq(Decimal::of_double(x).to_double(), x)
+    assert_eq(Decimal::from_double(x).to_double(), x)
   }
 }
 
 ///|
 /// Powers of two and other dyadic values reduce to their canonical form (no
 /// spurious trailing zeros), matching Python's `Decimal(float)`.
-test "of_double canonical exact form" {
-  inspect(Decimal::of_double(2.0), content="2")
-  inspect(Decimal::of_double(0.5), content="0.5")
-  inspect(Decimal::of_double(-0.0), content="-0")
+test "from_double canonical exact form" {
+  inspect(Decimal::from_double(2.0), content="2")
+  inspect(Decimal::from_double(0.5), content="0.5")
+  inspect(Decimal::from_double(-0.0), content="-0")
   // 0.1 carries its full binary expansion (denominator 2^55).
   inspect(
-    Decimal::of_double(0.1),
+    Decimal::from_double(0.1),
     content="0.1000000000000000055511151231257827021181583404541015625",
   )
 }
 
 ///|
-test "of_double specials" {
+test "from_double specials" {
   let nan = (0.0 : Double) / 0.0
   let inf = (1.0 : Double) / 0.0
-  assert_true(Decimal::of_double(nan).is_nan())
-  assert_true(Decimal::of_double(inf).is_infinite())
-  let neg = Decimal::of_double(-inf)
+  assert_true(Decimal::from_double(nan).is_nan())
+  assert_true(Decimal::from_double(inf).is_infinite())
+  let neg = Decimal::from_double(-inf)
   assert_true(neg.is_infinite())
   inspect(neg, content="-Infinity")
 }
