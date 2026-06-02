@@ -292,7 +292,10 @@ pub fn Decimal::compare_total(self : Decimal, other : Decimal) -> Decimal {
 /// GDA `compare-total-magnitude`: `compare-total` applied to `|self|` and
 /// `|other|`. Sign-stripping happens via `copy_abs`, which clears the sign
 /// bit even on NaN.
-pub fn Decimal::compare_total_magnitude(self : Decimal, other : Decimal) -> Decimal {
+pub fn Decimal::compare_total_magnitude(
+  self : Decimal,
+  other : Decimal,
+) -> Decimal {
   Decimal::compare_total(Decimal::copy_abs(self), Decimal::copy_abs(other))
 }
 

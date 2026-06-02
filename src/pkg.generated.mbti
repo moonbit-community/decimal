@@ -9,6 +9,8 @@ import {
 // Values
 pub fn default_context() -> Context
 
+pub fn[T] with_context(Context, () -> T) -> (T, Flags)
+
 // Errors
 pub(all) suberror ParseError {
   Empty
@@ -63,11 +65,15 @@ pub fn Decimal::divide(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::divide_int(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::exp(Self, Context) -> (Self, Flags)
 pub fn Decimal::finalize(Self, Context) -> (Self, Flags)
-pub fn Decimal::unsafe_finite(@bigint.BigInt, Int, negative? : Bool) -> Self
 pub fn Decimal::fma(Self, Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::from_bigint(@bigint.BigInt) -> Self
 pub fn Decimal::from_decimal128_hex(String) -> Self?
 pub fn Decimal::from_decimal32_hex(String) -> Self?
 pub fn Decimal::from_decimal64_hex(String) -> Self?
+pub fn Decimal::from_double(Double) -> Self
+pub fn Decimal::from_int(Int) -> Self
+pub fn Decimal::from_int64(Int64) -> Self
+pub fn Decimal::from_string(String, Context) -> (Self, Flags)
 pub fn Decimal::infinity() -> Self
 pub fn Decimal::is_canonical(Self) -> Bool
 pub fn Decimal::is_finite(Self) -> Bool
@@ -95,11 +101,6 @@ pub fn Decimal::next_minus(Self, Context) -> (Self, Flags)
 pub fn Decimal::next_plus(Self, Context) -> (Self, Flags)
 pub fn Decimal::next_toward(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::number_class(Self, Context) -> String
-pub fn Decimal::from_bigint(@bigint.BigInt) -> Self
-pub fn Decimal::from_double(Double) -> Self
-pub fn Decimal::from_int(Int) -> Self
-pub fn Decimal::from_int64(Int64) -> Self
-pub fn Decimal::from_string(String, Context) -> (Self, Flags)
 pub fn Decimal::one() -> Self
 pub fn Decimal::parse(String) -> Self raise ParseError
 pub fn Decimal::plus(Self, Context) -> (Self, Flags)
@@ -127,6 +128,7 @@ pub fn Decimal::to_integral_exact(Self, Context) -> (Self, Flags)
 pub fn Decimal::to_integral_value(Self, Context) -> (Self, Flags)
 pub fn Decimal::to_sci_string(Self) -> String
 pub fn Decimal::try_finite(@bigint.BigInt, Int, negative? : Bool) -> Self?
+pub fn Decimal::unsafe_finite(@bigint.BigInt, Int, negative? : Bool) -> Self
 pub fn Decimal::zero() -> Self
 pub impl Add for Decimal
 pub impl Compare for Decimal
