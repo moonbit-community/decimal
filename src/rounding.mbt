@@ -5,8 +5,7 @@
 ///|
 /// Finalise a `Decimal` result under the active context: round to
 /// `precision`, then enforce the exponent range. Non-finite results pass
-/// through unchanged — NaN and Infinity have no representation to round and
-/// no exponent to clamp.
+/// through unchanged.
 ///
 /// Flags raised here:
 /// * `rounded` — whenever precision-driven adjustment shortened the
@@ -17,8 +16,6 @@
 ///   `e_max`. Per GDA the result then becomes `±Infinity` or the
 ///   largest-finite-representable value, depending on the rounding mode.
 ///
-/// `underflow` / `subnormal` / `clamped` are not raised yet; those land
-/// alongside the subnormal handling and the `clamp` field on Context.
 fn Decimal::finalize_raw(self : Decimal, ctx : Context) -> Decimal {
   match self.class {
     Finite => {
@@ -377,8 +374,8 @@ fn round_drop(
 
 ///|
 /// Finalize `self` under `ctx` — round to precision and enforce the exponent
-/// range — returning the result paired with the `Flags` it raised. See
-/// `finalize_raw` for the algorithm.
+/// range — returning the result paired with the `Flags` it raised.
+/// See `finalize_raw` for the algorithm.
 pub fn Decimal::finalize(self : Decimal, ctx : Context) -> (Decimal, Flags) {
   let ctx = { ..ctx, flags: Flags::new() }
   (self.finalize_raw(ctx), ctx.flags)

@@ -1,8 +1,8 @@
 // ---------------------------------------------------------------------------
-// Transcendentals: exp / ln / log10 / power.
+// Advanced mathematical functions: exp / ln / log10 / power.
 //
 // Each operation produces a correctly-rounded result by driving the
-// fixed-point integer kernels in `mathfn.mbt` (`dexp` / `dlog` / `dlog10` /
+// fixed-point integer kernels in `math_kernel.mbt` (`dexp` / `dlog` / `dlog10` /
 // `dpower`) inside a Ziv loop: compute to a few guard digits, and if the
 // value sits exactly on a rounding boundary, widen the working precision by 3
 // and retry until it rounds unambiguously. `finalize` then rounds to the

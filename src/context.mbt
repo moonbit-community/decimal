@@ -98,9 +98,7 @@ pub fn Flags::new() -> Flags {
 }
 
 ///|
-/// Combine two flag sets — the union of every raised signal. `Flags` under
-/// `combine` with `Flags::new()` as identity forms a monoid, so the flags of
-/// a multi-step computation are the `combine` of each step's flags.
+/// Combine two flag sets — the union of every raised signal.
 pub fn Flags::combine(self : Flags, other : Flags) -> Flags {
   {
     inexact: self.inexact || other.inexact,

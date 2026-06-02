@@ -165,8 +165,6 @@ moon test src/tests/divide
 # Run tests from one file
 moon test src/tests/parse/parse_test.mbt
 
-# Run only the index-th test in a single selected file
-moon test src/tests/parse/parse_test.mbt --index 0
 ```
 
 Microbenchmarks (small/large arithmetic, conversion, format, math functions)

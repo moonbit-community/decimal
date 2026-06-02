@@ -129,6 +129,21 @@ pub fn Decimal::neg_infinity() -> Decimal {
 }
 
 ///|
+fn signed_infinity(negative : Bool) -> Decimal {
+  { class: Infinity, negative, coefficient: 0N, exponent: 0 }
+}
+
+///|
+fn finite_zero(exponent : Int, negative : Bool) -> Decimal {
+  { class: Finite, negative, coefficient: 0N, exponent }
+}
+
+///|
+fn xor_sign(a : Decimal, b : Decimal) -> Bool {
+  a.negative != b.negative
+}
+
+///|
 /// A quiet NaN with the given (non-negative) diagnostic payload. The
 /// no-payload, non-negative variant returns a shared singleton.
 ///
