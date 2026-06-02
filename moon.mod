@@ -1,4 +1,4 @@
-name = "DzmingLi/decimal"
+name = "moonbit-community/decimal"
 
 version = "0.2.1"
 
@@ -8,7 +8,7 @@ description = "Arbitrary-precision decimal arithmetic for MoonBit"
 
 readme = "README.md"
 
-repository = "https://github.com/DzmingLi/moonbit-decimal"
+repository = "https://github.com/moonbit-community/decimal"
 
 options(
   source: "src",

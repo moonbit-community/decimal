@@ -1,4 +1,4 @@
 import {
-  "DzmingLi/decimal",
-  "DzmingLi/decimal/dectest",
+  "moonbit-community/decimal",
+  "moonbit-community/decimal/dectest",
 }
