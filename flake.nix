@@ -24,7 +24,7 @@
         {
           default = pkgs.mkShell {
             packages = [
-              pkgs.moonbit
+              pkgs.moonbit-nightly
               pkgs.gcc
             ];
             shellHook = ''
