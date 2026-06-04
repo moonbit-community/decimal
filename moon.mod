@@ -12,5 +12,5 @@ repository = "https://github.com/moonbit-community/decimal"
 
 options(
   source: "src",
-  exclude: ["src/tests", "src/dectest", "flake.nix", "flake.lock"],
+  exclude: [ "src/tests", "src/dectest", "flake.nix", "flake.lock" ],
 )
