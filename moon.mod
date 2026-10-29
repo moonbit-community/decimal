@@ -10,7 +10,4 @@ readme = "README.md"
 
 repository = "https://github.com/moonbit-community/decimal"
 
-options(
-  source: "src",
-  exclude: [ "src/tests", "src/dectest", "flake.nix", "flake.lock" ],
-)
+source = "src"
