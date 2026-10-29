@@ -26,7 +26,7 @@ pub fn Decimal::add(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.add_raw(other, ctx), ctx.flags)
 }
 
@@ -68,7 +68,7 @@ pub fn Decimal::subtract(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.subtract_raw(other, ctx), ctx.flags)
 }
 
@@ -81,7 +81,7 @@ fn Decimal::subtract_raw(
 ) -> Decimal {
   match propagate_nan(self, other, ctx) {
     Some(d) => d
-    None => Decimal::add_raw(self, { ..other, negative: !other.negative }, ctx)
+    None => Decimal::add_raw(self, { ..other, negative: !other.negative, }, ctx)
   }
 }
 
@@ -145,7 +145,12 @@ fn add_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
     ctx.rounding,
     neg,
   )
-  { class: Finite, negative: final_neg, coefficient: sum, exponent: result_exp }
+  {
+    class: Finite,
+    negative: final_neg,
+    coefficient: sum,
+    exponent: result_exp,
+  }
 }
 
 ///|
@@ -198,7 +203,7 @@ fn cancellation_neg(
 fn below_noise_sum(
   large : Decimal,
   small : Decimal,
-  large_adj : Int,
+  large_adj : Int32,
   ctx : Context,
 ) -> Decimal {
   ctx.raise_inexact()
@@ -238,7 +243,7 @@ fn align_zero_add(non_zero : Decimal, zero : Decimal, ctx : Context) -> Decimal 
   // Both-zero case: value is zero regardless of scaling, so just preserve
   // the smaller exponent without inventing a "precision-bounded" form.
   if non_zero.coefficient.is_zero() {
-    return { ..non_zero, exponent: zero.exponent }
+    return { ..non_zero, exponent: zero.exponent, }
   }
   let n_digits = digit_count(non_zero.coefficient)
   // Precision-bounded fast path: pad with only as many trailing zeros as

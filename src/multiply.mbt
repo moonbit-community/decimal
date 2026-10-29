@@ -10,7 +10,7 @@ pub fn Decimal::multiply(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.multiply_raw(other, ctx), ctx.flags)
 }
 
@@ -69,7 +69,7 @@ pub fn Decimal::fma(
   addend : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.fma_raw(other, addend, ctx), ctx.flags)
 }
 

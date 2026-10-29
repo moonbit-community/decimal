@@ -22,7 +22,7 @@ pub fn Decimal::compare(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.compare_raw(other, ctx), ctx.flags)
 }
 
@@ -46,7 +46,7 @@ fn Decimal::compare_raw(
 /// "value-only, scale-agnostic" rule of `compare`.
 /// `-1` for a negative sign, `+1` for positive — the comparison value of a
 /// sign bit.
-fn sign_to_cmp(negative : Bool) -> Int {
+fn sign_to_cmp(negative : Bool) -> Int32 {
   if negative {
     -1
   } else {
@@ -56,7 +56,7 @@ fn sign_to_cmp(negative : Bool) -> Int {
 
 ///|
 /// Signed-numeric comparison for non-NaN operands.
-fn compare_numeric_int(a : Decimal, b : Decimal) -> Int {
+fn compare_numeric_int(a : Decimal, b : Decimal) -> Int32 {
   match (a.class, b.class) {
     (Infinity, Infinity) =>
       if a.negative == b.negative {
@@ -98,7 +98,7 @@ pub fn Decimal::compare_signal(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.compare_signal_raw(other, ctx), ctx.flags)
 }
 
@@ -133,7 +133,7 @@ pub fn Decimal::max(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.max_raw(other, ctx), ctx.flags)
 }
 
@@ -150,7 +150,7 @@ pub fn Decimal::min(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.min_raw(other, ctx), ctx.flags)
 }
 
@@ -169,7 +169,7 @@ pub fn Decimal::max_magnitude(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.max_magnitude_raw(other, ctx), ctx.flags)
 }
 
@@ -191,7 +191,7 @@ pub fn Decimal::min_magnitude(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.min_magnitude_raw(other, ctx), ctx.flags)
 }
 
@@ -240,7 +240,7 @@ fn max_min_choose(
     return a.finalize_raw(ctx)
   }
   let cmp = if magnitude {
-    compare_numeric_int({ ..a, negative: false }, { ..b, negative: false })
+    compare_numeric_int({ ..a, negative: false, }, { ..b, negative: false, })
   } else {
     compare_numeric_int(a, b)
   }
@@ -321,7 +321,7 @@ pub fn Decimal::same_quantum(self : Decimal, other : Decimal) -> Decimal {
 ///|
 /// Return -1 / 0 / 1 for the abstract total order, before wrapping in a
 /// `Decimal` at the public boundary.
-fn compare_total_int(a : Decimal, b : Decimal) -> Int {
+fn compare_total_int(a : Decimal, b : Decimal) -> Int32 {
   // 1. Different signs: negative < positive.
   if a.negative != b.negative {
     return if a.negative { -1 } else { 1 }
@@ -354,7 +354,7 @@ fn compare_total_int(a : Decimal, b : Decimal) -> Int {
 /// Class-rank for the positive-side total order. Finite is lowest, then
 /// Infinity, then SNaN, then QNaN. The negative side mirrors this in
 /// `compare_total_int`.
-fn class_rank(c : Class) -> Int {
+fn class_rank(c : Class) -> Int32 {
   match c {
     Finite => 0
     Infinity => 1
@@ -367,7 +367,7 @@ fn class_rank(c : Class) -> Int {
 /// Compare two finite Decimals (same sign) in the total order: numerical
 /// magnitude first; on a tie, smaller exponent sorts first regardless of
 /// sign (per GDA, the rule applies to both positive and negative chains).
-fn compare_finite_total(a : Decimal, b : Decimal) -> Int {
+fn compare_finite_total(a : Decimal, b : Decimal) -> Int32 {
   let mag_cmp = compare_magnitudes(
     a.coefficient,
     a.exponent,
@@ -402,10 +402,10 @@ fn compare_finite_total(a : Decimal, b : Decimal) -> Int {
 /// scaled-up-by-billion BigInts when the magnitudes differ by orders.
 fn compare_magnitudes(
   a_coeff : BigInt,
-  a_exp : Int,
+  a_exp : Int32,
   b_coeff : BigInt,
-  b_exp : Int,
-) -> Int {
+  b_exp : Int32,
+) -> Int32 {
   let a_zero = a_coeff.is_zero()
   let b_zero = b_coeff.is_zero()
   if a_zero && b_zero {

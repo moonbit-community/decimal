@@ -8,9 +8,9 @@ import {
 // Values
 pub fn parse_dectest(String) -> Array[TestCase]
 
-pub fn run_cases(Array[TestCase]) -> (Array[String], Int)
+pub fn run_cases(Array[TestCase]) -> (Array[String], Int32)
 
-pub fn run_cases_with_flags(Array[TestCase]) -> (Array[String], Int)
+pub fn run_cases_with_flags(Array[TestCase]) -> (Array[String], Int32)
 
 // Errors
 
@@ -21,10 +21,10 @@ pub(all) struct TestCase {
   operands : Array[String]
   expected : String
   conditions : Array[String]
-  precision : Int
+  precision : Int32
   rounding : @decimal.Rounding
-  max_exponent : Int
-  min_exponent : Int
+  max_exponent : Int32
+  min_exponent : Int32
   clamp : Bool
 }
 
@@ -42,4 +42,3 @@ pub using @decimal {type ParseError}
 pub using @decimal {type Rounding}
 
 // Traits
-

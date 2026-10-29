@@ -3,7 +3,7 @@
 ///|
 fn quiet_snan(d : Decimal, ctx : Context) -> Decimal {
   ctx.raise_invalid_operation()
-  truncate_nan_payload({ ..d, class: QNaN }, ctx)
+  truncate_nan_payload({ ..d, class: QNaN, }, ctx)
 }
 
 ///|
@@ -40,5 +40,5 @@ fn truncate_nan_payload(d : Decimal, ctx : Context) -> Decimal {
     return d
   }
   let divisor = pow10(ctx.precision)
-  { ..d, coefficient: d.coefficient % divisor }
+  { ..d, coefficient: d.coefficient % divisor, }
 }

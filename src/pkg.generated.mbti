@@ -3,6 +3,7 @@ package "moonbit-community/decimal"
 
 import {
   "moonbitlang/core/bigint",
+  "moonbitlang/core/debug",
   "moonbitlang/core/json",
 }
 
@@ -14,11 +15,15 @@ pub fn[T] with_context(Context, () -> T) -> (T, Flags)
 // Errors
 pub(all) suberror ParseError {
   Empty
-  ExpectedDigit(position~ : Int)
-  InvalidExponent(position~ : Int)
-  TrailingGarbage(position~ : Int)
-  BadKeyword(position~ : Int)
+  ExpectedDigit(position~ : Int32)
+  InvalidExponent(position~ : Int32)
+  TrailingGarbage(position~ : Int32)
+  BadKeyword(position~ : Int32)
 } derive(Eq)
+pub fn ParseError::equal(Self, Self) -> Bool
+pub fn ParseError::not_equal(Self, Self) -> Bool
+pub fn ParseError::output(Self, &Logger) -> Unit
+pub fn ParseError::to_string(Self) -> String
 pub impl Show for ParseError
 
 // Types and methods
@@ -27,14 +32,19 @@ pub(all) enum Class {
   Infinity
   QNaN
   SNaN
-} derive(Eq)
+} derive(Eq, @debug.Debug)
+pub fn Class::equal(Self, Self) -> Bool
+pub fn Class::not_equal(Self, Self) -> Bool
+pub fn Class::output(Self, &Logger) -> Unit
+pub fn Class::to_repr(Self) -> @debug.Repr
+pub fn Class::to_string(Self) -> String
 pub impl Show for Class
 
 pub struct Context {
-  precision : Int
+  precision : Int32
   rounding : Rounding
-  e_min : Int
-  e_max : Int
+  e_min : Int32
+  e_max : Int32
   clamp : Bool
   flags : Flags
 }
@@ -42,13 +52,13 @@ pub fn Context::decimal128() -> Self
 pub fn Context::decimal32() -> Self
 pub fn Context::decimal64() -> Self
 pub fn Context::exact() -> Self
-pub fn Context::new(precision? : Int, rounding? : Rounding, e_min? : Int, e_max? : Int, clamp? : Bool) -> Self
+pub fn Context::new(precision? : Int32, rounding? : Rounding, e_min? : Int32, e_max? : Int32, clamp? : Bool) -> Self
 
 pub struct Decimal {
   class : Class
   negative : Bool
   coefficient : @bigint.BigInt
-  exponent : Int
+  exponent : Int32
 }
 pub fn Decimal::abs(Self, Context) -> (Self, Flags)
 pub fn Decimal::add(Self, Self, Context) -> (Self, Flags)
@@ -61,8 +71,10 @@ pub fn Decimal::copy(Self) -> Self
 pub fn Decimal::copy_abs(Self) -> Self
 pub fn Decimal::copy_negate(Self) -> Self
 pub fn Decimal::copy_sign(Self, Self) -> Self
+pub fn Decimal::div(Self, Self) -> Self
 pub fn Decimal::divide(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::divide_int(Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::equal(Self, Self) -> Bool
 pub fn Decimal::exp(Self, Context) -> (Self, Flags)
 pub fn Decimal::finalize(Self, Context) -> (Self, Flags)
 pub fn Decimal::fma(Self, Self, Self, Context) -> (Self, Flags)
@@ -71,9 +83,12 @@ pub fn Decimal::from_decimal128_hex(String) -> Self?
 pub fn Decimal::from_decimal32_hex(String) -> Self?
 pub fn Decimal::from_decimal64_hex(String) -> Self?
 pub fn Decimal::from_double(Double) -> Self
-pub fn Decimal::from_int(Int) -> Self
+pub fn Decimal::from_int(Int32) -> Self
 pub fn Decimal::from_int64(Int64) -> Self
+pub fn Decimal::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
 pub fn Decimal::from_string(String, Context) -> (Self, Flags)
+pub fn Decimal::hash(Self) -> Int32
+pub fn Decimal::hash_combine(Self, Hasher) -> Unit
 pub fn Decimal::infinity() -> Self
 pub fn Decimal::is_canonical(Self) -> Bool
 pub fn Decimal::is_finite(Self) -> Bool
@@ -94,14 +109,22 @@ pub fn Decimal::max_magnitude(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::min(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::min_magnitude(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::minus(Self, Context) -> (Self, Flags)
+pub fn Decimal::mul(Self, Self) -> Self
 pub fn Decimal::multiply(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::nan(payload? : @bigint.BigInt, negative? : Bool) -> Self
+pub fn Decimal::neg(Self) -> Self
 pub fn Decimal::neg_infinity() -> Self
 pub fn Decimal::next_minus(Self, Context) -> (Self, Flags)
 pub fn Decimal::next_plus(Self, Context) -> (Self, Flags)
 pub fn Decimal::next_toward(Self, Self, Context) -> (Self, Flags)
+pub fn Decimal::not_equal(Self, Self) -> Bool
 pub fn Decimal::number_class(Self, Context) -> String
 pub fn Decimal::one() -> Self
+pub fn Decimal::op_ge(Self, Self) -> Bool
+pub fn Decimal::op_gt(Self, Self) -> Bool
+pub fn Decimal::op_le(Self, Self) -> Bool
+pub fn Decimal::op_lt(Self, Self) -> Bool
+pub fn Decimal::output(Self, &Logger) -> Unit
 pub fn Decimal::parse(String) -> Self raise ParseError
 pub fn Decimal::plus(Self, Context) -> (Self, Flags)
 pub fn Decimal::power(Self, Self, Context) -> (Self, Flags)
@@ -115,6 +138,7 @@ pub fn Decimal::scaleb(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::shift(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::snan(payload? : @bigint.BigInt, negative? : Bool) -> Self
 pub fn Decimal::sqrt(Self, Context) -> (Self, Flags)
+pub fn Decimal::sub(Self, Self) -> Self
 pub fn Decimal::subtract(Self, Self, Context) -> (Self, Flags)
 pub fn Decimal::to_bigint(Self) -> @bigint.BigInt?
 pub fn Decimal::to_decimal128_hex(Self, rounding? : Rounding) -> (String, Flags)
@@ -122,13 +146,15 @@ pub fn Decimal::to_decimal32_hex(Self, rounding? : Rounding) -> (String, Flags)
 pub fn Decimal::to_decimal64_hex(Self, rounding? : Rounding) -> (String, Flags)
 pub fn Decimal::to_double(Self) -> Double
 pub fn Decimal::to_eng_string(Self) -> String
-pub fn Decimal::to_int(Self) -> Int?
+pub fn Decimal::to_int(Self) -> Int32?
 pub fn Decimal::to_int64(Self) -> Int64?
 pub fn Decimal::to_integral_exact(Self, Context) -> (Self, Flags)
 pub fn Decimal::to_integral_value(Self, Context) -> (Self, Flags)
+pub fn Decimal::to_json(Self) -> Json
 pub fn Decimal::to_sci_string(Self) -> String
-pub fn Decimal::try_finite(@bigint.BigInt, Int, negative? : Bool) -> Self?
-pub fn Decimal::unsafe_finite(@bigint.BigInt, Int, negative? : Bool) -> Self
+pub fn Decimal::to_string(Self) -> String
+pub fn Decimal::try_finite(@bigint.BigInt, Int32, negative? : Bool) -> Self?
+pub fn Decimal::unsafe_finite(@bigint.BigInt, Int32, negative? : Bool) -> Self
 pub fn Decimal::zero() -> Self
 pub impl Add for Decimal
 pub impl Compare for Decimal
@@ -158,7 +184,9 @@ pub(all) struct Flags {
   mut invalid_context : Bool
 } derive(Eq)
 pub fn Flags::combine(Self, Self) -> Self
+pub fn Flags::equal(Self, Self) -> Bool
 pub fn Flags::new() -> Self
+pub fn Flags::not_equal(Self, Self) -> Bool
 
 pub(all) enum Rounding {
   HalfUp
@@ -170,9 +198,12 @@ pub(all) enum Rounding {
   Floor
   ZeroFiveUp
 } derive(Eq)
+pub fn Rounding::equal(Self, Self) -> Bool
+pub fn Rounding::not_equal(Self, Self) -> Bool
+pub fn Rounding::output(Self, &Logger) -> Unit
+pub fn Rounding::to_string(Self) -> String
 pub impl Show for Rounding
 
 // Type aliases
 
 // Traits
-

@@ -2270,8 +2270,8 @@ let add_subset_3 : String =
 
 ///|
 fn run_subset(label : String, subset : String) -> Unit {
-  let cases = parse_dectest(subset)
-  let (failures, _) = run_cases_with_flags(cases)
+  let cases = @add.parse_dectest(subset)
+  let (failures, _) = @add.run_cases_with_flags(cases)
   if failures.length() > 0 {
     println("\{label}: \{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 30 { failures.length() } else { 30 }

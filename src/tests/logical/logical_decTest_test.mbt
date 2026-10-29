@@ -1203,9 +1203,9 @@ let invert_subset : String =
 
 ///|
 fn run_subset(label : String, subset : String) -> Unit {
-  let cases = parse_dectest(subset)
+  let cases = @logical.parse_dectest(subset)
   guard cases.length() > 0 else { abort("\{label}.decTest: no cases parsed") }
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let (failures, skipped) = @logical.run_cases_with_flags(cases)
   // Skipped cases are those the harness sets aside: interchange-format /
   // null-operand syntax (`NN#value`, bare `#`) and the few reference-specific
   // divergences. Surfaced here, never silently dropped.

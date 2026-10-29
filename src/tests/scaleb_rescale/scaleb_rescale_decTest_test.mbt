@@ -983,9 +983,9 @@ let rescale_subset : String =
 
 ///|
 fn run_subset(label : String, subset : String) -> Unit {
-  let cases = parse_dectest(subset)
+  let cases = @scaleb_rescale.parse_dectest(subset)
   guard cases.length() > 0 else { abort("\{label}.decTest: no cases parsed") }
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let (failures, skipped) = @scaleb_rescale.run_cases_with_flags(cases)
   // Skipped cases are the decNumber-reference-specific scaleb exponent
   // overflow divergences (`scbx164`/`scbx165`). Surfaced here, never silently
   // dropped.

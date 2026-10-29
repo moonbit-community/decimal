@@ -15,7 +15,7 @@ pub fn Decimal::logical_and(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.logical_and_raw(other, ctx), ctx.flags)
 }
 
@@ -36,7 +36,7 @@ pub fn Decimal::logical_or(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.logical_or_raw(other, ctx), ctx.flags)
 }
 
@@ -57,7 +57,7 @@ pub fn Decimal::logical_xor(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.logical_xor_raw(other, ctx), ctx.flags)
 }
 
@@ -81,7 +81,7 @@ pub fn Decimal::logical_invert(
   self : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.logical_invert_raw(ctx), ctx.flags)
 }
 
@@ -102,7 +102,7 @@ fn Decimal::logical_invert_raw(self : Decimal, ctx : Context) -> Decimal {
       } else {
         s
       }
-      let buf = StringBuilder::new()
+      let buf = StringBuilder()
       let n = padded.length()
       for i in 0..<n {
         if padded[i].to_int() == 0x30 {
@@ -123,7 +123,7 @@ fn logical_binary(
   a : Decimal,
   b : Decimal,
   ctx : Context,
-  op : (Int, Int) -> Int,
+  op : (Int32, Int32) -> Int32,
 ) -> Decimal {
   if !valid_logical_operand(a) || !valid_logical_operand(b) {
     return invalid_nan(ctx)
@@ -136,7 +136,7 @@ fn logical_binary(
       let na = sa.length()
       let nb = sb.length()
       let width = if na > nb { na } else { nb }
-      let buf = StringBuilder::new()
+      let buf = StringBuilder()
       for i in 0..<width {
         let ai = i - (width - na)
         let bi = i - (width - nb)
@@ -188,7 +188,7 @@ pub fn Decimal::rotate(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.rotate_raw(other, ctx), ctx.flags)
 }
 
@@ -211,7 +211,7 @@ pub fn Decimal::shift(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.shift_raw(other, ctx), ctx.flags)
 }
 
@@ -280,7 +280,7 @@ fn rotate_or_shift(
 /// `b` must be a finite non-fractional integer (exponent 0) whose
 /// magnitude does not exceed `ctx.precision`. Returns the signed shift
 /// amount in `Some`, or `None` to signal `Invalid_operation`.
-fn shift_amount(b : Decimal, ctx : Context) -> Int? {
+fn shift_amount(b : Decimal, ctx : Context) -> Int32? {
   if !(b.class is Finite) {
     return None
   }
@@ -303,7 +303,7 @@ fn shift_amount(b : Decimal, ctx : Context) -> Int? {
 ///|
 /// Cyclically rotate `s` by `shift` positions — positive shift moves the
 /// leftmost digits past the right edge; negative shift goes the other way.
-fn rotate_digits(s : String, shift : Int, width : Int) -> String {
+fn rotate_digits(s : String, shift : Int32, width : Int32) -> String {
   // Normalise shift into `[0, width)`.
   let mut k = shift % width
   if k < 0 {
@@ -313,7 +313,7 @@ fn rotate_digits(s : String, shift : Int, width : Int) -> String {
     return s
   }
   // Left rotate by k: take s[k:] + s[:k].
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   buf.write_string(s[k:].to_owned())
   buf.write_string(s[:k].to_owned())
   buf.to_string()
@@ -323,7 +323,7 @@ fn rotate_digits(s : String, shift : Int, width : Int) -> String {
 /// Non-cyclic shift. Positive shift moves digits left (off the left
 /// edge); negative shift moves them right (off the right edge). Vacated
 /// positions are filled with `'0'`.
-fn shift_digits(s : String, shift : Int, width : Int) -> String {
+fn shift_digits(s : String, shift : Int32, width : Int32) -> String {
   if shift >= width || shift <= -width {
     return "0".repeat(width)
   }

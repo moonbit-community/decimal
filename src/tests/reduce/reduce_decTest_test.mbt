@@ -239,8 +239,8 @@ let reduce_subset : String =
 
 ///|
 test "reduce.decTest subset" {
-  let cases = parse_dectest(reduce_subset)
-  let (failures, _) = run_cases_with_flags(cases)
+  let cases = @reduce.parse_dectest(reduce_subset)
+  let (failures, _) = @reduce.run_cases_with_flags(cases)
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 30 { failures.length() } else { 30 }

@@ -22,7 +22,7 @@
 /// significand holds it without rounding), which is what makes the `to_double`
 /// fast path a single correctly-rounded operation.
 let pow10_dbl_table : Array[Double] = {
-  let t = Array::new(capacity=23)
+  let t = Array(capacity=23)
   let mut p = 1.0
   for _i in 0..<=22 {
     t.push(p)
@@ -88,7 +88,7 @@ pub fn Decimal::from_double(x : Double) -> Decimal {
   } else {
     (m * pow5(-exp2), exp2)
   }
-  { class: Finite, negative, coefficient, exponent }
+  { class: Finite, negative, coefficient, exponent, }
 }
 
 ///|
@@ -112,7 +112,7 @@ pub fn Decimal::to_bigint(self : Decimal) -> BigInt? {
 ///|
 /// The exact value of `self` as a machine `Int`, or `None` when it is not a
 /// finite integer or falls outside `[Int::min_value, Int::max_value]`.
-pub fn Decimal::to_int(self : Decimal) -> Int? {
+pub fn Decimal::to_int(self : Decimal) -> Int32? {
   guard self.to_bigint() is Some(n) else { return None }
   guard n >= -2147483648N && n <= 2147483647N else { return None }
   Some(n.to_int())

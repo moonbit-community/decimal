@@ -3,7 +3,7 @@
 /// representable range. Chosen above any context's `e_max` (which never
 /// exceeds `999_999_999`) yet far enough below `Int.max` that the later
 /// `exp - frac_digits` arithmetic and sign flip cannot wrap.
-const EXPONENT_SATURATION : Int = 1_999_999_999
+const EXPONENT_SATURATION : Int32 = 1_999_999_999
 
 ///|
 /// Errors raised by `Decimal::parse`.
@@ -11,13 +11,13 @@ pub(all) suberror ParseError {
   /// Input was empty.
   Empty
   /// A digit was required at this position but not found.
-  ExpectedDigit(position~ : Int)
+  ExpectedDigit(position~ : Int32)
   /// Exponent body was missing or malformed.
-  InvalidExponent(position~ : Int)
+  InvalidExponent(position~ : Int32)
   /// Unexpected character left over after a valid decimal was consumed.
-  TrailingGarbage(position~ : Int)
+  TrailingGarbage(position~ : Int32)
   /// A keyword (Inf/Infinity/NaN/sNaN) was started but not completed.
-  BadKeyword(position~ : Int)
+  BadKeyword(position~ : Int32)
 } derive(Eq)
 
 ///|
@@ -84,7 +84,7 @@ pub fn Decimal::parse(input : String) -> Decimal raise ParseError {
 /// at the leading 'i'.
 fn parse_infinity(
   input : String,
-  start : Int,
+  start : Int32,
   negative : Bool,
 ) -> Decimal raise ParseError {
   let n = input.length()
@@ -100,14 +100,14 @@ fn parse_infinity(
   if endpos != n {
     raise TrailingGarbage(position=endpos)
   }
-  { class: Infinity, negative, coefficient: 0N, exponent: 0 }
+  { class: Infinity, negative, coefficient: 0N, exponent: 0, }
 }
 
 ///|
 /// Parse "NaN" with optional decimal payload.
 fn parse_nan(
   input : String,
-  start : Int,
+  start : Int32,
   negative : Bool,
   signaling~ : Bool,
 ) -> Decimal raise ParseError {
@@ -117,7 +117,7 @@ fn parse_nan(
     raise BadKeyword(position=start)
   }
   let mut i = start + kw.length()
-  let payload_buf = StringBuilder::new()
+  let payload_buf = StringBuilder()
   let payload_len = consume_digits(input, i, payload_buf)
   i = i + payload_len
   if i != n {
@@ -144,11 +144,11 @@ fn parse_nan(
 /// Parse the finite-number branch of the grammar starting at `start`.
 fn parse_finite(
   input : String,
-  start : Int,
+  start : Int32,
   negative : Bool,
 ) -> Decimal raise ParseError {
   let n = input.length()
-  let digits = StringBuilder::new()
+  let digits = StringBuilder()
   let mut i = start
   let int_digits = consume_digits(input, i, digits)
   i = i + int_digits
@@ -213,13 +213,13 @@ fn parse_finite(
     raise TrailingGarbage(position=i)
   }
   let coefficient = BigInt::from_string(digits.to_string())
-  { class: Finite, negative, coefficient, exponent: exp - frac_digits }
+  { class: Finite, negative, coefficient, exponent: exp - frac_digits, }
 }
 
 ///|
 /// Consume a run of ASCII digits starting at `start`, appending each to
 /// `buf`. Returns the number of digits consumed.
-fn consume_digits(input : String, start : Int, buf : StringBuilder) -> Int {
+fn consume_digits(input : String, start : Int32, buf : StringBuilder) -> Int32 {
   let n = input.length()
   let mut i = start
   while i < n && is_digit(char_at(input, i)) {
@@ -237,7 +237,7 @@ fn is_digit(c : Char) -> Bool {
 ///|
 /// ASCII case-insensitive prefix match: does `input[start..]` start with
 /// `word`? `word` is assumed to be lowercase ASCII.
-fn match_ci(input : String, start : Int, word : String) -> Bool {
+fn match_ci(input : String, start : Int32, word : String) -> Bool {
   let n = input.length()
   let w = word.length()
   if start + w > n {

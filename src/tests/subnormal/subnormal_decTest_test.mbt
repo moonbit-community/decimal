@@ -32,9 +32,9 @@ let subnormal_subset : String =
 
 ///|
 test "subnormal addx cluster" {
-  let cases = parse_dectest(subnormal_subset)
+  let cases = @subnormal.parse_dectest(subnormal_subset)
   assert_eq(cases.length(), 18)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, _) = @subnormal.run_cases_with_flags(cases)
   if failures.length() > 0 {
     println("\{failures.length()} of \{cases.length()} cases failed:")
     let limit = if failures.length() < 30 { failures.length() } else { 30 }

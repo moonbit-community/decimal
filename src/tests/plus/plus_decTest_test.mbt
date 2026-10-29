@@ -199,13 +199,13 @@ let plus_subset : String =
 
 ///|
 test "plus.decTest plusx subset round-trips through parse + plus + toSci" {
-  let cases = parse_dectest(plus_subset)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @plus.parse_dectest(plus_subset)
+  let (failures, skipped) = @plus.run_cases_with_flags(cases)
   if skipped > 0 {
     println("\{skipped} cases skipped (format-encoding / reference-specific)")
   }
   if failures.length() > 0 {
-    let buf = StringBuilder::new()
+    let buf = StringBuilder()
     buf.write_string(
       "\{failures.length()} of \{cases.length()} cases failed:\n",
     )

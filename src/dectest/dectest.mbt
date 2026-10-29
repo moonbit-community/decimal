@@ -12,14 +12,14 @@ pub(all) struct TestCase {
   conditions : Array[String]
   /// Active precision when this case appeared; `0` means no `precision:`
   /// directive has been seen, which the runner treats as "no precision cap".
-  precision : Int
+  precision : Int32
   /// Active rounding mode; defaults to `HalfEven` until a `rounding:`
   /// directive overrides it.
   rounding : Rounding
   /// Active `maxExponent` and `minExponent` directives; default to the
   /// near-`Int.max` bounds Context uses when no directive is in scope.
-  max_exponent : Int
-  min_exponent : Int
+  max_exponent : Int32
+  min_exponent : Int32
   /// Active `clamp` directive; defaults to off.
   clamp : Bool
 }
@@ -32,7 +32,7 @@ pub(all) struct TestCase {
 /// in scope for it. Directive names are case-insensitive per the GDA
 /// convention.
 pub fn parse_dectest(text : String) -> Array[TestCase] {
-  let cases = Array::new()
+  let cases = Array()
   let mut current_precision = 0
   let mut current_rounding = Rounding::HalfEven
   let mut current_max_exp = 999_999_999
@@ -147,11 +147,11 @@ fn parse_dectest_line(line : String) -> TestCase? {
   if left_tokens.length() < 3 || right_tokens.length() < 1 {
     return None
   }
-  let operands = Array::new()
+  let operands = Array()
   for i in 2..<left_tokens.length() {
     operands.push(left_tokens[i])
   }
-  let conditions = Array::new()
+  let conditions = Array()
   for i in 1..<right_tokens.length() {
     conditions.push(right_tokens[i])
   }
@@ -175,7 +175,7 @@ fn parse_dectest_line(line : String) -> TestCase? {
 /// the spec as making it possible to embed leading/trailing whitespace in
 /// operands and results).
 fn tokenize_dectest(s : String) -> Array[String] {
-  let tokens = Array::new()
+  let tokens = Array()
   let n = s.length()
   let mut i = 0
   while i < n {
@@ -238,8 +238,8 @@ priv enum CaseOutcome {
 /// Run every recognised case in `cases`, returning the list of failures and
 /// the count of skipped cases (for diagnostics — runners that have full op
 /// coverage should expect zero skips).
-pub fn run_cases(cases : Array[TestCase]) -> (Array[String], Int) {
-  let failures = Array::new()
+pub fn run_cases(cases : Array[TestCase]) -> (Array[String], Int32) {
+  let failures = Array()
   let mut skipped = 0
   for case in cases {
     match run_one(case) {
@@ -278,8 +278,8 @@ fn run_one(case : TestCase) -> CaseOutcome {
 ///|
 /// Strict variant: validates both the rendered string and the condition
 /// flags. Used by per-op packages that want to gate on flag accuracy.
-pub fn run_cases_with_flags(cases : Array[TestCase]) -> (Array[String], Int) {
-  let failures = Array::new()
+pub fn run_cases_with_flags(cases : Array[TestCase]) -> (Array[String], Int32) {
+  let failures = Array()
   let mut skipped = 0
   for case in cases {
     match run_one_strict(case) {
@@ -365,7 +365,7 @@ fn compare_flags(actual : Flags, expected : Array[String]) -> String {
     ("Insufficient_storage", actual.insufficient_storage),
     ("Invalid_context", actual.invalid_context),
   ]
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let mut sep = ""
   for pair in pairs {
     let (name, raised) = pair
@@ -569,7 +569,7 @@ fn parse_operand(token : String, case : TestCase) -> (Decimal, Flags) raise {
     Some((kind, body)) =>
       match kind {
         32 | 64 | 128 => {
-          let d = Decimal::parse(body) catch { e => raise e }
+          let d = Decimal::parse(body)
           let (hex, _flags) = encode_by_format(d, kind, case.rounding)
           match decode_by_format(hex, kind) {
             Some(decoded) => (decoded, Flags::new())
@@ -590,7 +590,7 @@ fn parse_operand(token : String, case : TestCase) -> (Decimal, Flags) raise {
         _ => raise RunnerError("unsupported interchange format '\{kind}'")
       }
     None => {
-      let d = Decimal::parse(token) catch { e => raise e }
+      let d = Decimal::parse(token)
       (d, Flags::new())
     }
   }
@@ -639,7 +639,7 @@ fn expected_token_for_compare(case : TestCase) -> String raise RunnerError {
 }
 
 ///|
-fn result_format_kind(token : String) -> Int? {
+fn result_format_kind(token : String) -> Int32? {
   match format_token_kind(token) {
     Some((kind, body)) =>
       if kind == 0 {
@@ -657,7 +657,7 @@ fn result_format_kind(token : String) -> Int? {
 }
 
 ///|
-fn format_token_kind(token : String) -> (Int, String)? {
+fn format_token_kind(token : String) -> (Int32, String)? {
   match token.find("#") {
     Some(i) =>
       if i == 0 {
@@ -686,7 +686,7 @@ fn format_token_kind(token : String) -> (Int, String)? {
 ///|
 fn encode_by_format(
   d : Decimal,
-  kind : Int,
+  kind : Int32,
   rounding : Rounding,
 ) -> (String, Flags) raise RunnerError {
   match kind {
@@ -698,7 +698,7 @@ fn encode_by_format(
 }
 
 ///|
-fn decode_by_format(hex : String, kind : Int) -> Decimal? {
+fn decode_by_format(hex : String, kind : Int32) -> Decimal? {
   match kind {
     32 => Decimal::from_decimal32_hex(hex)
     64 => Decimal::from_decimal64_hex(hex)
@@ -886,7 +886,7 @@ fn binary(
 
 ///|
 fn format_operands(operands : Array[String]) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for i, op in operands {
     if i > 0 {
       buf.write_string(", ")
@@ -901,7 +901,7 @@ fn format_operands(operands : Array[String]) -> String {
 /// are conventionally lowercase but the spec allows any case, so we
 /// normalise before matching.
 fn ascii_lowercase(s : String) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let n = s.length()
   let mut i = 0
   while i < n {
@@ -918,7 +918,7 @@ fn ascii_lowercase(s : String) -> String {
 
 ///|
 fn uppercase_ascii(s : String) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let n = s.length()
   let mut i = 0
   while i < n {
@@ -967,6 +967,6 @@ fn ascii_eq_ci(a : String, b : String) -> Bool {
 /// in the `decimal` package; both packages keep their own private copy since
 /// the inputs they process — decimal grammar and dectest format — are
 /// ASCII-only and don't justify exporting the helper.
-fn char_at(s : String, i : Int) -> Char {
+fn char_at(s : String, i : Int32) -> Char {
   s[i].to_int().unsafe_to_char()
 }

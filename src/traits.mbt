@@ -15,7 +15,7 @@
 /// Total numeric order with NaN ordered below everything (and equal to
 /// itself). `-0`/`+0` and differing cohorts of one value compare equal,
 /// matching the numeric `Eq`/`Hash` below.
-fn numeric_total_cmp(a : Decimal, b : Decimal) -> Int {
+fn numeric_total_cmp(a : Decimal, b : Decimal) -> Int32 {
   let a_nan = a.class is (QNaN | SNaN)
   let b_nan = b.class is (QNaN | SNaN)
   if a_nan && b_nan {
@@ -95,7 +95,7 @@ pub fn default_context() -> Context {
 ///|
 /// Context installed by the innermost active `with_context` block. `None` means
 /// no block is active and the operators fall back to `default_context()`.
-let active_ctx_slot : Ref[Context?] = { val: None }
+let active_ctx_slot : Ref[Context?] = { val: None, }
 
 ///|
 /// The context the arithmetic operators currently evaluate under: the active
@@ -123,7 +123,7 @@ fn active_context() -> Context {
 /// })
 /// ```
 pub fn[T] with_context(ctx : Context, f : () -> T) -> (T, Flags) {
-  let installed = { ..ctx, flags: Flags::new() }
+  let installed = { ..ctx, flags: Flags::new(), }
   let saved = active_ctx_slot.val
   active_ctx_slot.val = Some(installed)
   let result = f()

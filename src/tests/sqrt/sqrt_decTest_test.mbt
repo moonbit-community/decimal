@@ -3839,8 +3839,8 @@ let sqrt_subset : String =
 
 ///|
 test "squareroot.decTest subset" {
-  let cases = parse_dectest(sqrt_subset)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @sqrt.parse_dectest(sqrt_subset)
+  let (failures, skipped) = @sqrt.run_cases_with_flags(cases)
   if skipped > 0 {
     println("\{skipped} cases skipped (format-encoding / reference-specific)")
   }

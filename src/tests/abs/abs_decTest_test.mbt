@@ -165,13 +165,13 @@ let abs_subset : String =
 
 ///|
 test "abs.decTest absx subset round-trips through parse + abs + toSci" {
-  let cases = parse_dectest(abs_subset)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @abs.parse_dectest(abs_subset)
+  let (failures, skipped) = @abs.run_cases_with_flags(cases)
   if skipped > 0 {
     println("\{skipped} cases skipped (format-encoding / reference-specific)")
   }
   if failures.length() > 0 {
-    let buf = StringBuilder::new()
+    let buf = StringBuilder()
     buf.write_string(
       "\{failures.length()} of \{cases.length()} cases failed:\n",
     )

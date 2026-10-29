@@ -391,8 +391,8 @@ let samequantum_subset : String =
 
 ///|
 test "samequantum.decTest subset round-trips through parse + samequantum + toSci" {
-  let cases = parse_dectest(samequantum_subset)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @samequantum.parse_dectest(samequantum_subset)
+  let (failures, skipped) = @samequantum.run_cases_with_flags(cases)
   if skipped > 0 {
     println("\{skipped} cases skipped (format-encoding / reference-specific)")
   }

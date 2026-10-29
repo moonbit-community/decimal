@@ -11,7 +11,7 @@
 ///|
 /// GDA `next-plus`: smallest representable value greater than `self`.
 pub fn Decimal::next_plus(self : Decimal, ctx : Context) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.next_plus_raw(ctx), ctx.flags)
 }
 
@@ -29,7 +29,7 @@ fn Decimal::next_plus_raw(self : Decimal, ctx : Context) -> Decimal {
 ///|
 /// GDA `next-minus`: largest representable value less than `self`.
 pub fn Decimal::next_minus(self : Decimal, ctx : Context) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.next_minus_raw(ctx), ctx.flags)
 }
 
@@ -53,7 +53,7 @@ pub fn Decimal::next_toward(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.next_toward_raw(other, ctx), ctx.flags)
 }
 
@@ -72,7 +72,7 @@ fn Decimal::next_toward_raw(
   if cmp == 0 {
     // Numerically equal — the value is unchanged but takes `other`'s sign, so
     // `nextToward(0.00, -0.0000)` yields `-0.00`, not `+0.00`. Quiet.
-    return { ..self, negative: other.negative }
+    return { ..self, negative: other.negative, }
   }
   // The step itself is quiet (`next_plus` / `next_minus`), but next-toward
   // additionally signals when the stepped result leaves the normal range:
@@ -134,7 +134,7 @@ fn largest_finite(negative : Bool, ctx : Context) -> Decimal {
 /// Smallest positive subnormal: `1 × 10^etiny`. The next step above zero.
 fn smallest_subnormal(negative : Bool, ctx : Context) -> Decimal {
   let etiny = ctx.etiny()
-  { class: Finite, negative, coefficient: 1N, exponent: etiny }
+  { class: Finite, negative, coefficient: 1N, exponent: etiny, }
 }
 
 ///|
@@ -170,7 +170,7 @@ fn next_step(x : Decimal, ctx : Context, step_up : Bool) -> Decimal {
     // (next-plus(-tiny) → -0; next-minus(tiny) → +0).
     Zero => finite_zero(ctx.etiny(), x.negative)
     Value(coef, exp) =>
-      { class: Finite, negative: x.negative, coefficient: coef, exponent: exp }
+      { class: Finite, negative: x.negative, coefficient: coef, exponent: exp, }
   }
 }
 
@@ -178,7 +178,7 @@ fn next_step(x : Decimal, ctx : Context, step_up : Bool) -> Decimal {
 /// Outcome of a magnitude step: a concrete next value, or the "we went
 /// past the largest representable" / "we went past zero" boundary.
 priv enum StepResult {
-  Value(BigInt, Int)
+  Value(BigInt, Int32)
   Overflow
   Zero
 }
@@ -190,7 +190,7 @@ priv enum StepResult {
 /// Over-precision inputs first round Ceiling-style (round toward larger
 /// magnitude); if the rounding moved the value, that's already the
 /// next-up. Otherwise the rounded result has its low digit incremented.
-fn step_magnitude_up(coef : BigInt, exp : Int, ctx : Context) -> StepResult {
+fn step_magnitude_up(coef : BigInt, exp : Int32, ctx : Context) -> StepResult {
   let etop = ctx.etop()
   let etiny = ctx.etiny()
   let n = digit_count(coef)
@@ -245,7 +245,7 @@ fn step_magnitude_up(coef : BigInt, exp : Int, ctx : Context) -> StepResult {
 /// Over-precision inputs first Floor-truncate (drop the excess digits);
 /// the truncated value is strictly less than the original, so that *is*
 /// the next-down.
-fn step_magnitude_down(coef : BigInt, exp : Int, ctx : Context) -> StepResult {
+fn step_magnitude_down(coef : BigInt, exp : Int32, ctx : Context) -> StepResult {
   let etiny = ctx.etiny()
   let n = digit_count(coef)
   let adj = exp + n - 1
@@ -286,10 +286,10 @@ fn step_magnitude_down(coef : BigInt, exp : Int, ctx : Context) -> StepResult {
 /// with the wraparound at that point.
 fn normalise_for_step(
   coef : BigInt,
-  exp : Int,
-  precision : Int,
-  etiny : Int,
-) -> (BigInt, Int) {
+  exp : Int32,
+  precision : Int32,
+  etiny : Int32,
+) -> (BigInt, Int32) {
   let n = digit_count(coef)
   if n >= precision {
     return (coef, exp)

@@ -58,7 +58,7 @@ fn coeff_to_string(coefficient : BigInt) -> String {
 
 ///|
 /// Render the magnitude of a finite decimal (without leading sign).
-fn finite_to_sci(coefficient : BigInt, exponent : Int) -> String {
+fn finite_to_sci(coefficient : BigInt, exponent : Int32) -> String {
   let coeff = coeff_to_string(coefficient)
   let n = coeff.length()
   let adjusted = exponent + n - 1
@@ -71,7 +71,7 @@ fn finite_to_sci(coefficient : BigInt, exponent : Int) -> String {
 
 ///|
 /// Plain notation: `exponent <= 0` and `adjusted >= -6`.
-fn plain_form(coeff : String, n : Int, exponent : Int) -> String {
+fn plain_form(coeff : String, n : Int32, exponent : Int32) -> String {
   let neg_exp = -exponent
   if exponent == 0 {
     coeff
@@ -88,7 +88,7 @@ fn plain_form(coeff : String, n : Int, exponent : Int) -> String {
 ///|
 /// Scientific notation: `d[.ddd]E±n`. Exponent always carries an explicit
 /// sign per GDA.
-fn sci_form(coeff : String, n : Int, adjusted : Int) -> String {
+fn sci_form(coeff : String, n : Int32, adjusted : Int32) -> String {
   let mantissa = if n == 1 {
     coeff
   } else {
@@ -102,7 +102,7 @@ fn sci_form(coeff : String, n : Int, adjusted : Int) -> String {
 /// Render the magnitude of a finite decimal in engineering notation. Shares
 /// the no-exponent plain branch with `finite_to_sci`; only the exponential
 /// case differs, snapping the exponent to a multiple of three.
-fn finite_to_eng(coefficient : BigInt, exponent : Int) -> String {
+fn finite_to_eng(coefficient : BigInt, exponent : Int32) -> String {
   let coeff = coeff_to_string(coefficient)
   let n = coeff.length()
   let adjusted = exponent + n - 1
@@ -116,7 +116,7 @@ fn finite_to_eng(coefficient : BigInt, exponent : Int) -> String {
 ///|
 /// Engineering exponential form: place 1–3 digits before the point so the
 /// printed exponent is a multiple of three.
-fn eng_form(coeff : String, n : Int, exponent : Int) -> String {
+fn eng_form(coeff : String, n : Int32, exponent : Int32) -> String {
   let leftdigits = exponent + n
   // Digits to keep before the decimal point. The zero coefficient takes the
   // other branch so the integer part lands in [1, 3] for real values.
@@ -143,6 +143,6 @@ fn eng_form(coeff : String, n : Int, exponent : Int) -> String {
 
 ///|
 /// Non-negative remainder (`%` follows the sign of the dividend in MoonBit).
-fn pos_mod(x : Int, m : Int) -> Int {
+fn pos_mod(x : Int32, m : Int32) -> Int32 {
   (x % m + m) % m
 }

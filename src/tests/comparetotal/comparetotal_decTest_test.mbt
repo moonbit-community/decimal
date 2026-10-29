@@ -803,8 +803,8 @@ let comparetotal_subset : String =
 
 ///|
 test "comparetotal.decTest subset round-trips through parse + comparetotal + toSci" {
-  let cases = parse_dectest(comparetotal_subset)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @comparetotal.parse_dectest(comparetotal_subset)
+  let (failures, skipped) = @comparetotal.run_cases_with_flags(cases)
   if skipped > 0 {
     println("\{skipped} cases skipped (format-encoding / reference-specific)")
   }

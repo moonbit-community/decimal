@@ -133,8 +133,8 @@ let class_subset : String =
 
 ///|
 test "class.decTest subset" {
-  let cases = parse_dectest(class_subset)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @class.parse_dectest(class_subset)
+  let (failures, skipped) = @class.run_cases_with_flags(cases)
   if skipped > 0 {
     println("\{skipped} cases skipped (format-encoding / reference-specific)")
   }

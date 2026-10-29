@@ -614,8 +614,8 @@ let ln_subset : String =
 
 ///|
 test "ln.decTest subset" {
-  let cases = parse_dectest(ln_subset)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @ln.parse_dectest(ln_subset)
+  let (failures, skipped) = @ln.run_cases_with_flags(cases)
   if skipped > 0 {
     println("\{skipped} cases skipped (format-encoding / reference-specific)")
   }

@@ -4,7 +4,7 @@
 /// operand's exponent keeps the ideal (unrounded) exponent unchanged, so the
 /// operations only differ from the identity when rounding actually fires.
 fn zero_like(d : Decimal) -> Decimal {
-  { class: Finite, negative: false, coefficient: 0N, exponent: d.exponent }
+  { class: Finite, negative: false, coefficient: 0N, exponent: d.exponent, }
 }
 
 ///|
@@ -16,7 +16,7 @@ fn zero_like(d : Decimal) -> Decimal {
 /// unchanged — a NaN is never arithmetically negated — while a signaling NaN
 /// raises `Invalid_operation` (and its payload is truncated to precision).
 pub fn Decimal::minus(self : Decimal, ctx : Context) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.minus_raw(ctx), ctx.flags)
 }
 
@@ -36,7 +36,7 @@ fn Decimal::minus_raw(self : Decimal, ctx : Context) -> Decimal {
 /// `minus`, a NaN propagates unchanged and a signaling NaN raises
 /// `Invalid_operation`.
 pub fn Decimal::plus(self : Decimal, ctx : Context) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.plus_raw(ctx), ctx.flags)
 }
 
@@ -56,7 +56,7 @@ fn Decimal::plus_raw(self : Decimal, ctx : Context) -> Decimal {
 /// sign is *not* cleared (e.g. `abs(-NaN22) = -NaN22`); a signaling NaN raises
 /// `Invalid_operation`.
 pub fn Decimal::abs(self : Decimal, ctx : Context) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.abs_raw(ctx), ctx.flags)
 }
 

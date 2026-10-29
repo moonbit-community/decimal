@@ -186,13 +186,13 @@ let minus_subset : String =
 
 ///|
 test "minus.decTest minx subset round-trips through parse + minus + toSci" {
-  let cases = parse_dectest(minus_subset)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @minus.parse_dectest(minus_subset)
+  let (failures, skipped) = @minus.run_cases_with_flags(cases)
   if skipped > 0 {
     println("\{skipped} cases skipped (format-encoding / reference-specific)")
   }
   if failures.length() > 0 {
-    let buf = StringBuilder::new()
+    let buf = StringBuilder()
     buf.write_string(
       "\{failures.length()} of \{cases.length()} cases failed:\n",
     )

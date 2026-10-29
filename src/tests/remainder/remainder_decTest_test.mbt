@@ -644,8 +644,8 @@ let remainder_subset : String =
 
 ///|
 test "remainder.decTest subset round-trips through parse + remainder + toSci" {
-  let cases = parse_dectest(remainder_subset)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @remainder.parse_dectest(remainder_subset)
+  let (failures, skipped) = @remainder.run_cases_with_flags(cases)
   if skipped > 0 {
     println("\{skipped} cases skipped (format-encoding / reference-specific)")
   }
