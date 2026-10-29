@@ -1637,8 +1637,8 @@ let power_subset : String =
 
 ///|
 test "power.decTest subset" {
-  let cases = parse_dectest(power_subset)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @power.parse_dectest(power_subset)
+  let (failures, skipped) = @power.run_cases_with_flags(cases)
   if skipped > 0 {
     println("\{skipped} cases skipped (format-encoding / reference-specific)")
   }

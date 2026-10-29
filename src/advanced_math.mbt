@@ -26,7 +26,7 @@
 /// `exp` / `ln` / `log10` / `power` are defined. Beyond it the working
 /// precision needed to round correctly would be unbounded, so GDA requires
 /// the operation to refuse with `Invalid_context` rather than diverge.
-const MAX_MATH : Int = 999_999
+const MAX_MATH : Int32 = 999_999
 
 ///|
 /// True when `ctx` is too extreme for the series-based math functions:
@@ -73,7 +73,7 @@ fn math_precheck(x : Decimal, ctx : Context) -> Decimal? {
 ///|
 /// GDA `exp`: e raised to the operand.
 pub fn Decimal::exp(self : Decimal, ctx : Context) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.exp_raw(ctx), ctx.flags)
 }
 
@@ -88,7 +88,7 @@ fn Decimal::exp_raw(self : Decimal, ctx : Context) -> Decimal {
     Infinity =>
       if self.negative {
         // exp(-Inf) = +0
-        { class: Finite, negative: false, coefficient: 0N, exponent: 0 }
+        { class: Finite, negative: false, coefficient: 0N, exponent: 0, }
       } else {
         self
       }
@@ -104,7 +104,7 @@ fn Decimal::exp_raw(self : Decimal, ctx : Context) -> Decimal {
 
 ///|
 /// Number of decimal digits of a non-negative `Int` (`len(str(n))`).
-fn int_digits(n : Int) -> Int {
+fn int_digits(n : Int32) -> Int32 {
   bigint_digits(BigInt::from_int(n))
 }
 
@@ -125,13 +125,23 @@ fn exp_finite(x : Decimal, ctx : Context) -> Decimal {
   let etiny = ctx.etiny()
   let result : Decimal = if !x.negative && adj > int_digits((ctx.e_max + 1) * 3) {
     // overflow: a value above e_max that finalize turns into ±Infinity.
-    { class: Finite, negative: false, coefficient: 1N, exponent: ctx.e_max + 1 }
+    {
+      class: Finite,
+      negative: false,
+      coefficient: 1N,
+      exponent: ctx.e_max + 1,
+    }
   } else if x.negative && adj > int_digits((-etiny + 1) * 3) {
     // underflow: a value below etiny that finalize rounds to 0.
-    { class: Finite, negative: false, coefficient: 1N, exponent: etiny - 1 }
+    { class: Finite, negative: false, coefficient: 1N, exponent: etiny - 1, }
   } else if !x.negative && adj < -p {
     // just above 1: 1 + 10^-p, so finalize rounds to 1 and raises Inexact.
-    { class: Finite, negative: false, coefficient: pow10(p) + 1N, exponent: -p }
+    {
+      class: Finite,
+      negative: false,
+      coefficient: pow10(p) + 1N,
+      exponent: -p,
+    }
   } else if x.negative && adj < -p - 1 {
     // just below 1: (p+1) nines = 1 - 10^-(p+1); finalize rounds up to 1.
     {
@@ -152,10 +162,10 @@ fn exp_finite(x : Decimal, ctx : Context) -> Decimal {
         continue extra + 3
       }
     }
-    { class: Finite, negative: false, coefficient: coeff, exponent: exp }
+    { class: Finite, negative: false, coefficient: coeff, exponent: exp, }
   }
   // exp always rounds half-even; flags accumulate into the shared Flags.
-  result.finalize_raw({ ..ctx, rounding: HalfEven })
+  result.finalize_raw({ ..ctx, rounding: HalfEven, })
 }
 
 ///|
@@ -187,7 +197,7 @@ fn dstr_lt(a : String, b : String) -> Bool {
 /// `Division_by_zero` raised); ln of negative or NaN is the usual
 /// propagation / invalid.
 pub fn Decimal::ln(self : Decimal, ctx : Context) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.ln_raw(ctx), ctx.flags)
 }
 
@@ -258,14 +268,14 @@ fn ln_finite(x : Decimal, ctx : Context) -> Decimal {
       negative: coeff < 0N,
       coefficient: abs_big(coeff),
       exponent: -places,
-    } : Decimal).finalize_raw({ ..ctx, rounding: HalfEven })
+    } : Decimal).finalize_raw({ ..ctx, rounding: HalfEven, })
 }
 
 ///|
 /// Lower bound `r` on the adjusted exponent of `ln(x)` (i.e. `|ln(x)| >=
 /// 10^r`), used to seed the Ziv loop's working precision. Uses the bounds
 /// `1 - 1/x <= ln(x) <= x - 1` for `0.1 <= x <= 10`.
-fn ln_exp_bound(x : Decimal) -> Int {
+fn ln_exp_bound(x : Decimal) -> Int32 {
   let adj = adjusted_exponent(x)
   if adj >= 1 {
     return int_digits(adj * 23 / 10) - 1
@@ -291,7 +301,7 @@ fn ln_exp_bound(x : Decimal) -> Int {
 /// at workp precision; falls back to the closed-form result for exact
 /// powers of ten.
 pub fn Decimal::log10(self : Decimal, ctx : Context) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.log10_raw(ctx), ctx.flags)
 }
 
@@ -325,7 +335,7 @@ fn log10_finite(x : Decimal, ctx : Context) -> Decimal {
   match power_of_ten_log(x) {
     // log10(10^k) = k; still finalized so it fits precision (may round).
     Some(k) =>
-      return Decimal::from_int(k).finalize_raw({ ..ctx, rounding: HalfEven })
+      return Decimal::from_int(k).finalize_raw({ ..ctx, rounding: HalfEven, })
     None => ()
   }
   let p = ctx.precision
@@ -345,12 +355,12 @@ fn log10_finite(x : Decimal, ctx : Context) -> Decimal {
       negative: coeff < 0N,
       coefficient: abs_big(coeff),
       exponent: -places,
-    } : Decimal).finalize_raw({ ..ctx, rounding: HalfEven })
+    } : Decimal).finalize_raw({ ..ctx, rounding: HalfEven, })
 }
 
 ///|
 /// Lower bound on the adjusted exponent of `log10(x)`, seeding the Ziv loop.
-fn log10_exp_bound(x : Decimal) -> Int {
+fn log10_exp_bound(x : Decimal) -> Int32 {
   let adj = adjusted_exponent(x)
   if adj >= 1 {
     return int_digits(adj) - 1
@@ -376,7 +386,7 @@ fn log10_exp_bound(x : Decimal) -> Int {
 /// For a positive finite `x = c · 10^e`, return `Some(k)` iff `c` is a
 /// power of ten (so `x = 10^(k_c + e)` for some `k_c`). Used by log10
 /// to recognise the exact-result cases.
-fn power_of_ten_log(x : Decimal) -> Int? {
+fn power_of_ten_log(x : Decimal) -> Int32? {
   if x.coefficient.is_zero() {
     return None
   }
@@ -398,7 +408,7 @@ pub fn Decimal::power(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.power_raw(other, ctx), ctx.flags)
 }
 
@@ -535,7 +545,7 @@ fn power_finite(x : Decimal, y : Decimal, ctx : Context) -> Decimal {
     return invalid_nan(ctx)
   }
   // From here on work with the magnitude; the sign is `result_neg`.
-  let ax : Decimal = { ..x, negative: false }
+  let ax : Decimal = { ..x, negative: false, }
   // power(±0, y≠0): negative y → signed Infinity, positive y → signed zero.
   // `power` does not raise Division_by_zero (unlike `divide`).
   if ax.coefficient.is_zero() {
@@ -644,7 +654,7 @@ fn power_finite(x : Decimal, y : Decimal, ctx : Context) -> Decimal {
     }
   }
   (
-    { class: Finite, negative: result_neg, coefficient: coeff, exponent: exp } :
+    { class: Finite, negative: result_neg, coefficient: coeff, exponent: exp, } :
     Decimal).finalize_raw(ctx)
 }
 
@@ -655,9 +665,9 @@ fn power_finite(x : Decimal, y : Decimal, ctx : Context) -> Decimal {
 /// non-integer `y` the result is `1.000…0` at `1 - precision` with `Inexact`
 /// and `Rounded`.
 fn power_one(
-  self_exp : Int,
+  self_exp : Int32,
   y : Decimal,
-  y_int : Int?,
+  y_int : Int32?,
   y_is_int : Bool,
   result_neg : Bool,
   ctx : Context,
@@ -696,7 +706,7 @@ fn power_one(
 ///|
 /// Integer-power via square-and-multiply, with negative exponents
 /// expressed as `1 / power(x, |n|)`.
-fn power_int(x : Decimal, n : Int, ctx : Context) -> Decimal {
+fn power_int(x : Decimal, n : Int32, ctx : Context) -> Decimal {
   if n == 0 {
     return Decimal::one()
   }
@@ -733,7 +743,7 @@ fn power_int(x : Decimal, n : Int, ctx : Context) -> Decimal {
 ///|
 /// Return `Some(n)` iff `y` is exactly representable as an `Int` —
 /// non-negative or negative integer with no fractional part.
-fn integer_value(y : Decimal) -> Int? {
+fn integer_value(y : Decimal) -> Int32? {
   if !(y.class is Finite) {
     return None
   }
@@ -793,7 +803,7 @@ fn is_odd_integer(y : Decimal) -> Bool {
 ///|
 /// True iff `|x| == 1` (any representation).
 fn is_one_abs(x : Decimal) -> Bool {
-  is_one({ ..x, negative: false })
+  is_one({ ..x, negative: false, })
 }
 
 ///|

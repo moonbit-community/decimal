@@ -3,7 +3,7 @@
 /// the ASCII subset of any input; non-BMP / surrogate inputs are out of scope
 /// for the call sites that use this helper (decimal grammar + dectest format
 /// are ASCII-only).
-fn char_at(s : String, i : Int) -> Char {
+fn char_at(s : String, i : Int32) -> Char {
   s[i].to_int().unsafe_to_char()
 }
 
@@ -11,14 +11,14 @@ fn char_at(s : String, i : Int) -> Char {
 /// Largest power of ten kept in `pow10_table`. Covers IEEE 754 `decimal128`'s
 /// 34-digit precision (and the digit counts the round / align hot paths probe)
 /// with wide headroom; shifts beyond it fall back to a one-shot `BigInt::pow`.
-const POW10_MAX : Int = 128
+const POW10_MAX : Int32 = 128
 
 ///|
 /// Pre-computed powers of ten `10^0` … `10^POW10_MAX`, built once at startup,
 /// so the hot-path digit-shift / digit-count routines index the table instead
 /// of allocating via `BigInt::pow`.
 let pow10_table : Array[BigInt] = {
-  let table = Array::new(capacity=POW10_MAX + 1)
+  let table = Array(capacity=POW10_MAX + 1)
   let mut p : BigInt = 1N
   for _i in 0..<=POW10_MAX {
     table.push(p)
@@ -29,7 +29,7 @@ let pow10_table : Array[BigInt] = {
 
 ///|
 /// Clamp `v` into the inclusive range `[lo, hi]`.
-fn clamp(v : Int, lo : Int, hi : Int) -> Int {
+fn clamp(v : Int32, lo : Int32, hi : Int32) -> Int32 {
   if v < lo {
     lo
   } else if v > hi {
@@ -42,7 +42,7 @@ fn clamp(v : Int, lo : Int, hi : Int) -> Int {
 ///|
 /// Compute `10^n` as a `BigInt`. Negative `n` is a programmer error and
 /// aborts. Small `n` lands in `pow10_table`; larger `n` allocates fresh.
-fn pow10(n : Int) -> BigInt {
+fn pow10(n : Int32) -> BigInt {
   guard n >= 0 else { abort("pow10: negative exponent \{n}") }
   if n < pow10_table.length() {
     pow10_table[n]
@@ -55,11 +55,11 @@ fn pow10(n : Int) -> BigInt {
 /// Powers of five `5^0` … `5^POW5_MAX`, built once at startup. `from_double`
 /// spreads a binary fraction's `2^-k` as `5^k × 10^-k`, so the conversion's hot
 /// factor is a power of five; caching them avoids a `BigInt::pow` per call.
-const POW5_MAX : Int = 128
+const POW5_MAX : Int32 = 128
 
 ///|
 let pow5_table : Array[BigInt] = {
-  let table = Array::new(capacity=POW5_MAX + 1)
+  let table = Array(capacity=POW5_MAX + 1)
   let mut p : BigInt = 1N
   for _i in 0..<=POW5_MAX {
     table.push(p)
@@ -70,7 +70,7 @@ let pow5_table : Array[BigInt] = {
 
 ///|
 /// `5^n` as a `BigInt`. Negative `n` is a programmer error and aborts.
-fn pow5(n : Int) -> BigInt {
+fn pow5(n : Int32) -> BigInt {
   guard n >= 0 else { abort("pow5: negative exponent \{n}") }
   if n < pow5_table.length() {
     pow5_table[n]
@@ -90,7 +90,7 @@ fn pow5(n : Int) -> BigInt {
 /// dectest exercises (< 30 digits), avoiding `to_string` is a measurable
 /// win — `to_string` does O(n²) grade-school divisions just to discard the
 /// resulting characters past their `.length()`.
-fn digit_count(b : BigInt) -> Int {
+fn digit_count(b : BigInt) -> Int32 {
   if b.is_zero() {
     return 1
   }
@@ -121,7 +121,7 @@ fn fits_int64(b : BigInt) -> Int64? {
 ///|
 /// Convert a non-negative `BigInt` magnitude to a signed `Int`, or `None` if it
 /// does not fit the `Int` range. Used to read an integer-valued operand.
-fn bigint_to_int(magnitude : BigInt, negative : Bool) -> Int? {
+fn bigint_to_int(magnitude : BigInt, negative : Bool) -> Int32? {
   match fits_int64(magnitude) {
     Some(v) =>
       if v.compare(2147483647L) <= 0 {
@@ -141,9 +141,9 @@ fn bigint_to_int(magnitude : BigInt, negative : Bool) -> Int? {
 /// their `keep` predicate.
 fn strip_trailing_zeros(
   coef : BigInt,
-  exp : Int,
-  keep : (Int) -> Bool,
-) -> (BigInt, Int) {
+  exp : Int32,
+  keep : (Int32) -> Bool,
+) -> (BigInt, Int32) {
   for c = coef, e = exp {
     if c.is_zero() || !keep(e) {
       break (c, e)
@@ -165,7 +165,7 @@ fn strip_trailing_zeros(
 /// The zero short-circuit matters when callers align around extreme exponent
 /// gaps — `0 * 10^huge` is still zero, but materialising the `10^huge` BigInt
 /// would consume gigabytes.
-fn scale_up(coeff : BigInt, shift : Int) -> BigInt {
+fn scale_up(coeff : BigInt, shift : Int32) -> BigInt {
   if shift == 0 || coeff.is_zero() {
     coeff
   } else {
@@ -174,7 +174,7 @@ fn scale_up(coeff : BigInt, shift : Int) -> BigInt {
 }
 
 ///|
-fn min_exponent(a : Decimal, b : Decimal) -> Int {
+fn min_exponent(a : Decimal, b : Decimal) -> Int32 {
   if a.exponent <= b.exponent {
     a.exponent
   } else {
@@ -194,7 +194,7 @@ fn min_exponent(a : Decimal, b : Decimal) -> Int {
 /// `pow10_table` range, so the helper is cheap for the common case where the
 /// exponent gap is small. Callers that have an Int64 fast path live alongside
 /// it (e.g. `try_add_finite_small`) handle their own small-int alignment.
-fn align(a : Decimal, b : Decimal) -> (BigInt, BigInt, Int) {
+fn align(a : Decimal, b : Decimal) -> (BigInt, BigInt, Int32) {
   let result_exp = min_exponent(a, b)
   let a_scaled = scale_up(a.coefficient, a.exponent - result_exp)
   let b_scaled = scale_up(b.coefficient, b.exponent - result_exp)
@@ -202,12 +202,12 @@ fn align(a : Decimal, b : Decimal) -> (BigInt, BigInt, Int) {
 }
 
 ///|
-fn adjusted_exponent(d : Decimal) -> Int {
+fn adjusted_exponent(d : Decimal) -> Int32 {
   adjusted_exponent_parts(d.coefficient, d.exponent)
 }
 
 ///|
-fn adjusted_exponent_parts(coeff : BigInt, exponent : Int) -> Int {
+fn adjusted_exponent_parts(coeff : BigInt, exponent : Int32) -> Int32 {
   exponent + digit_count(coeff) - 1
 }
 
@@ -245,9 +245,9 @@ fn signed_add(
 /// exponent so the powers of ten cancel.
 fn align_for_int_div(
   a_coeff : BigInt,
-  a_exp : Int,
+  a_exp : Int32,
   b_coeff : BigInt,
-  b_exp : Int,
+  b_exp : Int32,
 ) -> (BigInt, BigInt) {
   if a_exp >= b_exp {
     (scale_up(a_coeff, a_exp - b_exp), b_coeff)

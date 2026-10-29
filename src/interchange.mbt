@@ -9,10 +9,10 @@
 
 ///|
 priv struct InterchangeFormat {
-  bits : Int
-  precision : Int
-  ecbits : Int
-  bias : Int
+  bits : Int32
+  precision : Int32
+  ecbits : Int32
+  bias : Int32
   context : Context
 }
 
@@ -50,7 +50,7 @@ let format128 : InterchangeFormat = {
 /// conversion are returned with the hex string.
 pub fn Decimal::to_decimal32_hex(
   self : Decimal,
-  rounding? : Rounding = HalfEven,
+  rounding~ : Rounding = HalfEven,
 ) -> (String, Flags) {
   encode_interchange(self, format32, rounding)
 }
@@ -59,7 +59,7 @@ pub fn Decimal::to_decimal32_hex(
 /// Encode `self` as a decimal64 DPD interchange payload.
 pub fn Decimal::to_decimal64_hex(
   self : Decimal,
-  rounding? : Rounding = HalfEven,
+  rounding~ : Rounding = HalfEven,
 ) -> (String, Flags) {
   encode_interchange(self, format64, rounding)
 }
@@ -68,7 +68,7 @@ pub fn Decimal::to_decimal64_hex(
 /// Encode `self` as a decimal128 DPD interchange payload.
 pub fn Decimal::to_decimal128_hex(
   self : Decimal,
-  rounding? : Rounding = HalfEven,
+  rounding~ : Rounding = HalfEven,
 ) -> (String, Flags) {
   encode_interchange(self, format128, rounding)
 }
@@ -100,7 +100,7 @@ fn encode_interchange(
   fmt : InterchangeFormat,
   rounding : Rounding,
 ) -> (String, Flags) {
-  let ctx = { ..fmt.context, rounding, flags: Flags::new() }
+  let ctx = { ..fmt.context, rounding, flags: Flags::new(), }
   let rounded = d.finalize_raw(ctx)
   (interchange_bits(rounded, fmt).to_fixed_hex(fmt.bits / 4), ctx.flags)
 }
@@ -167,7 +167,7 @@ fn decode_interchange(hex : String, fmt : InterchangeFormat) -> Decimal? {
   let encoded_exp = (exp_msb << fmt.ecbits) | exp_cont
   let exponent = encoded_exp - fmt.bias
   let coefficient = decode_coefficient_continuation(bits, fmt, msd~)
-  Some({ class: Finite, negative: sign, coefficient, exponent })
+  Some({ class: Finite, negative: sign, coefficient, exponent, })
 }
 
 ///|
@@ -202,10 +202,10 @@ fn encode_digit_string_continuation(
 fn decode_coefficient_continuation(
   bits : BigInt,
   fmt : InterchangeFormat,
-  msd~ : Int,
+  msd~ : Int32,
 ) -> BigInt {
   let groups = (fmt.precision - 1) / 3
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   buf.write_char((0x30 + msd).unsafe_to_char())
   for g in 0..<groups {
     let offset = 6 + fmt.ecbits + g * 10
@@ -219,7 +219,7 @@ fn decode_coefficient_continuation(
 }
 
 ///|
-fn dpd_encode3(d0 : Int, d1 : Int, d2 : Int) -> Int {
+fn dpd_encode3(d0 : Int32, d1 : Int32, d2 : Int32) -> Int32 {
   let a = (d0 >> 3) & 1
   let b = (d0 >> 2) & 1
   let c = (d0 >> 1) & 1
@@ -255,7 +255,7 @@ fn dpd_encode3(d0 : Int, d1 : Int, d2 : Int) -> Int {
 }
 
 ///|
-fn dpd_decode3(code : Int) -> (Int, Int, Int) {
+fn dpd_decode3(code : Int32) -> (Int32, Int32, Int32) {
   let p = (code >> 9) & 1
   let q = (code >> 8) & 1
   let r = (code >> 7) & 1
@@ -291,7 +291,7 @@ fn dpd_decode3(code : Int) -> (Int, Int, Int) {
 }
 
 ///|
-fn get_bits(bits : BigInt, total : Int, offset : Int, len : Int) -> Int {
+fn get_bits(bits : BigInt, total : Int32, offset : Int32, len : Int32) -> Int32 {
   let shift = total - offset - len
   (bits >> shift).land((1N << len) - 1N).to_int()
 }
@@ -307,7 +307,7 @@ fn parse_hex_bigint(hex : String) -> BigInt? {
 }
 
 ///|
-fn hex_digit(c : Char) -> Int? {
+fn hex_digit(c : Char) -> Int32? {
   if c >= '0' && c <= '9' {
     Some(c.to_int() - '0'.to_int())
   } else if c >= 'a' && c <= 'f' {
@@ -320,8 +320,8 @@ fn hex_digit(c : Char) -> Int? {
 }
 
 ///|
-fn BigInt::to_fixed_hex(self : BigInt, width : Int) -> String {
-  let buf = StringBuilder::new()
+fn BigInt::to_fixed_hex(self : BigInt, width : Int32) -> String {
+  let buf = StringBuilder()
   for i in 0..<width {
     let shift = (width - i - 1) * 4
     let nibble = (self >> shift).land(15N).to_int()
@@ -332,11 +332,11 @@ fn BigInt::to_fixed_hex(self : BigInt, width : Int) -> String {
 }
 
 ///|
-fn left_pad_digits(s : String, width : Int) -> String {
+fn left_pad_digits(s : String, width : Int32) -> String {
   if s.length() >= width {
     return s
   }
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for _ in 0..<(width - s.length()) {
     buf.write_char('0')
   }
@@ -345,6 +345,6 @@ fn left_pad_digits(s : String, width : Int) -> String {
 }
 
 ///|
-fn digit_at(s : String, i : Int) -> Int {
+fn digit_at(s : String, i : Int32) -> Int32 {
   char_at(s, i).to_int() - '0'.to_int()
 }

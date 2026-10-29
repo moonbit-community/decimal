@@ -3431,8 +3431,8 @@ let fma_subset : String =
 
 ///|
 test "fma.decTest subset" {
-  let cases = parse_dectest(fma_subset)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @fma.parse_dectest(fma_subset)
+  let (failures, skipped) = @fma.run_cases_with_flags(cases)
   if skipped > 0 {
     println("\{skipped} cases skipped (format-encoding / reference-specific)")
   }

@@ -678,8 +678,8 @@ let exp_subset : String =
 
 ///|
 test "exp.decTest subset" {
-  let cases = parse_dectest(exp_subset)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @exp.parse_dectest(exp_subset)
+  let (failures, skipped) = @exp.run_cases_with_flags(cases)
   if skipped > 0 {
     println("\{skipped} cases skipped (format-encoding / reference-specific)")
   }

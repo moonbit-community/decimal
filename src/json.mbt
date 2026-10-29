@@ -8,7 +8,7 @@
 ///|
 /// Encode as the GDA scientific string (e.g. `"1.50"`, `"-0"`, `"Infinity"`.)
 pub impl ToJson for Decimal with fn to_json(self) {
-  self.to_sci_string().to_json()
+  Json(self.to_sci_string())
 }
 
 ///|

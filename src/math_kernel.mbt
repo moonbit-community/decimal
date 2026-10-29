@@ -29,13 +29,13 @@ fn abs_big(b : BigInt) -> BigInt {
 
 ///|
 /// Number of decimal digits in the magnitude `|b|` (zero counts as one digit).
-fn bigint_digits(b : BigInt) -> Int {
+fn bigint_digits(b : BigInt) -> Int32 {
   digit_count(abs_big(b))
 }
 
 ///|
 /// Bit length of the magnitude `|n|` (zero -> 0).
-fn nbits(n : BigInt) -> Int {
+fn nbits(n : BigInt) -> Int32 {
   n.bit_length()
 }
 
@@ -67,7 +67,7 @@ fn div_nearest(a : BigInt, b : BigInt) -> BigInt {
 
 ///|
 /// Closest integer to `x / 2^shift` (shift >= 0), rounding to even on a tie.
-fn rshift_nearest(x : BigInt, shift : Int) -> BigInt {
+fn rshift_nearest(x : BigInt, shift : Int32) -> BigInt {
   let b = 1N << shift
   let q = x >> shift
   if ((x.land(b - 1N) << 1) + q.land(1N)).compare(b) > 0 {
@@ -87,7 +87,7 @@ fn rshift_nearest(x : BigInt, shift : Int) -> BigInt {
 /// * sqrt(finite positive): Newton-style integer sqrt, half-even rounded
 ///   to `precision` digits.
 pub fn Decimal::sqrt(self : Decimal, ctx : Context) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.sqrt_raw(ctx), ctx.flags)
 }
 
@@ -101,7 +101,7 @@ fn Decimal::sqrt_raw(self : Decimal, ctx : Context) -> Decimal {
     Finite =>
       if self.coefficient.is_zero() {
         let ideal = floor_div2(self.exponent)
-        ({ ..self, exponent: ideal } : Decimal).finalize_raw(ctx)
+        ({ ..self, exponent: ideal, } : Decimal).finalize_raw(ctx)
       } else if self.negative {
         invalid_nan(ctx)
       } else {
@@ -169,9 +169,9 @@ fn sqrt_finite(x : Decimal, ctx : Context) -> Decimal {
   // sqrt always rounds half-even; finalize applies precision + exponent-range
   // rules and raises Inexact / Rounded. Flags accumulate into the shared
   // Flags object, so they still surface on the caller's context.
-  let he_ctx = { ..ctx, rounding: HalfEven }
+  let he_ctx = { ..ctx, rounding: HalfEven, }
   Decimal::finalize_raw(
-    { class: Finite, negative: false, coefficient: n, exponent: e },
+    { class: Finite, negative: false, coefficient: n, exponent: e, },
     he_ctx,
   )
 }
@@ -204,7 +204,7 @@ fn isqrt(n : BigInt) -> BigInt {
 /// toward zero, which gives the wrong result for negative odd inputs; we
 /// adjust by one when needed so the GDA "ideal exponent"
 /// (`floor(x.exponent / 2)`) is computed correctly even for `sqrt(0E-3)`.
-fn floor_div2(n : Int) -> Int {
+fn floor_div2(n : Int32) -> Int32 {
   if n >= 0 {
     n / 2
   } else {
@@ -227,14 +227,14 @@ fn sqrt_nearest(n : BigInt, a0 : BigInt) -> BigInt {
 ///|
 /// Number of terms for the fixed-point Taylor series at precision `M` (with
 /// `digits = len(str(M))`) and reduction parameter `L`: `ceil(10*digits/(3L))`.
-fn taylor_terms(digits : Int, l : Int) -> Int {
+fn taylor_terms(digits : Int32, l : Int32) -> Int32 {
   (10 * digits + 3 * l - 1) / (3 * l)
 }
 
 ///|
 /// Integer approximation to `M * log(x / M)` (x, M > 0). For `L = 8` and
 /// `0.1 <= x/M <= 10` the absolute error is at most 22.
-fn ilog(x : BigInt, m : BigInt, l : Int) -> BigInt {
+fn ilog(x : BigInt, m : BigInt, l : Int32) -> BigInt {
   // Argument reduction via `log1p(y) = 2*log1p(y/(1+sqrt(1+y)))`, in
   // fixed-point: `y` represents `2^R * y_real * M` after R reductions.
   let (y, r) = for y = x - m, r = 0 {
@@ -263,7 +263,7 @@ fn ilog(x : BigInt, m : BigInt, l : Int) -> BigInt {
 ///|
 /// Integer approximation to `M * exp(x / M)` (M > 0, x/M small). For
 /// `0 <= x/M <= 2.4` the absolute error is bounded by 60.
-fn iexp(x : BigInt, m : BigInt, l : Int) -> BigInt {
+fn iexp(x : BigInt, m : BigInt, l : Int32) -> BigInt {
   // Reduce by a power R of 2 so |x/2^R/M| < 2^-L, sum the expm1 Taylor series,
   // then square back up R times via `expm1(2x) = expm1(x)*(expm1(x)+2)`.
   let r = nbits(floor_div(x << l, m))
@@ -290,7 +290,7 @@ fn iexp(x : BigInt, m : BigInt, l : Int) -> BigInt {
 
 ///|
 /// True iff the last `count` characters of `s` are all the digit '0'.
-fn suffix_all_zeros(s : String, count : Int) -> Bool {
+fn suffix_all_zeros(s : String, count : Int32) -> Bool {
   let n = s.length()
   for i = n - count {
     if i >= n {
@@ -317,7 +317,7 @@ let log10_cache : Ref[String] = {
 /// `ln` / `log10` / `power`. Served from `log10_cache`, extending it via `ilog`
 /// when more digits are wanted (computing until the truncation point is
 /// reliable, i.e. the trailing guard digits are not all zero).
-fn log10_digits(p : Int) -> BigInt {
+fn log10_digits(p : Int32) -> BigInt {
   let cached = log10_cache.val
   if p + 1 > cached.length() {
     let s = for extra = 3 {
@@ -355,7 +355,7 @@ fn reliable_prefix(s : String) -> String {
 /// Assumes `c * 10^e != 1`. Uses `log(c*10^e) = log(d) + f*log(10)` after
 /// writing `c*10^e = d*10^f` with `d` near 1 — so the magnitude `f` is read
 /// off directly, never iterated.
-fn dlog(c : BigInt, e : Int, p_in : Int) -> BigInt {
+fn dlog(c : BigInt, e : Int32, p_in : Int32) -> BigInt {
   let p = p_in + 2
   let l = bigint_digits(c)
   let f = e + l - (if e + l >= 1 { 1 } else { 0 })
@@ -382,7 +382,7 @@ fn dlog(c : BigInt, e : Int, p_in : Int) -> BigInt {
 ///|
 /// Integer approximation to `10^p * log10(c * 10^e)` (c > 0), error <= 1.
 /// Assumes `c * 10^e != 1`.
-fn dlog10(c : BigInt, e : Int, p_in : Int) -> BigInt {
+fn dlog10(c : BigInt, e : Int32, p_in : Int32) -> BigInt {
   let p = p_in + 2
   let l = bigint_digits(c)
   let f = e + l - (if e + l >= 1 { 1 } else { 0 })
@@ -402,7 +402,7 @@ fn dlog10(c : BigInt, e : Int, p_in : Int) -> BigInt {
 /// Approximation to `exp(c * 10^e)` with `p` digits of precision. Returns
 /// `(d, f)` with `10^(p-1) <= d <= 10^p` and `(d-1)*10^f < exp(c*10^e) <
 /// (d+1)*10^f` — i.e. `d` carries an error of at most 1.
-fn dexp(c : BigInt, e : Int, p_in : Int) -> (BigInt, Int) {
+fn dexp(c : BigInt, e : Int32, p_in : Int32) -> (BigInt, Int32) {
   let p = p_in + 2
   // extra precision for log(10) = adjusted exponent of c*10^e (if positive).
   let adj = e + bigint_digits(c) - 1
@@ -427,7 +427,7 @@ fn dexp(c : BigInt, e : Int, p_in : Int) -> (BigInt, Int) {
 /// from a rounding boundary to round the same way under any mode — i.e. it is
 /// not a multiple of half a ulp at `p`. While this is false the caller widens
 /// the working precision and recomputes.
-fn ziv_roundable(coeff : BigInt, p : Int) -> Bool {
+fn ziv_roundable(coeff : BigInt, p : Int32) -> Bool {
   !(abs_big(coeff) % (5N * pow10(bigint_digits(coeff) - p - 1))).is_zero()
 }
 
@@ -437,11 +437,11 @@ fn ziv_roundable(coeff : BigInt, p : Int) -> Bool {
 /// `(c-1)*10^e < x^y < (c+1)*10^e`.
 fn dpower(
   xc : BigInt,
-  xe : Int,
+  xe : Int32,
   yc : BigInt,
-  ye : Int,
-  p : Int,
-) -> (BigInt, Int) {
+  ye : Int32,
+  p : Int32,
+) -> (BigInt, Int32) {
   let b = bigint_digits(yc) + ye
   let lxc = dlog(xc, xe, p + b + 1)
   let shift = ye - b

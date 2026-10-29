@@ -54,7 +54,7 @@ fn Decimal::finalize_raw(self : Decimal, ctx : Context) -> Decimal {
 /// `max(precision, etiny)` digits at once), so the value reaching this
 /// function is correctly rounded and only needs `apply_subnormal` to raise
 /// the Subnormal / Underflow flags.
-fn check_range(d : Decimal, pre_adj : Int, ctx : Context) -> Decimal {
+fn check_range(d : Decimal, pre_adj : Int32, ctx : Context) -> Decimal {
   if ctx.precision == 0 {
     return d
   }
@@ -62,11 +62,11 @@ fn check_range(d : Decimal, pre_adj : Int, ctx : Context) -> Decimal {
     let etiny = ctx.etiny()
     if d.exponent < etiny {
       ctx.raise_clamped()
-      return { ..d, exponent: etiny }
+      return { ..d, exponent: etiny, }
     }
     if d.exponent > ctx.e_max {
       ctx.raise_clamped()
-      return { ..d, exponent: ctx.e_max }
+      return { ..d, exponent: ctx.e_max, }
     }
     // A zero that arose from underflow rounding still needs the
     // Subnormal / Underflow / Clamped trio raised — the *pre-round*
@@ -132,7 +132,7 @@ fn apply_clamp(d : Decimal, ctx : Context) -> Decimal {
   }
   let pad = d.exponent - etop
   ctx.raise_clamped()
-  { ..d, coefficient: scale_up(d.coefficient, pad), exponent: etop }
+  { ..d, coefficient: scale_up(d.coefficient, pad), exponent: etop, }
 }
 
 ///|
@@ -213,7 +213,7 @@ fn round_finite(d : Decimal, ctx : Context) -> Decimal {
     let candidate : BigInt = if round_up { 1N } else { 0N }
     ctx.raise_rounded()
     ctx.raise_inexact()
-    return { ..d, coefficient: candidate, exponent: etiny }
+    return { ..d, coefficient: candidate, exponent: etiny, }
   }
   let divisor = pow10(dropped_len)
   let kept = d.coefficient / divisor
@@ -241,7 +241,7 @@ fn round_finite(d : Decimal, ctx : Context) -> Decimal {
   if !dropped.is_zero() {
     ctx.raise_inexact()
   }
-  { ..d, coefficient: final_coeff, exponent: new_exp }
+  { ..d, coefficient: final_coeff, exponent: new_exp, }
 }
 
 ///|
@@ -256,7 +256,7 @@ fn round_finite(d : Decimal, ctx : Context) -> Decimal {
 fn should_round_up(
   kept : BigInt,
   negative : Bool,
-  half : Int,
+  half : Int32,
   dropped_nonzero : Bool,
   mode : Rounding,
 ) -> Bool {
@@ -287,7 +287,7 @@ fn should_round_up(
 /// `should_round_up`.
 fn round_decision(
   dropped : BigInt,
-  dropped_len : Int,
+  dropped_len : Int32,
   kept : BigInt,
   negative : Bool,
   mode : Rounding,
@@ -331,7 +331,7 @@ fn round_decision(
 /// spans it, and a left-pad zero when it overshoots.
 fn round_drop(
   coef : BigInt,
-  drop_len : Int,
+  drop_len : Int32,
   negative : Bool,
   mode : Rounding,
 ) -> (BigInt, BigInt, BigInt) {
@@ -377,6 +377,6 @@ fn round_drop(
 /// range — returning the result paired with the `Flags` it raised.
 /// See `finalize_raw` for the algorithm.
 pub fn Decimal::finalize(self : Decimal, ctx : Context) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.finalize_raw(ctx), ctx.flags)
 }

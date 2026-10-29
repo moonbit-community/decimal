@@ -117,11 +117,11 @@ let copysign_subset : String =
 
 ///|
 test "copysign.decTest subset round-trips through parse + copysign + toSci" {
-  let cases = parse_dectest(copysign_subset)
+  let cases = @copysign.parse_dectest(copysign_subset)
   assert_eq(cases.length(), 111)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, _) = @copysign.run_cases_with_flags(cases)
   if failures.length() > 0 {
-    let buf = StringBuilder::new()
+    let buf = StringBuilder()
     buf.write_string(
       "\{failures.length()} of \{cases.length()} cases failed:\n",
     )

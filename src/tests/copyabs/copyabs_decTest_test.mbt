@@ -49,11 +49,11 @@ let copyabs_subset : String =
 
 ///|
 test "copyabs.decTest subset round-trips through parse + copyabs + toSci" {
-  let cases = parse_dectest(copyabs_subset)
+  let cases = @copyabs.parse_dectest(copyabs_subset)
   assert_eq(cases.length(), 43)
-  let (failures, _) = run_cases_with_flags(cases)
+  let (failures, _) = @copyabs.run_cases_with_flags(cases)
   if failures.length() > 0 {
-    let buf = StringBuilder::new()
+    let buf = StringBuilder()
     buf.write_string(
       "\{failures.length()} of \{cases.length()} cases failed:\n",
     )

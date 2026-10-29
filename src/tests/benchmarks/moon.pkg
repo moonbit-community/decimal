@@ -1,4 +1,7 @@
 import {
   "moonbit-community/decimal",
-  "moonbitlang/core/bench",
 }
+
+import {
+  "moonbitlang/core/bench",
+} for "test"

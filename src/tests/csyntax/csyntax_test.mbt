@@ -18,11 +18,11 @@ let conversion_syntax_cases : String =
 
 ///|
 test "malformed operands route to NaN + Conversion_syntax" {
-  let cases = parse_dectest(conversion_syntax_cases)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @csyntax.parse_dectest(conversion_syntax_cases)
+  let (failures, skipped) = @csyntax.run_cases_with_flags(cases)
   assert_eq(skipped, 0)
   if failures.length() > 0 {
-    let buf = StringBuilder::new()
+    let buf = StringBuilder()
     for f in failures {
       buf.write_string(f)
       buf.write_char('\n')

@@ -130,10 +130,10 @@ pub fn Flags::combine(self : Flags, other : Flags) -> Flags {
 /// result with as many digits as needed. This is the default so the existing
 /// "exact" arithmetic surface keeps its current behaviour.
 pub struct Context {
-  precision : Int
+  precision : Int32
   rounding : Rounding
-  e_min : Int
-  e_max : Int
+  e_min : Int32
+  e_max : Int32
   /// When set, finite results with `exponent > etop = e_max - precision + 1`
   /// get their exponent folded down to `etop` by padding the coefficient
   /// with trailing zeros, and `clamped` is raised. Required for IEEE-754
@@ -151,11 +151,11 @@ pub struct Context {
 /// Panics if `precision < 0` or `e_min > e_max` — these are API-misuse
 /// (typically literal typos), so they fail fast rather than returning an error.
 pub fn Context::new(
-  precision? : Int = 0,
-  rounding? : Rounding = HalfEven,
-  e_min? : Int = -999_999_999,
-  e_max? : Int = 999_999_999,
-  clamp? : Bool = false,
+  precision~ : Int32 = 0,
+  rounding~ : Rounding = HalfEven,
+  e_min~ : Int32 = -999_999_999,
+  e_max~ : Int32 = 999_999_999,
+  clamp~ : Bool = false,
 ) -> Context {
   guard precision >= 0 else {
     abort("Context::new: precision must be non-negative")
@@ -163,7 +163,7 @@ pub fn Context::new(
   guard e_min <= e_max else {
     abort("Context::new: e_min must not exceed e_max")
   }
-  { precision, rounding, e_min, e_max, clamp, flags: Flags::new() }
+  { precision, rounding, e_min, e_max, clamp, flags: Flags::new(), }
 }
 
 ///|
@@ -177,14 +177,14 @@ pub fn Context::exact() -> Context {
 ///|
 /// The smallest exponent of a representable (subnormal) value: `e_min -
 /// precision + 1`. Coefficients below this floor round to zero.
-fn Context::etiny(self : Context) -> Int {
+fn Context::etiny(self : Context) -> Int32 {
   self.e_min - self.precision + 1
 }
 
 ///|
 /// The largest exponent a finite result may carry before clamping: `e_max -
 /// precision + 1`. Above it, trailing zeros are folded into the coefficient.
-fn Context::etop(self : Context) -> Int {
+fn Context::etop(self : Context) -> Int32 {
   self.e_max - self.precision + 1
 }
 

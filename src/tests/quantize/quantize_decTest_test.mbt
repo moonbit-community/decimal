@@ -953,8 +953,8 @@ let quantize_corpus : String =
 
 ///|
 test "quantize.decTest full corpus" {
-  let cases = parse_dectest(quantize_corpus)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @quantize.parse_dectest(quantize_corpus)
+  let (failures, skipped) = @quantize.run_cases_with_flags(cases)
   // Interchange-format and null-operand cases are handled by the runner.
   inspect(skipped, content="0")
   if failures.length() > 0 {

@@ -28,7 +28,7 @@ pub fn Decimal::divide(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.divide_raw(other, ctx), ctx.flags)
 }
 
@@ -96,7 +96,7 @@ pub fn Decimal::divide_int(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.divide_int_raw(other, ctx), ctx.flags)
 }
 
@@ -152,7 +152,7 @@ pub fn Decimal::remainder(
   other : Decimal,
   ctx : Context,
 ) -> (Decimal, Flags) {
-  let ctx = { ..ctx, flags: Flags::new() }
+  let ctx = { ..ctx, flags: Flags::new(), }
   (self.remainder_raw(other, ctx), ctx.flags)
 }
 
@@ -223,7 +223,7 @@ fn divide_int_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
     ctx.raise_division_impossible()
     return Decimal::nan()
   }
-  { class: Finite, negative: neg, coefficient: quotient, exponent: 0 }
+  { class: Finite, negative: neg, coefficient: quotient, exponent: 0, }
 }
 
 ///|
@@ -262,7 +262,7 @@ fn divide_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
     if !rem.is_zero() {
       return invalid_nan(ctx)
     }
-    return { class: Finite, negative: neg, coefficient: an / bn, exponent: 0 }
+    return { class: Finite, negative: neg, coefficient: an / bn, exponent: 0, }
   }
   let mut dividend = a.coefficient
   let mut divisor = b.coefficient
@@ -321,7 +321,7 @@ fn divide_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
       ctx.raise_rounded()
     }
   }
-  { class: Finite, negative: neg, coefficient: quot, exponent: final_exp }
+  { class: Finite, negative: neg, coefficient: quot, exponent: final_exp, }
 }
 
 ///|
@@ -330,9 +330,9 @@ fn divide_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
 /// the `ideal_exp = a.exp - b.exp` GDA convention.
 fn strip_trailing_zeros_to(
   coef : BigInt,
-  exp : Int,
-  target_exp : Int,
-) -> (BigInt, Int) {
+  exp : Int32,
+  target_exp : Int32,
+) -> (BigInt, Int32) {
   strip_trailing_zeros(coef, exp, e => e < target_exp)
 }
 
@@ -346,7 +346,7 @@ fn strip_trailing_zeros_to(
 fn decide_div_round(
   quot : BigInt,
   negative : Bool,
-  cmp : Int,
+  cmp : Int32,
   mode : Rounding,
 ) -> Bool {
   // Called only when the remainder is non-zero, so the discard is non-zero and
@@ -370,7 +370,7 @@ fn remainder_finite(a : Decimal, b : Decimal, ctx : Context) -> Decimal {
   let prod = Decimal::multiply_raw(quot, b, exact_ctx)
   let result = Decimal::subtract_raw(a, prod, ctx)
   if result.class is Finite && result.coefficient.is_zero() {
-    { ..result, negative: a.negative }
+    { ..result, negative: a.negative, }
   } else {
     result
   }

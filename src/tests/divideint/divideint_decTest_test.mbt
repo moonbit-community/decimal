@@ -491,8 +491,8 @@ let divideint_subset : String =
 
 ///|
 test "divideint.decTest subset round-trips through parse + divideint + toSci" {
-  let cases = parse_dectest(divideint_subset)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @divideint.parse_dectest(divideint_subset)
+  let (failures, skipped) = @divideint.run_cases_with_flags(cases)
   if skipped > 0 {
     println("\{skipped} cases skipped (format-encoding / reference-specific)")
   }

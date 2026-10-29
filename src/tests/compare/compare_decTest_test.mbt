@@ -763,8 +763,8 @@ let compare_subset : String =
 
 ///|
 test "compare.decTest subset round-trips through parse + compare + toSci" {
-  let cases = parse_dectest(compare_subset)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @compare.parse_dectest(compare_subset)
+  let (failures, skipped) = @compare.run_cases_with_flags(cases)
   if skipped > 0 {
     println("\{skipped} cases skipped (format-encoding / reference-specific)")
   }

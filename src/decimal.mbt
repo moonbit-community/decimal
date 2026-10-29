@@ -10,7 +10,7 @@ pub(all) enum Class {
   QNaN
   /// Signaling NaN. `coefficient` carries the optional diagnostic payload.
   SNaN
-} derive(Eq)
+} derive(Debug, Eq)
 
 ///|
 pub impl Show for Class with fn to_string(self) {
@@ -40,7 +40,7 @@ pub struct Decimal {
   class : Class
   negative : Bool
   coefficient : BigInt
-  exponent : Int
+  exponent : Int32
 }
 
 ///|
@@ -57,11 +57,11 @@ pub impl Show for Decimal with fn to_string(self) {
 /// exponent (e.g. `try_finite(150N, -2)` is `1.50`) or an explicit `-0`.
 pub fn Decimal::try_finite(
   coefficient : BigInt,
-  exponent : Int,
-  negative? : Bool = false,
+  exponent : Int32,
+  negative~ : Bool = false,
 ) -> Decimal? {
   guard coefficient >= 0N else { None }
-  Some({ class: Finite, negative, coefficient, exponent })
+  Some({ class: Finite, negative, coefficient, exponent, })
 }
 
 ///|
@@ -71,10 +71,10 @@ pub fn Decimal::try_finite(
 /// use this; everyone else uses `try_finite` or `from_bigint`.
 pub fn Decimal::unsafe_finite(
   coefficient : BigInt,
-  exponent : Int,
-  negative? : Bool = false,
+  exponent : Int32,
+  negative~ : Bool = false,
 ) -> Decimal {
-  { class: Finite, negative, coefficient, exponent }
+  { class: Finite, negative, coefficient, exponent, }
 }
 
 ///|
@@ -119,23 +119,23 @@ pub fn Decimal::one() -> Decimal {
 ///|
 /// `+Infinity`.
 pub fn Decimal::infinity() -> Decimal {
-  { class: Infinity, negative: false, coefficient: 0N, exponent: 0 }
+  { class: Infinity, negative: false, coefficient: 0N, exponent: 0, }
 }
 
 ///|
 /// `-Infinity`.
 pub fn Decimal::neg_infinity() -> Decimal {
-  { class: Infinity, negative: true, coefficient: 0N, exponent: 0 }
+  { class: Infinity, negative: true, coefficient: 0N, exponent: 0, }
 }
 
 ///|
 fn signed_infinity(negative : Bool) -> Decimal {
-  { class: Infinity, negative, coefficient: 0N, exponent: 0 }
+  { class: Infinity, negative, coefficient: 0N, exponent: 0, }
 }
 
 ///|
-fn finite_zero(exponent : Int, negative : Bool) -> Decimal {
-  { class: Finite, negative, coefficient: 0N, exponent }
+fn finite_zero(exponent : Int32, negative : Bool) -> Decimal {
+  { class: Finite, negative, coefficient: 0N, exponent, }
 }
 
 ///|
@@ -151,8 +151,8 @@ fn xor_sign(a : Decimal, b : Decimal) -> Bool {
 /// (non-negative) coefficient. A negative payload is a programmer error, not
 /// untrusted input, so it fails fast rather than returning an error.
 pub fn Decimal::nan(
-  payload? : BigInt = 0N,
-  negative? : Bool = false,
+  payload~ : BigInt = 0N,
+  negative~ : Bool = false,
 ) -> Decimal {
   guard payload >= 0N else {
     abort("Decimal::nan: payload must be non-negative")
@@ -160,7 +160,7 @@ pub fn Decimal::nan(
   if !negative && payload.is_zero() {
     nan_singleton
   } else {
-    { class: QNaN, negative, coefficient: payload, exponent: 0 }
+    { class: QNaN, negative, coefficient: payload, exponent: 0, }
   }
 }
 
@@ -168,28 +168,28 @@ pub fn Decimal::nan(
 /// A signaling NaN with the given (non-negative) diagnostic payload.
 /// Panics if `payload` is negative (a programmer error, as for `nan`).
 pub fn Decimal::snan(
-  payload? : BigInt = 0N,
-  negative? : Bool = false,
+  payload~ : BigInt = 0N,
+  negative~ : Bool = false,
 ) -> Decimal {
   guard payload >= 0N else {
     abort("Decimal::snan: payload must be non-negative")
   }
-  { class: SNaN, negative, coefficient: payload, exponent: 0 }
+  { class: SNaN, negative, coefficient: payload, exponent: 0, }
 }
 
 ///|
 /// Lift a `BigInt` into a `Decimal` at exponent 0.
 pub fn Decimal::from_bigint(n : BigInt) -> Decimal {
   if n >= 0N {
-    { class: Finite, negative: false, coefficient: n, exponent: 0 }
+    { class: Finite, negative: false, coefficient: n, exponent: 0, }
   } else {
-    { class: Finite, negative: true, coefficient: -n, exponent: 0 }
+    { class: Finite, negative: true, coefficient: -n, exponent: 0, }
   }
 }
 
 ///|
 /// Lift an `Int` into a `Decimal` at exponent 0.
-pub fn Decimal::from_int(n : Int) -> Decimal {
+pub fn Decimal::from_int(n : Int32) -> Decimal {
   Decimal::from_bigint(BigInt::from_int(n))
 }
 

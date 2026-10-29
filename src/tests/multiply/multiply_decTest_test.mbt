@@ -594,8 +594,8 @@ let multiply_subset_3 : String =
 
 ///|
 fn run_subset(label : String, subset : String) -> Unit {
-  let cases = parse_dectest(subset)
-  let (failures, _) = run_cases_with_flags(cases)
+  let cases = @multiply.parse_dectest(subset)
+  let (failures, _) = @multiply.run_cases_with_flags(cases)
   if failures.length() > 0 {
     println("\{label}: \{failures.length()} of \{cases.length()} cases failed")
     abort("\{label}.decTest failures")

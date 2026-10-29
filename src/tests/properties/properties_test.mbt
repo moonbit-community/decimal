@@ -3,34 +3,36 @@
 ///|
 /// A spread of decimals: integers, fractions, cohorts, signed zeros, large /
 /// small exponents, and every special.
-fn sample() -> Array[Decimal] raise {
+fn sample() -> Array[@properties.Decimal] raise {
   [
     "0", "-0", "1", "-1", "1.0", "1.00", "1.5", "-2.50", "123", "0.001", "1E+4",
     "1.234E+9", "-9.99E-7", "9999999999999999", "Infinity", "-Infinity", "NaN", "NaN42",
     "sNaN",
-  ].map(Decimal::parse)
+  ].map(@properties.Decimal::parse)
 }
 
 ///|
 test "json round-trips through the GDA string" {
   for d in sample() {
-    let back : Decimal = @json.from_json(d.to_json())
+    let back : @properties.Decimal = @json.from_json(d.to_json())
     assert_true(back == d)
   }
 }
 
 ///|
 test "to_json is the scientific string, quoted" {
-  assert_true(Decimal::parse("1.50").to_json() == "1.50".to_json())
-  assert_true(Decimal::parse("-0").to_json() == "-0".to_json())
-  assert_true(Decimal::parse("Infinity").to_json() == "Infinity".to_json())
+  assert_true(@properties.Decimal::parse("1.50").to_json() == Json("1.50"))
+  assert_true(@properties.Decimal::parse("-0").to_json() == Json("-0"))
+  assert_true(
+    @properties.Decimal::parse("Infinity").to_json() == Json("Infinity"),
+  )
 }
 
 ///|
 /// `true` when decoding `j` into a `Decimal` raises (the rejection path).
 fn decode_fails(j : Json) -> Bool {
   try {
-    let _ : Decimal = @json.from_json(j)
+    let _ : @properties.Decimal = @json.from_json(j)
     false
   } catch {
     _ => true
@@ -39,8 +41,8 @@ fn decode_fails(j : Json) -> Bool {
 
 ///|
 test "from_json rejects non-strings and bad literals" {
-  assert_true(decode_fails(1.5.to_json()))
-  assert_true(decode_fails("not a number".to_json()))
+  assert_true(decode_fails(Json(1.5)))
+  assert_true(decode_fails(Json("not a number")))
 }
 
 ///|
@@ -48,13 +50,17 @@ test "from_json rejects non-strings and bad literals" {
 test "parse/to_sci_string round-trip is idempotent" {
   for d in sample() {
     let s = d.to_sci_string()
-    assert_eq(Decimal::parse(s).to_sci_string(), s)
+    assert_eq(@properties.Decimal::parse(s).to_sci_string(), s)
   }
 }
 
 ///|
-fn mk_flags(inexact~ : Bool, overflow~ : Bool, clamped~ : Bool) -> Flags {
-  let f = Flags::new()
+fn mk_flags(
+  inexact~ : Bool,
+  overflow~ : Bool,
+  clamped~ : Bool,
+) -> @properties.Flags {
+  let f = @properties.Flags::new()
   f.inexact = inexact
   f.overflow = overflow
   f.clamped = clamped
@@ -64,12 +70,12 @@ fn mk_flags(inexact~ : Bool, overflow~ : Bool, clamped~ : Bool) -> Flags {
 ///|
 test "Flags::combine is a monoid (identity + associativity)" {
   let samples = [
-    Flags::new(),
+    @properties.Flags::new(),
     mk_flags(inexact=true, overflow=false, clamped=false),
     mk_flags(inexact=false, overflow=true, clamped=true),
     mk_flags(inexact=true, overflow=true, clamped=false),
   ]
-  let id = Flags::new()
+  let id = @properties.Flags::new()
   for a in samples {
     // Identity: a · e == a == e · a.
     assert_true(a.combine(id) == a)
@@ -113,14 +119,18 @@ test "Compare is a total order consistent with Eq" {
 
 ///|
 test "Compare orders NaN below everything and numeric values by value" {
-  let nan = Decimal::parse("NaN")
-  let neg_inf = Decimal::parse("-Infinity")
-  let half = Decimal::parse("0.5")
-  let two = Decimal::parse("2")
+  let nan = @properties.Decimal::parse("NaN")
+  let neg_inf = @properties.Decimal::parse("-Infinity")
+  let half = @properties.Decimal::parse("0.5")
+  let two = @properties.Decimal::parse("2")
   assert_true(nan < neg_inf)
   assert_true(neg_inf < half)
   assert_true(half < two)
   // Cohorts compare equal (numeric, not structural).
-  assert_true(Decimal::parse("1.0") == Decimal::parse("1.00"))
-  assert_false(Decimal::parse("1.0") < Decimal::parse("1.00"))
+  assert_true(
+    @properties.Decimal::parse("1.0") == @properties.Decimal::parse("1.00"),
+  )
+  assert_false(
+    @properties.Decimal::parse("1.0") < @properties.Decimal::parse("1.00"),
+  )
 }

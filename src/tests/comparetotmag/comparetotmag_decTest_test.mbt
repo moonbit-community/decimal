@@ -795,8 +795,8 @@ let comparetotmag_subset : String =
 
 ///|
 test "comparetotmag.decTest subset round-trips through parse + comparetotmag + toSci" {
-  let cases = parse_dectest(comparetotmag_subset)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @comparetotmag.parse_dectest(comparetotmag_subset)
+  let (failures, skipped) = @comparetotmag.run_cases_with_flags(cases)
   if skipped > 0 {
     println("\{skipped} cases skipped (format-encoding / reference-specific)")
   }

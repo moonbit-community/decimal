@@ -554,8 +554,8 @@ let log10_subset : String =
 
 ///|
 test "log10.decTest subset" {
-  let cases = parse_dectest(log10_subset)
-  let (failures, skipped) = run_cases_with_flags(cases)
+  let cases = @log.parse_dectest(log10_subset)
+  let (failures, skipped) = @log.run_cases_with_flags(cases)
   if skipped > 0 {
     println("\{skipped} cases skipped (format-encoding / reference-specific)")
   }

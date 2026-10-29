@@ -1,4 +1,7 @@
 import {
   "moonbit-community/decimal",
-  "moonbitlang/core/json",
 }
+
+import {
+  "moonbitlang/core/json",
+} for "test"
